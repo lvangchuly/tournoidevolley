@@ -1051,6 +1051,8 @@ export default function App() {
               const pendingStatus = getPendingStatus(match);
               const officialStatus = getMatchStatusLabel(match, phaseRules);
               const isLocked = officialStatus === 'Valide';
+              const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
+              const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
               return (
                 <tr key={match.id} className={pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : pendingStatus === 'À valider' ? 'row-pending' : ''}>
                   <td>{schedule?.startText || match.time}</td>
@@ -1059,11 +1061,19 @@ export default function App() {
                   <td>{match.group}</td>
                   <td>{teamName(match.teamAId)}</td>
                   <td>
-                    <div className="score-inputs">
-                      <input type="number" min="0" disabled={isLocked} value={match.submittedScoreA ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
-                      <span>-</span>
-                      <input type="number" min="0" disabled={isLocked} value={match.submittedScoreB ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
-                    </div>
+                    {isLocked ? (
+                      <div className="score-readonly">
+                        <span className="score-chip">{displayScoreA === '' ? '-' : displayScoreA}</span>
+                        <span>-</span>
+                        <span className="score-chip">{displayScoreB === '' ? '-' : displayScoreB}</span>
+                      </div>
+                    ) : (
+                      <div className="score-inputs">
+                        <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                        <span>-</span>
+                        <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      </div>
+                    )}
                   </td>
                   <td>{teamName(match.teamBId)}</td>
                   <td>
