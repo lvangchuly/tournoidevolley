@@ -4,7 +4,7 @@ const STORAGE_KEY = 'tournoidevolley-react-vite-v10';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v11';
+const APP_VERSION = 'v13';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -625,10 +625,33 @@ function LargePublicMatch({ title, match, teamName }) {
 }
 
 
+
+function buildRefereeAccessUrl() {
+  if (typeof window === 'undefined') return '?mode=referee';
+  const url = new URL(window.location.href);
+  url.searchParams.set('mode', 'referee');
+  return url.toString();
+}
+
+function RefereeQrCode({ url }) {
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
+  return (
+    <div className="referee-qr-card">
+      <div className="referee-qr-title">Accès arbitres</div>
+      <img className="referee-qr-image" src={qrSrc} alt="QR code d’accès au mode arbitres" />
+      <div className="referee-qr-caption">Scanne ce QR code pour ouvrir directement le mode Arbitres.</div>
+    </div>
+  );
+}
+
 export default function App() {
   const initial = loadState();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [mode, setMode] = useState('public');
+  const [mode, setMode] = useState(() => {
+    if (typeof window === 'undefined') return 'public';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'referee' ? 'referee' : 'public';
+  });
   const [isOrganizerAuthenticated, setIsOrganizerAuthenticated] = useState(false);
   const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
   const [organizerAttempt, setOrganizerAttempt] = useState('');
@@ -649,6 +672,7 @@ export default function App() {
   const [singleKnockout, setSingleKnockout] = useState(safeClone(initial?.singleKnockout, { roundOf16: [], quarters: [], semis: [], finals: [] }));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
+  const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(), []);
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
@@ -843,6 +867,11 @@ export default function App() {
   }
 
   function enterPublicMode() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url.toString());
+    }
     setMode('public');
     setIsOrganizerAuthenticated(false);
     setShowOrganizerLogin(false);
@@ -852,6 +881,11 @@ export default function App() {
   }
 
   function enterRefereeMode() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', 'referee');
+      window.history.replaceState({}, '', url.toString());
+    }
     setMode('referee');
     setIsOrganizerAuthenticated(false);
     setShowOrganizerLogin(false);
@@ -869,6 +903,11 @@ export default function App() {
   function handleOrganizerLogin() {
     if (organizerAttempt === organizerPassword) {
       setIsOrganizerAuthenticated(true);
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('mode');
+        window.history.replaceState({}, '', url.toString());
+      }
       setMode('organizer');
       setShowOrganizerLogin(false);
       setOrganizerAttempt('');
@@ -1744,7 +1783,7 @@ export default function App() {
               <div className="hero-version">Version {APP_VERSION}</div>
             </div>
             <h1>{tournamentName}</h1>
-            <p>Gestionnaire organisateur du tournoi. Les scores saisis par les arbitres apparaissent ici avec le statut “À valider”.</p>
+            <RefereeQrCode url={refereeAccessUrl} />
           </div>
           <div className="hero-controls">
             <label>
