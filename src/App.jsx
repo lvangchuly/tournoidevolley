@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v1';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v2';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
@@ -24,6 +24,29 @@ function addMinutesToTime(time, minutesToAdd) {
   const h = String(Math.floor(normalized / 60)).padStart(2, '0');
   const m = String(normalized % 60).padStart(2, '0');
   return `${h}:${m}`;
+}
+
+function parseTimeToMinutes(time) {
+  const [hours, minutes] = String(time || '09:00').split(':').map(Number);
+  return (hours * 60) + minutes;
+}
+
+function minutesToTime(value) {
+  const normalized = ((Math.round(value) % 1440) + 1440) % 1440;
+  const hours = String(Math.floor(normalized / 60)).padStart(2, '0');
+  const minutes = String(normalized % 60).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+function stampToMinutes(stamp) {
+  if (!stamp) return null;
+  const date = new Date(stamp);
+  if (Number.isNaN(date.getTime())) return null;
+  return (date.getHours() * 60) + date.getMinutes();
+}
+
+function estimatePhaseDurationMinutes(rule) {
+  return Math.max(6, (Number(rule?.winningScore) || 21) + 5);
 }
 
 function toNumber(value) {
@@ -135,14 +158,15 @@ function roundRobinMatches(teamIds, phase, groupName) {
   return rounds;
 }
 
-function assignSchedule(matches, startSlot, startTime, slotDuration) {
+function assignSchedule(matches, startSlot) {
   return matches.map((match, index) => {
     const zeroBasedSlot = startSlot + Math.floor(index / 3);
     return {
       ...match,
       court: (index % 3) + 1,
       slot: zeroBasedSlot + 1,
-      time: addMinutesToTime(startTime, zeroBasedSlot * slotDuration),
+      time: '',
+      validatedAt: match.validatedAt || null,
     };
   });
 }
@@ -193,6 +217,56 @@ function getMatchStatusLabel(match, phaseRules) {
   const scoreB = toNumber(match.scoreB);
   if (scoreA === null || scoreB === null) return 'À saisir';
   return isMatchResultValid(match, phaseRules) ? 'Valide' : 'Score invalide';
+}
+
+function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
+  const scheduleMap = {};
+  const sorted = [...matches].sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
+  const courtAvailability = new Map([[1, stageStartMinutes], [2, stageStartMinutes], [3, stageStartMinutes]]);
+
+  sorted.forEach((match) => {
+    const court = match.court || 1;
+    const plannedStart = courtAvailability.get(court) ?? stageStartMinutes;
+    const actualEnd = isMatchResultValid(match, phaseRules) ? stampToMinutes(match.validatedAt) : null;
+    const estimatedEnd = plannedStart + estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules));
+    const endMinutes = actualEnd !== null ? Math.max(plannedStart, actualEnd) : estimatedEnd;
+
+    scheduleMap[match.id] = {
+      startMinutes: plannedStart,
+      startText: minutesToTime(plannedStart),
+      endMinutes,
+      endText: minutesToTime(endMinutes),
+      estimatedDuration: estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules)),
+    };
+
+    courtAvailability.set(court, endMinutes);
+  });
+
+  return {
+    scheduleMap,
+    stageEnd: Math.max(...courtAvailability.values()),
+  };
+}
+
+function computeTournamentSchedule(stageGroups, startTime, phaseRules) {
+  let stageStart = parseTimeToMinutes(startTime);
+  const mergedMap = {};
+
+  stageGroups.forEach((group) => {
+    if (!group.length) return;
+    const result = computeDynamicStageSchedule(group, stageStart, phaseRules);
+    Object.assign(mergedMap, result.scheduleMap);
+    stageStart = result.stageEnd;
+  });
+
+  return {
+    scheduleMap: mergedMap,
+    estimatedEndMinutes: stageStart,
+    estimatedEndText: minutesToTime(stageStart),
+  };
 }
 
 function compareStandingRows(a, b) {
@@ -335,6 +409,7 @@ function StatCard({ label, value, subvalue }) {
 }
 
 function PhaseRuleEditor({ title, value, onScoreChange, onModeChange }) {
+  const estimatedDuration = estimatePhaseDurationMinutes(value);
   return (
     <div className="rule-card">
       <h3>{title}</h3>
@@ -351,6 +426,7 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange }) {
           </select>
         </label>
       </div>
+      <p className="muted small helper-text">Durée estimée utilisée pour le planning : {estimatedDuration} min (échauffement inclus).</p>
     </div>
   );
 }
@@ -379,11 +455,18 @@ function LargePublicMatch({ title, match, teamName }) {
 export default function App() {
   const initial = loadState();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [publicMode, setPublicMode] = useState(false);
+  const [publicMode, setPublicMode] = useState(true);
+  const [isOrganizerAuthenticated, setIsOrganizerAuthenticated] = useState(false);
+  const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
+  const [organizerAttempt, setOrganizerAttempt] = useState('');
+  const [loginError, setLoginError] = useState('');
   const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
+  const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
+  const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
+  const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
   const [brassage1, setBrassage1] = useState(safeClone(initial?.brassage1, { pools: [], matches: [] }));
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
   const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
@@ -412,17 +495,43 @@ export default function App() {
     ...knockout.consolanteFinals,
   ], teamMap, phaseRules), [allTeamIds, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  function getPersistedState(savedAt = lastSavedAt) {
+    return {
       teams,
-      settings: { startTime, slotDuration, phaseRules },
+      settings: { startTime, slotDuration, phaseRules, organizerPassword },
+      meta: { lastSavedAt: savedAt },
       brassage1,
       brassage2,
       mainStage,
       knockout,
-    }));
-  }, [teams, startTime, slotDuration, phaseRules, brassage1, brassage2, mainStage, knockout]);
+    };
+  }
+
+  function saveTournamentState(showMessage = true) {
+    if (typeof window === 'undefined') return;
+    const savedAt = new Date().toISOString();
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState(savedAt)));
+    setLastSavedAt(savedAt);
+    if (showMessage) {
+      window.alert('État du tournoi sauvegardé sur ce navigateur.');
+    }
+  }
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, brassage1, brassage2, mainStage, knockout]);
+
+  const scheduleData = useMemo(() => computeTournamentSchedule([
+    brassage1.matches,
+    brassage2.matches,
+    [...mainStage.principaleMatches, ...mainStage.consolanteMatches],
+    [...knockout.principalQuarters, ...knockout.consolanteSemis],
+    [...knockout.principalSemis, ...knockout.consolanteFinals],
+    knockout.principalFinals,
+  ], startTime, phaseRules), [startTime, phaseRules, brassage1.matches, brassage2.matches, mainStage, knockout]);
+
+  const estimatedTournamentEnd = scheduleData.estimatedEndText;
 
   const nextMatches = useMemo(() => {
     const allMatches = [
@@ -438,12 +547,10 @@ export default function App() {
     ];
     return allMatches
       .filter((match) => toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules))
-      .sort((a, b) => {
-        if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
-        return (a.court || 0) - (b.court || 0);
-      })
-      .slice(0, 3);
-  }, [brassage1.matches, brassage2.matches, mainStage, knockout, phaseRules]);
+      .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
+      .slice(0, 3)
+      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }));
+  }, [brassage1.matches, brassage2.matches, mainStage, knockout, phaseRules, scheduleData]);
 
   const completedMatchCounts = {
     b1: brassage1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
@@ -469,10 +576,43 @@ export default function App() {
     setStartTime('09:00');
     setSlotDuration(20);
     setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
+    setOrganizerPassword('Chuly0ne');
+    setPasswordDraft('Chuly0ne');
+    setLastSavedAt('');
     setBrassage1({ pools: [], matches: [] });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+  }
+
+  function handleOrganizerLogin() {
+    if (organizerAttempt === organizerPassword) {
+      setIsOrganizerAuthenticated(true);
+      setPublicMode(false);
+      setShowOrganizerLogin(false);
+      setOrganizerAttempt('');
+      setLoginError('');
+      return;
+    }
+    setLoginError('Mot de passe incorrect.');
+  }
+
+  function lockOrganizerMode() {
+    setIsOrganizerAuthenticated(false);
+    setPublicMode(true);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+  }
+
+  function updateOrganizerPassword() {
+    const cleanPassword = passwordDraft.trim();
+    if (!cleanPassword) {
+      window.alert('Le mot de passe organisateur ne peut pas être vide.');
+      return;
+    }
+    setOrganizerPassword(cleanPassword);
+    window.alert('Mot de passe organisateur mis à jour.');
   }
 
   function updateTeam(teamId, field, value) {
@@ -534,7 +674,7 @@ export default function App() {
     const scheduled = assignSchedule([
       ...principalePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Principale', pool.name)),
       ...consolantePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Consolante', pool.name)),
-    ], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length), startTime, Number(slotDuration));
+    ], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length));
 
     setMainStage({
       principalePools,
@@ -563,7 +703,7 @@ export default function App() {
       makeKnockoutMatch('Tableau consolante', 'Demi 1', cMap.get('Consolante A')?.[0]?.teamId || null, cMap.get('Consolante B')?.[1]?.teamId || null),
       makeKnockoutMatch('Tableau consolante', 'Demi 2', cMap.get('Consolante B')?.[0]?.teamId || null, cMap.get('Consolante A')?.[1]?.teamId || null),
     ];
-    const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length), startTime, Number(slotDuration));
+    const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length));
     setKnockout((current) => ({
       ...current,
       principalQuarters: combined.filter((match) => match.phase === 'Tableau principal'),
@@ -599,7 +739,7 @@ export default function App() {
       makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
     ];
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
-    const combined = assignSchedule([...principalSemisRaw, ...consolanteFinalsRaw], startSlot, startTime, Number(slotDuration));
+    const combined = assignSchedule([...principalSemisRaw, ...consolanteFinalsRaw], startSlot);
     setKnockout((current) => ({
       ...current,
       principalSemis: combined.filter((match) => match.phase === 'Tableau principal'),
@@ -624,12 +764,17 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
     ];
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length) + stageSlotCount(knockout.principalSemis.length + knockout.consolanteFinals.length);
-    setKnockout((current) => ({ ...current, principalFinals: assignSchedule(finalsRaw, startSlot, startTime, Number(slotDuration)) }));
+    setKnockout((current) => ({ ...current, principalFinals: assignSchedule(finalsRaw, startSlot) }));
   }
 
   function updateMatchScore(scope, matchId, field, value) {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
-    const apply = (matches) => matches.map((match) => (match.id === matchId ? { ...match, [field]: normalized } : match));
+    const apply = (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      const updated = { ...match, [field]: normalized };
+      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
+      return updated;
+    });
     if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: apply(current.matches) }));
     if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: apply(current.matches) }));
     if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: apply(current.principaleMatches) }));
@@ -642,12 +787,12 @@ export default function App() {
   }
 
   function exportState() {
-    downloadJson('tournoidevolley-tournament.json', { teams, settings: { startTime, slotDuration, phaseRules }, brassage1, brassage2, mainStage, knockout });
+    downloadJson('tournoidevolley-tournament.json', getPersistedState());
   }
 
   async function copyState() {
     try {
-      await navigator.clipboard.writeText(JSON.stringify({ teams, settings: { startTime, slotDuration, phaseRules }, brassage1, brassage2, mainStage, knockout }, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(getPersistedState(), null, 2));
       window.alert('Configuration copiée dans le presse-papiers.');
     } catch {
       window.alert('Copie non disponible dans ce navigateur.');
@@ -665,6 +810,11 @@ export default function App() {
         if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
         if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
         if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
+        if (parsed.settings?.organizerPassword) {
+          setOrganizerPassword(parsed.settings.organizerPassword);
+          setPasswordDraft(parsed.settings.organizerPassword);
+        }
+        if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
         if (parsed.brassage1) setBrassage1(parsed.brassage1);
         if (parsed.brassage2) setBrassage2(parsed.brassage2);
         if (parsed.mainStage) setMainStage(parsed.mainStage);
@@ -737,9 +887,10 @@ export default function App() {
           <tbody>
             {matches.map((match) => {
               const status = getMatchStatusLabel(match, phaseRules);
+              const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
-                  <td>{match.time}</td>
+                  <td>{schedule?.startText || match.time}</td>
                   <td>Terrain {match.court}</td>
                   <td>{match.phase}</td>
                   <td>{match.group}</td>
@@ -752,7 +903,7 @@ export default function App() {
                     </div>
                   </td>
                   <td>{teamName(match.teamBId)}</td>
-                  <td><span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span></td>
+                  <td><div className="status-cell"><span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>{schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}</div></td>
                 </tr>
               );
             })}
@@ -825,7 +976,7 @@ export default function App() {
     { id: 'export', label: 'Sauvegarde' },
   ];
 
-  if (publicMode) {
+  if (publicMode || !isOrganizerAuthenticated) {
     return (
       <div className="public-page">
         <div className="container">
@@ -833,10 +984,33 @@ export default function App() {
             <div>
               <div className="hero-tag">tournoidevolley.fr</div>
               <h1>Affichage public du tournoi</h1>
-              <p>Prochains matchs, classement cumulé et podiums.</p>
+              <p>Prochains matchs, classement cumulé, estimation de fin du tournoi et accès organisateur protégé.</p>
             </div>
-            <Button variant="secondary" onClick={() => setPublicMode(false)}>Revenir au mode organisateur</Button>
+            <div className="hero-controls">
+              <div className="hero-pill">
+                <span>Fin estimée du tournoi</span>
+                <strong>{estimatedTournamentEnd}</strong>
+              </div>
+              {isOrganizerAuthenticated ? (
+                <Button variant="secondary" onClick={() => setPublicMode(false)}>Retour au mode organisateur</Button>
+              ) : (
+                <Button variant="primary" onClick={() => { setShowOrganizerLogin(true); setLoginError(''); }}>Accès organisateur</Button>
+              )}
+            </div>
           </header>
+
+          {showOrganizerLogin && !isOrganizerAuthenticated ? (
+            <section className="login-card">
+              <h2>Accès organisateur</h2>
+              <p className="muted">Saisis le mot de passe organisateur pour déverrouiller l’édition du tournoi.</p>
+              <div className="login-grid">
+                <input type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
+                <Button variant="primary" onClick={handleOrganizerLogin}>Déverrouiller</Button>
+                <Button variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
+              </div>
+              {loginError ? <div className="error-text">{loginError}</div> : null}
+            </section>
+          ) : null}
 
           <div className="cards-grid three-up">
             {nextMatches.map((match, index) => (
@@ -878,11 +1052,16 @@ export default function App() {
               <span>Début</span>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </label>
-            <label>
-              <span>Créneau (min)</span>
-              <input type="number" min="5" value={slotDuration} onChange={(e) => setSlotDuration(Number(e.target.value) || 20)} />
-            </label>
-            <Button variant="secondary" onClick={() => setPublicMode(true)}>Ouvrir l’affichage public</Button>
+            <div className="hero-pill">
+              <span>Fin estimée du tournoi</span>
+              <strong>{estimatedTournamentEnd}</strong>
+            </div>
+            <div className="actions-stack">
+              <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
+              <Button variant="secondary" onClick={() => setPublicMode(true)}>Ouvrir l’affichage public</Button>
+              <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller le mode organisateur</Button>
+            </div>
+            {lastSavedAt ? <div className="muted small">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
           </div>
         </header>
 
@@ -916,6 +1095,29 @@ export default function App() {
                   <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
                   <PhaseRuleEditor title="Principale" value={phaseRules.principale} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
                   <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                </div>
+              </Section>
+
+              <Section title="Sécurité organisateur" subtitle="Le mode organisateur se déverrouille avec un mot de passe. Tu peux le modifier ici, uniquement une fois connecté.">
+                <div className="cards-grid two-up">
+                  <div className="rule-card">
+                    <h3>Mot de passe organisateur</h3>
+                    <label>
+                      <span>Nouveau mot de passe</span>
+                      <input type="password" value={passwordDraft} onChange={(e) => setPasswordDraft(e.target.value)} />
+                    </label>
+                    <div className="actions-row">
+                      <Button variant="primary" onClick={updateOrganizerPassword}>Mettre à jour le mot de passe</Button>
+                    </div>
+                  </div>
+                  <div className="rule-card">
+                    <h3>Sauvegarde locale</h3>
+                    <p className="muted">Le bouton Sauvegarder enregistre l’état actuel sur ce navigateur pour le retrouver lors de la prochaine ouverture de la page.</p>
+                    <div className="actions-row">
+                      <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder maintenant</Button>
+                    </div>
+                    {lastSavedAt ? <p className="muted small helper-text">Dernière sauvegarde : {new Date(lastSavedAt).toLocaleString('fr-FR')}</p> : null}
+                  </div>
                 </div>
               </Section>
 

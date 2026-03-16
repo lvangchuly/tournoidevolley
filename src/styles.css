@@ -17,7 +17,7 @@ button, input, select { font: inherit; }
 }
 
 .app-shell { min-height: 100vh; padding: 24px 0 40px; }
-.public-page { min-height: 100vh; padding: 24px 0 40px; background: #020617; color: #e2e8f0; }
+.public-page { min-height: 100vh; padding: 24px 0 40px; background: #f8fafc; color: #0f172a; }
 
 .hero {
   background: linear-gradient(135deg, #0f172a, #1e293b);
@@ -30,7 +30,7 @@ button, input, select { font: inherit; }
   box-shadow: 0 24px 40px rgba(15, 23, 42, 0.18);
 }
 
-.public-hero { background: linear-gradient(135deg, #020617, #0f172a); }
+.public-hero { background: linear-gradient(135deg, #1d4ed8, #0f172a); }
 .hero h1 { margin: 14px 0 10px; font-size: clamp(28px, 4vw, 42px); }
 .hero p { margin: 0; max-width: 900px; color: rgba(255, 255, 255, 0.78); }
 .hero-tag {
@@ -260,3 +260,36 @@ tbody tr:last-child td { border-bottom: none; }
   .align-right { text-align: left; }
   .container { width: min(1400px, calc(100% - 20px)); }
 }
+
+.hero-pill {
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.1);
+  display: grid;
+  gap: 6px;
+}
+
+.hero-pill strong { font-size: 28px; }
+.actions-stack { display: grid; gap: 10px; }
+.helper-text { margin: 10px 0 0; }
+.status-cell { display: grid; gap: 6px; }
+.tiny { font-size: 11px; }
+.login-card {
+  margin: 18px 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  padding: 22px;
+}
+.login-card h2 { margin: 0 0 8px; }
+.login-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.login-grid input { max-width: 280px; }
+.error-text { color: #b91c1c; margin-top: 10px; font-weight: 600; }
+.public-page .section-card,
+.public-page .public-match-card,
+.public-page .mini-card { color: #0f172a; }
+.public-page .hero p { color: rgba(255,255,255,0.86); }
+.public-page .hero-pill { color: white; }
+.public-page .btn-secondary { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
