@@ -158,6 +158,91 @@ function roundRobinMatches(teamIds, phase, groupName) {
   return rounds;
 }
 
+function createThreeTeamPoolMatches(pool, phase) {
+  if (pool.teamIds.length !== 3) {
+    return roundRobinMatches(pool.teamIds, phase, pool.name);
+  }
+
+  const [team1, team2, team3] = pool.teamIds;
+
+  return [
+    {
+      id: uid('match'),
+      phase,
+      group: pool.name,
+      round: 1,
+      teamAId: team1,
+      teamBId: team2,
+      scoreA: '',
+      scoreB: '',
+    },
+    {
+      id: uid('match'),
+      phase,
+      group: pool.name,
+      round: 2,
+      teamAId: team2,
+      teamBId: team3,
+      scoreA: '',
+      scoreB: '',
+    },
+    {
+      id: uid('match'),
+      phase,
+      group: pool.name,
+      round: 3,
+      teamAId: team3,
+      teamBId: team1,
+      scoreA: '',
+      scoreB: '',
+    },
+  ];
+}
+
+function scheduleBrassageMatches(pools, phase, startSlot) {
+  const poolPairs = [
+    [0, 1],
+    [2, 3],
+    [4, 5],
+  ];
+
+  const scheduled = [];
+
+  poolPairs.forEach(([firstPoolIndex, secondPoolIndex], courtIndex) => {
+    const firstPool = pools[firstPoolIndex];
+    const secondPool = pools[secondPoolIndex];
+    if (!firstPool || !secondPool) return;
+
+    const firstPoolMatches = createThreeTeamPoolMatches(firstPool, phase);
+    const secondPoolMatches = createThreeTeamPoolMatches(secondPool, phase);
+
+    const orderedMatches = [
+      firstPoolMatches[0],
+      secondPoolMatches[0],
+      firstPoolMatches[1],
+      secondPoolMatches[1],
+      firstPoolMatches[2],
+      secondPoolMatches[2],
+    ];
+
+    orderedMatches.forEach((match, offset) => {
+      const zeroBasedSlot = startSlot + offset;
+      scheduled.push({
+        ...match,
+        court: courtIndex + 1,
+        slot: zeroBasedSlot + 1,
+        time: '',
+        validatedAt: match.validatedAt || null,
+      });
+    });
+  });
+
+  return scheduled.sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
+}
+
 function assignSchedule(matches, startSlot) {
   return matches.map((match, index) => {
     const zeroBasedSlot = startSlot + Math.floor(index / 3);
@@ -719,7 +804,7 @@ export default function App() {
     }
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
     const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
-    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 1', pool.name)), 0);
+    const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
     setBrassage1({ pools, matches });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
@@ -744,7 +829,7 @@ export default function App() {
     }
     const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
-    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 2', pool.name)), stageSlotCount(brassage1.matches.length));
+    const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(brassage1.matches.length));
     setBrassage2({ pools, matches });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
@@ -1535,7 +1620,7 @@ export default function App() {
 
           {activeTab === 'brassage1' && (
             <>
-              <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
+              <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
               <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
@@ -1547,7 +1632,7 @@ export default function App() {
 
           {activeTab === 'brassage2' && (
             <>
-              <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
+              <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
               <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
