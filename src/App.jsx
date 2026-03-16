@@ -452,10 +452,11 @@ function LargePublicMatch({ title, match, teamName }) {
   );
 }
 
+
 export default function App() {
   const initial = loadState();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [publicMode, setPublicMode] = useState(true);
+  const [mode, setMode] = useState('public');
   const [isOrganizerAuthenticated, setIsOrganizerAuthenticated] = useState(false);
   const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
   const [organizerAttempt, setOrganizerAttempt] = useState('');
@@ -466,6 +467,7 @@ export default function App() {
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
   const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
+  const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
   const [brassage1, setBrassage1] = useState(safeClone(initial?.brassage1, { pools: [], matches: [] }));
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
@@ -498,7 +500,7 @@ export default function App() {
   function getPersistedState(savedAt = lastSavedAt) {
     return {
       teams,
-      settings: { startTime, slotDuration, phaseRules, organizerPassword },
+      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName },
       meta: { lastSavedAt: savedAt },
       brassage1,
       brassage2,
@@ -520,7 +522,7 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, brassage1, brassage2, mainStage, knockout]);
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, brassage1, brassage2, mainStage, knockout]);
 
   const scheduleData = useMemo(() => computeTournamentSchedule([
     brassage1.matches,
@@ -561,34 +563,39 @@ export default function App() {
   };
 
   function updatePhaseRule(ruleKey, field, value) {
-    setPhaseRules((current) => ({
-      ...current,
-      [ruleKey]: { ...current[ruleKey], [field]: value },
-    }));
+    setPhaseRules((current) => ({ ...current, [ruleKey]: { ...current[ruleKey], [field]: value } }));
   }
 
   function teamName(teamId) {
     return teamMap.get(teamId)?.name || 'À définir';
   }
 
-  function resetTournament() {
-    setTeams(defaultTeams());
-    setStartTime('09:00');
-    setSlotDuration(20);
-    setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
-    setOrganizerPassword('Chuly0ne');
-    setPasswordDraft('Chuly0ne');
-    setLastSavedAt('');
-    setBrassage1({ pools: [], matches: [] });
-    setBrassage2({ pools: [], matches: [] });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+  function enterPublicMode() {
+    setMode('public');
+    setIsOrganizerAuthenticated(false);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+  }
+
+  function enterRefereeMode() {
+    setMode('referee');
+    setIsOrganizerAuthenticated(false);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+  }
+
+  function requestOrganizerMode() {
+    setShowOrganizerLogin(true);
+    setOrganizerAttempt('');
+    setLoginError('');
   }
 
   function handleOrganizerLogin() {
     if (organizerAttempt === organizerPassword) {
       setIsOrganizerAuthenticated(true);
-      setPublicMode(false);
+      setMode('organizer');
       setShowOrganizerLogin(false);
       setOrganizerAttempt('');
       setLoginError('');
@@ -598,11 +605,7 @@ export default function App() {
   }
 
   function lockOrganizerMode() {
-    setIsOrganizerAuthenticated(false);
-    setPublicMode(true);
-    setShowOrganizerLogin(false);
-    setOrganizerAttempt('');
-    setLoginError('');
+    enterPublicMode();
   }
 
   function updateOrganizerPassword() {
@@ -631,6 +634,21 @@ export default function App() {
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
   }
 
+  function resetTournament() {
+    setTeams(defaultTeams());
+    setStartTime('09:00');
+    setSlotDuration(20);
+    setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
+    setOrganizerPassword('Chuly0ne');
+    setPasswordDraft('Chuly0ne');
+    setTournamentName('Tournoi de volley');
+    setLastSavedAt('');
+    setBrassage1({ pools: [], matches: [] });
+    setBrassage2({ pools: [], matches: [] });
+    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
+    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+  }
+
   function generateBrassage1() {
     const readyTeams = teams.filter((team) => team.name.trim());
     if (readyTeams.length !== TEAM_TARGET) {
@@ -639,7 +657,7 @@ export default function App() {
     }
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
     const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
-    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 1', pool.name)), 0, startTime, Number(slotDuration));
+    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 1', pool.name)), 0);
     setBrassage1({ pools, matches });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
@@ -654,7 +672,7 @@ export default function App() {
     }
     const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
-    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 2', pool.name)), stageSlotCount(brassage1.matches.length), startTime, Number(slotDuration));
+    const matches = assignSchedule(pools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Brassage 2', pool.name)), stageSlotCount(brassage1.matches.length));
     setBrassage2({ pools, matches });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
@@ -767,27 +785,97 @@ export default function App() {
     setKnockout((current) => ({ ...current, principalFinals: assignSchedule(finalsRaw, startSlot) }));
   }
 
-  function updateMatchScore(scope, matchId, field, value) {
+  function updateMatchesInScope(scope, updater) {
+    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: updater(current.matches) }));
+    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: updater(current.matches) }));
+    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: updater(current.principaleMatches) }));
+    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: updater(current.consolanteMatches) }));
+    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: updater(current.principalQuarters) }));
+    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: updater(current.principalSemis) }));
+    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: updater(current.principalFinals) }));
+    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: updater(current.consolanteSemis) }));
+    return setKnockout((current) => ({ ...current, consolanteFinals: updater(current.consolanteFinals) }));
+  }
+
+  function getPendingMatchSnapshot(match) {
+    return {
+      ...match,
+      scoreA: match.submittedScoreA,
+      scoreB: match.submittedScoreB,
+    };
+  }
+
+  function getPendingStatus(match) {
+    const pendingA = toNumber(match.submittedScoreA);
+    const pendingB = toNumber(match.submittedScoreB);
+    if (pendingA === null || pendingB === null) return 'Aucun';
+    return isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? 'À valider' : 'Saisie arbitre invalide';
+  }
+
+  function updateOfficialMatchScore(scope, matchId, field, value) {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
-    const apply = (matches) => matches.map((match) => {
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      const updated = { ...match, [field]: normalized };
+      const updated = {
+        ...match,
+        [field]: normalized,
+        submittedScoreA: '',
+        submittedScoreB: '',
+        submittedAt: null,
+      };
       updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
       return updated;
-    });
-    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: apply(current.matches) }));
-    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: apply(current.matches) }));
-    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: apply(current.principaleMatches) }));
-    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: apply(current.consolanteMatches) }));
-    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: apply(current.principalQuarters) }));
-    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: apply(current.principalSemis) }));
-    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: apply(current.principalFinals) }));
-    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: apply(current.consolanteSemis) }));
-    return setKnockout((current) => ({ ...current, consolanteFinals: apply(current.consolanteFinals) }));
+    }));
+  }
+
+  function updateRefereeMatchScore(scope, matchId, field, value) {
+    const normalized = value === '' ? '' : Math.max(0, Number(value));
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      return {
+        ...match,
+        [field]: match[field],
+        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
+        submittedAt: new Date().toISOString(),
+      };
+    }));
+  }
+
+  function approveRefereeScore(scope, matchId) {
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      const approved = {
+        ...match,
+        scoreA: match.submittedScoreA,
+        scoreB: match.submittedScoreB,
+        submittedScoreA: '',
+        submittedScoreB: '',
+        submittedAt: null,
+      };
+      approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
+      return approved;
+    }));
+  }
+
+  function rejectRefereeScore(scope, matchId) {
+    updateMatchesInScope(scope, (matches) => matches.map((match) => (
+      match.id === matchId
+        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: null }
+        : match
+    )));
+  }
+
+  function formatExportFilename() {
+    const sourceDate = new Date();
+    const stamp = `${sourceDate.getFullYear()}-${String(sourceDate.getMonth() + 1).padStart(2, '0')}-${String(sourceDate.getDate()).padStart(2, '0')}_${String(sourceDate.getHours()).padStart(2, '0')}-${String(sourceDate.getMinutes()).padStart(2, '0')}-${String(sourceDate.getSeconds()).padStart(2, '0')}`;
+    const slug = String(tournamentName || 'tournoi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'tournoi';
+    return `${slug}_${stamp}.json`;
   }
 
   function exportState() {
-    downloadJson('tournoidevolley-tournament.json', getPersistedState());
+    const savedAt = new Date().toISOString();
+    setLastSavedAt(savedAt);
+    downloadJson(formatExportFilename(), getPersistedState(savedAt));
   }
 
   async function copyState() {
@@ -814,6 +902,7 @@ export default function App() {
           setOrganizerPassword(parsed.settings.organizerPassword);
           setPasswordDraft(parsed.settings.organizerPassword);
         }
+        if (parsed.settings?.tournamentName) setTournamentName(parsed.settings.tournamentName);
         if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
         if (parsed.brassage1) setBrassage1(parsed.brassage1);
         if (parsed.brassage2) setBrassage2(parsed.brassage2);
@@ -831,9 +920,9 @@ export default function App() {
   function renderStandings(cards) {
     if (!cards.length) return <div className="empty-state">Aucun classement disponible pour le moment.</div>;
     return (
-      <div className="cards-grid four-up">
+      <div className="cards-grid three-up">
         {cards.map(({ pool, rows }) => (
-          <div className="mini-card" key={pool.id}>
+          <div key={pool.id} className="mini-card">
             <div className="mini-card-head">{pool.name}</div>
             <div className="table-wrap">
               <table>
@@ -867,7 +956,7 @@ export default function App() {
     );
   }
 
-  function renderMatches(matches, scope) {
+  function renderOrganizerMatches(matches, scope) {
     if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <div className="table-wrap">
@@ -879,7 +968,7 @@ export default function App() {
               <th>Phase</th>
               <th>Match</th>
               <th>Équipe A</th>
-              <th>Score</th>
+              <th>Score officiel</th>
               <th>Équipe B</th>
               <th>Statut</th>
             </tr>
@@ -887,9 +976,10 @@ export default function App() {
           <tbody>
             {matches.map((match) => {
               const status = getMatchStatusLabel(match, phaseRules);
+              const pendingStatus = getPendingStatus(match);
               const schedule = scheduleData.scheduleMap[match.id];
               return (
-                <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
+                <tr key={match.id} className={status === 'Score invalide' || pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : ''}>
                   <td>{schedule?.startText || match.time}</td>
                   <td>Terrain {match.court}</td>
                   <td>{match.phase}</td>
@@ -897,13 +987,88 @@ export default function App() {
                   <td>{teamName(match.teamAId)}</td>
                   <td>
                     <div className="score-inputs">
-                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
-                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
                   <td>{teamName(match.teamBId)}</td>
-                  <td><div className="status-cell"><span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>{schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}</div></td>
+                  <td>
+                    <div className="status-cell">
+                      <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                      {pendingStatus === 'À valider' ? (
+                        <>
+                          <span className="badge badge-warning">À valider</span>
+                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                          <div className="actions-row compact-actions">
+                            <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                            <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                          </div>
+                        </>
+                      ) : null}
+                      {pendingStatus === 'Saisie arbitre invalide' ? (
+                        <>
+                          <span className="badge badge-danger">Saisie arbitre invalide</span>
+                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                          <div className="actions-row compact-actions">
+                            <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Effacer</Button>
+                          </div>
+                        </>
+                      ) : null}
+                      {schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  function renderRefereeMatches(matches, scope) {
+    if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
+    return (
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Heure</th>
+              <th>Terrain</th>
+              <th>Phase</th>
+              <th>Match</th>
+              <th>Équipe A</th>
+              <th>Score arbitre</th>
+              <th>Équipe B</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {matches.map((match) => {
+              const schedule = scheduleData.scheduleMap[match.id];
+              const pendingStatus = getPendingStatus(match);
+              return (
+                <tr key={match.id} className={pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : pendingStatus === 'À valider' ? 'row-pending' : ''}>
+                  <td>{schedule?.startText || match.time}</td>
+                  <td>Terrain {match.court}</td>
+                  <td>{match.phase}</td>
+                  <td>{match.group}</td>
+                  <td>{teamName(match.teamAId)}</td>
+                  <td>
+                    <div className="score-inputs">
+                      <input type="number" min="0" value={match.submittedScoreA ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <span>-</span>
+                      <input type="number" min="0" value={match.submittedScoreB ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                    </div>
+                  </td>
+                  <td>{teamName(match.teamBId)}</td>
+                  <td>
+                    <div className="status-cell">
+                      <span className={`badge ${pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral'}`}>{pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus}</span>
+                      {schedule ? <span className="muted tiny">Début prévu : {schedule.startText}</span> : null}
+                    </div>
+                  </td>
                 </tr>
               );
             })}
@@ -965,6 +1130,21 @@ export default function App() {
     );
   }
 
+  function renderOrganizerLoginCard() {
+    return (
+      <section className="login-card">
+        <h2>Accès organisateur</h2>
+        <p className="muted">Saisis le mot de passe organisateur pour déverrouiller le mode organisateur.</p>
+        <div className="login-grid">
+          <input type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
+          <Button variant="primary" onClick={handleOrganizerLogin}>Déverrouiller</Button>
+          <Button variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
+        </div>
+        {loginError ? <div className="error-text">{loginError}</div> : null}
+      </section>
+    );
+  }
+
   const tabs = [
     { id: 'dashboard', label: 'Vue d’ensemble' },
     { id: 'equipes', label: 'Équipes' },
@@ -976,41 +1156,29 @@ export default function App() {
     { id: 'export', label: 'Sauvegarde' },
   ];
 
-  if (publicMode || !isOrganizerAuthenticated) {
+  if (mode === 'public') {
     return (
       <div className="public-page">
         <div className="container">
-          <header className="hero public-hero">
+          <header className="hero public-hero public-hero-light">
             <div>
-              <div className="hero-tag">tournoidevolley.fr</div>
-              <h1>Affichage public du tournoi</h1>
-              <p>Prochains matchs, classement cumulé, estimation de fin du tournoi et accès organisateur protégé.</p>
+              <div className="hero-tag hero-tag-dark">tournoidevolley.fr</div>
+              <h1>{tournamentName}</h1>
+              <p>Affichage public du tournoi, prochains matchs, classement cumulé et estimation de fin du tournoi.</p>
             </div>
             <div className="hero-controls">
-              <div className="hero-pill">
+              <div className="hero-pill public-pill-light">
                 <span>Fin estimée du tournoi</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
-              {isOrganizerAuthenticated ? (
-                <Button variant="secondary" onClick={() => setPublicMode(false)}>Retour au mode organisateur</Button>
-              ) : (
-                <Button variant="primary" onClick={() => { setShowOrganizerLogin(true); setLoginError(''); }}>Accès organisateur</Button>
-              )}
+              <div className="actions-stack">
+                <Button variant="primary" onClick={requestOrganizerMode}>Accès organisateur</Button>
+                <Button variant="success" onClick={enterRefereeMode}>Mode arbitres</Button>
+              </div>
             </div>
           </header>
 
-          {showOrganizerLogin && !isOrganizerAuthenticated ? (
-            <section className="login-card">
-              <h2>Accès organisateur</h2>
-              <p className="muted">Saisis le mot de passe organisateur pour déverrouiller l’édition du tournoi.</p>
-              <div className="login-grid">
-                <input type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
-                <Button variant="primary" onClick={handleOrganizerLogin}>Déverrouiller</Button>
-                <Button variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
-              </div>
-              {loginError ? <div className="error-text">{loginError}</div> : null}
-            </section>
-          ) : null}
+          {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="cards-grid three-up">
             {nextMatches.map((match, index) => (
@@ -1019,13 +1187,57 @@ export default function App() {
           </div>
 
           <div className="stack-gap">
-            <Section title="Classement cumulé" subtitle="Tous les matchs valides saisis sont pris en compte.">
+            <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
               {renderOverallRanking(overallRanking)}
             </Section>
-            <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont valides.">
+            <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
               <div className="cards-grid two-up">
                 {renderPodium('Tableau principal', knockout.principalFinals)}
                 {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+              </div>
+            </Section>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'referee') {
+    return (
+      <div className="referee-page">
+        <div className="container">
+          <header className="hero referee-hero">
+            <div>
+              <div className="hero-tag">tournoidevolley.fr</div>
+              <h1>{tournamentName} — mode arbitres</h1>
+              <p>Le mode arbitres permet uniquement la saisie des scores. Les scores restent en attente tant qu’ils ne sont pas validés en mode organisateur.</p>
+            </div>
+            <div className="hero-controls">
+              <div className="hero-pill">
+                <span>Fin estimée du tournoi</span>
+                <strong>{estimatedTournamentEnd}</strong>
+              </div>
+              <div className="actions-stack">
+                <Button variant="secondary" onClick={enterPublicMode}>Retour à l’affichage public</Button>
+                <Button variant="primary" onClick={requestOrganizerMode}>Accès organisateur</Button>
+              </div>
+            </div>
+          </header>
+
+          {showOrganizerLogin ? renderOrganizerLoginCard() : null}
+
+          <div className="stack-gap">
+            <Section title="Brassage 1 — saisie arbitre">{renderRefereeMatches(brassage1.matches, 'brassage1')}</Section>
+            <Section title="Brassage 2 — saisie arbitre">{renderRefereeMatches(brassage2.matches, 'brassage2')}</Section>
+            <Section title="Principale — saisie arbitre">{renderRefereeMatches(mainStage.principaleMatches, 'principale')}</Section>
+            <Section title="Consolante — saisie arbitre">{renderRefereeMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+            <Section title="Phases finales — saisie arbitre">
+              <div className="stack-gap compact-stack">
+                {renderRefereeMatches(knockout.principalQuarters, 'principalQuarters')}
+                {renderRefereeMatches(knockout.principalSemis, 'principalSemis')}
+                {renderRefereeMatches(knockout.principalFinals, 'principalFinals')}
+                {renderRefereeMatches(knockout.consolanteSemis, 'consolanteSemis')}
+                {renderRefereeMatches(knockout.consolanteFinals, 'consolanteFinals')}
               </div>
             </Section>
           </div>
@@ -1040,12 +1252,8 @@ export default function App() {
         <header className="hero">
           <div>
             <div className="hero-tag">tournoidevolley.fr</div>
-            <h1>Gestionnaire de tournoi de volley</h1>
-            <p>
-              Projet React/Vite prêt à déployer : 18 équipes, 2 brassages de 6 poules de 3,
-              principale à 12, consolante à 6, méthode serpent, validation des scores par phase,
-              classements, tableaux finaux et affichage public.
-            </p>
+            <h1>{tournamentName}</h1>
+            <p>Gestionnaire organisateur du tournoi. Les scores saisis par les arbitres apparaissent ici avec le statut “À valider”.</p>
           </div>
           <div className="hero-controls">
             <label>
@@ -1058,8 +1266,9 @@ export default function App() {
             </div>
             <div className="actions-stack">
               <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
-              <Button variant="secondary" onClick={() => setPublicMode(true)}>Ouvrir l’affichage public</Button>
-              <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller le mode organisateur</Button>
+              <Button variant="secondary" onClick={enterRefereeMode}>Mode arbitres</Button>
+              <Button variant="secondary" onClick={enterPublicMode}>Affichage public</Button>
+              <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller</Button>
             </div>
             {lastSavedAt ? <div className="muted small">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
           </div>
@@ -1070,7 +1279,13 @@ export default function App() {
             <button
               key={tab.id}
               className={`tab ${activeTab === tab.id ? 'tab-active' : ''}`}
-              onClick={() => (tab.id === 'public' ? setPublicMode(true) : setActiveTab(tab.id))}
+              onClick={() => {
+                if (tab.id === 'public') {
+                  enterPublicMode();
+                } else {
+                  setActiveTab(tab.id);
+                }
+              }}
             >
               {tab.label}
             </button>
@@ -1089,6 +1304,19 @@ export default function App() {
                 <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
               </div>
 
+              <Section title="Identité du tournoi" subtitle="Le nom du tournoi est affiché sur le mode organisateur, le mode arbitres, le mode public et dans le nom du fichier JSON exporté.">
+                <div className="form-grid two-cols">
+                  <label>
+                    <span>Nom du tournoi</span>
+                    <input value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} placeholder="Nom du tournoi" />
+                  </label>
+                  <div className="hero-pill hero-pill-inline">
+                    <span>Nom du prochain export</span>
+                    <strong className="filename-preview">{formatExportFilename()}</strong>
+                  </div>
+                </div>
+              </Section>
+
               <Section title="Paramètres de score par phase" subtitle="En mode sec, il faut atteindre exactement le score cible. En mode avec 2 points d’écart, il faut atteindre au moins le score cible avec 2 points d’avance minimum.">
                 <div className="cards-grid two-up">
                   <PhaseRuleEditor title="Brassage 1" value={phaseRules.brassage1} onScoreChange={(value) => updatePhaseRule('brassage1', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage1', 'mode', value)} />
@@ -1098,32 +1326,20 @@ export default function App() {
                 </div>
               </Section>
 
-              <Section title="Sécurité organisateur" subtitle="Le mode organisateur se déverrouille avec un mot de passe. Tu peux le modifier ici, uniquement une fois connecté.">
-                <div className="cards-grid two-up">
-                  <div className="rule-card">
-                    <h3>Mot de passe organisateur</h3>
-                    <label>
-                      <span>Nouveau mot de passe</span>
-                      <input type="password" value={passwordDraft} onChange={(e) => setPasswordDraft(e.target.value)} />
-                    </label>
-                    <div className="actions-row">
-                      <Button variant="primary" onClick={updateOrganizerPassword}>Mettre à jour le mot de passe</Button>
-                    </div>
-                  </div>
-                  <div className="rule-card">
-                    <h3>Sauvegarde locale</h3>
-                    <p className="muted">Le bouton Sauvegarder enregistre l’état actuel sur ce navigateur pour le retrouver lors de la prochaine ouverture de la page.</p>
-                    <div className="actions-row">
-                      <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder maintenant</Button>
-                    </div>
-                    {lastSavedAt ? <p className="muted small helper-text">Dernière sauvegarde : {new Date(lastSavedAt).toLocaleString('fr-FR')}</p> : null}
+              <Section title="Sécurité du mode organisateur" subtitle="Le mot de passe est demandé à chaque retour vers le mode organisateur depuis le mode public ou le mode arbitres.">
+                <div className="form-grid two-cols">
+                  <label>
+                    <span>Mot de passe organisateur</span>
+                    <input type="password" value={passwordDraft} onChange={(e) => setPasswordDraft(e.target.value)} />
+                  </label>
+                  <div className="actions-stack organizer-tools">
+                    <Button variant="primary" onClick={updateOrganizerPassword}>Mettre à jour le mot de passe</Button>
+                    <div className="muted small">Mot de passe actuel requis au prochain déverrouillage : {organizerPassword}</div>
                   </div>
                 </div>
               </Section>
 
-              <Section
-                title="Flux du tournoi"
-                subtitle="La méthode serpent est utilisée pour les brassages, la principale et la consolante. Les scores invalides ne comptent pas dans les classements."
+              <Section title="Flux du tournoi" subtitle="Les scores invalides et les scores arbitres en attente ne comptent pas dans les classements ni dans le calcul du planning dynamique."
                 right={
                   <>
                     <Button onClick={generateBrassage1}>1. Générer brassage 1</Button>
@@ -1140,7 +1356,7 @@ export default function App() {
                     ['Principale', '4 poules de 3 puis quarts, demies, finale et petite finale.'],
                     ['Consolante', '2 poules de 3 puis demi-finales, finale et petite finale.'],
                   ].map(([title, text]) => (
-                    <div className="mini-card" key={title}>
+                    <div key={title} className="mini-card">
                       <div className="mini-card-head">{title}</div>
                       <p className="muted">{text}</p>
                     </div>
@@ -1148,23 +1364,14 @@ export default function App() {
                 </div>
               </Section>
 
-              <Section title="Classement cumulé" subtitle="Tous les matchs valides saisis sont pris en compte.">
+              <Section title="Classement général" subtitle="Classement cumulé sur les matchs officiels valides uniquement.">
                 {renderOverallRanking(overallRanking)}
               </Section>
             </>
           )}
 
           {activeTab === 'equipes' && (
-            <Section
-              title="Équipes"
-              subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour les têtes de série."
-              right={
-                <>
-                  <Button variant="secondary" onClick={addTeam}>Ajouter</Button>
-                  <Button onClick={generateBrassage1}>Générer brassage 1</Button>
-                </>
-              }
-            >
+            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -1203,8 +1410,8 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title="Matchs du brassage 1">{renderMatches(brassage1.matches, 'brassage1')}</Section>
-              <Section title="Classement général du brassage 1" subtitle="Il sert à créer le brassage 2.">
+              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
             </>
@@ -1215,7 +1422,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title="Matchs du brassage 2">{renderMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -1227,25 +1434,25 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title="Matchs de la principale">{renderMatches(mainStage.principaleMatches, 'principale')}</Section>
-              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 autres équipes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
+              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
+              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title="Matchs de la consolante">{renderMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
             </>
           )}
 
           {activeTab === 'finales' && (
             <>
-              <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer étape 2</Button></>}>
+              <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
                 <div className="cards-grid two-up">
                   <div>
                     <h3>Quarts de finale principale</h3>
-                    {renderMatches(knockout.principalQuarters, 'principalQuarters')}
+                    {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
                   </div>
                   <div>
                     <h3>Demi-finales consolante</h3>
-                    {renderMatches(knockout.consolanteSemis, 'consolanteSemis')}
+                    {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
                   </div>
                 </div>
               </Section>
@@ -1254,17 +1461,17 @@ export default function App() {
                 <div className="cards-grid two-up">
                   <div>
                     <h3>Demi-finales principale</h3>
-                    {renderMatches(knockout.principalSemis, 'principalSemis')}
+                    {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
                   </div>
                   <div>
                     <h3>Finales consolante</h3>
-                    {renderMatches(knockout.consolanteFinals, 'consolanteFinals')}
+                    {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
                   </div>
                 </div>
               </Section>
 
-              <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour les places 1 à 3.">
-                {renderMatches(knockout.principalFinals, 'principalFinals')}
+              <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
+                {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
               </Section>
 
               <Section title="Podiums" subtitle="Le podium principal donne les places 1 à 3 du tournoi. Le podium consolante donne les places 1 à 3 de la consolante.">
@@ -1277,18 +1484,7 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section
-              title="Sauvegarde"
-              subtitle="Export et import complets du tournoi."
-              right={
-                <>
-                  <Button onClick={exportState}>Exporter JSON</Button>
-                  <Button variant="secondary" onClick={copyState}>Copier JSON</Button>
-                  <Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button>
-                  <Button variant="danger" onClick={resetTournament}>Réinitialiser</Button>
-                </>
-              }
-            >
+            <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up">
                 <div className="mini-card">
@@ -1298,16 +1494,16 @@ export default function App() {
                     <li>2 brassages en 6 poules de 3</li>
                     <li>Principale à 12 et consolante à 6</li>
                     <li>Quarts, demi-finales, finales et petites finales</li>
-                    <li>Classements automatiques et affichage public</li>
+                    <li>Modes public, arbitres et organisateur</li>
                   </ul>
                 </div>
                 <div className="mini-card">
-                  <div className="mini-card-head">Validation des scores</div>
+                  <div className="mini-card-head">Sauvegarde et export</div>
                   <ul className="simple-list">
-                    <li>Réglage distinct pour brassage 1, brassage 2, principale et consolante</li>
-                    <li>Mode sec : le vainqueur doit atteindre exactement le score cible</li>
-                    <li>Mode 2 points d’écart : score cible minimum + 2 points d’avance</li>
-                    <li>Les scores invalides ne comptent pas dans les classements</li>
+                    <li>Sauvegarde locale automatique et bouton de sauvegarde manuelle</li>
+                    <li>Nom du tournoi intégré au nom du fichier JSON exporté</li>
+                    <li>Date et heure de sauvegarde intégrées au nom du fichier</li>
+                    <li>Import complet depuis un export JSON précédent</li>
                   </ul>
                 </div>
               </div>
