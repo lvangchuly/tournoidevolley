@@ -563,17 +563,27 @@ export default function App() {
     ko: [...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals].filter((m) => isMatchResultValid(m, phaseRules)).length,
   };
 
+  const stageValidation = useMemo(() => ({
+    brassage1Complete: brassage1.matches.length > 0 && brassage1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage2Complete: brassage2.matches.length > 0 && brassage2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    consolantePoolsComplete: mainStage.consolanteMatches.length > 0 && mainStage.consolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    principalQuartersComplete: knockout.principalQuarters.length > 0 && knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    principalSemisComplete: knockout.principalSemis.length > 0 && knockout.principalSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+  }), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
+
   const refereeMatchGroups = useMemo(() => ([
-    { title: 'Brassage 1', scope: 'brassage1', matches: brassage1.matches },
-    { title: 'Brassage 2', scope: 'brassage2', matches: brassage2.matches },
-    { title: 'Principale', scope: 'principale', matches: mainStage.principaleMatches },
-    { title: 'Consolante', scope: 'consolante', matches: mainStage.consolanteMatches },
-    { title: 'Quarts principale', scope: 'principalQuarters', matches: knockout.principalQuarters },
-    { title: 'Demi-finales principale', scope: 'principalSemis', matches: knockout.principalSemis },
-    { title: 'Finales principale', scope: 'principalFinals', matches: knockout.principalFinals },
-    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: knockout.consolanteSemis },
-    { title: 'Finales consolante', scope: 'consolanteFinals', matches: knockout.consolanteFinals },
-  ]), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout]);
+    { title: 'Brassage 1', scope: 'brassage1', matches: brassage1.matches, isUnlocked: true, lockReason: '' },
+    { title: 'Brassage 2', scope: 'brassage2', matches: brassage2.matches, isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
+    { title: 'Principale', scope: 'principale', matches: mainStage.principaleMatches, isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Consolante', scope: 'consolante', matches: mainStage.consolanteMatches, isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Quarts principale', scope: 'principalQuarters', matches: knockout.principalQuarters, isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
+    { title: 'Demi-finales principale', scope: 'principalSemis', matches: knockout.principalSemis, isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
+    { title: 'Finales principale', scope: 'principalFinals', matches: knockout.principalFinals, isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
+    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: knockout.consolanteSemis, isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
+    { title: 'Finales consolante', scope: 'consolanteFinals', matches: knockout.consolanteFinals, isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
+  ]), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -1328,6 +1338,7 @@ export default function App() {
                   {refereeMatchGroups.filter((group) => group.matches.length > 0).map((group) => (
                     <div key={group.scope} className="mini-card">
                       <div className="mini-card-head">{group.title}</div>
+                      {!group.isUnlocked ? <div className="referee-lock-note">{group.lockReason}</div> : null}
                       <div className="referee-selector-list">
                         {group.matches.map((match) => {
                           const schedule = scheduleData.scheduleMap[match.id];
@@ -1336,12 +1347,18 @@ export default function App() {
                           const statusText = officialStatus === 'Valide' ? 'Valide' : pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus;
                           const badgeClass = officialStatus === 'Valide' ? 'badge-success' : pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral';
                           return (
-                            <button key={match.id} className="referee-selector-item" onClick={() => setRefereeSelectedMatch({ scope: group.scope, matchId: match.id })}>
+                            <button
+                              key={match.id}
+                              className={`referee-selector-item ${group.isUnlocked ? '' : 'referee-selector-item-disabled'}`}
+                              onClick={() => group.isUnlocked && setRefereeSelectedMatch({ scope: group.scope, matchId: match.id })}
+                              disabled={!group.isUnlocked}
+                              title={group.isUnlocked ? '' : group.lockReason}
+                            >
                               <div>
                                 <strong>{teamName(match.teamAId)} vs {teamName(match.teamBId)}</strong>
                                 <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
                               </div>
-                              <span className={`badge ${badgeClass}`}>{statusText}</span>
+                              <span className={`badge ${group.isUnlocked ? badgeClass : 'badge-neutral'}`}>{group.isUnlocked ? statusText : 'Verrouillé'}</span>
                             </button>
                           );
                         })}
