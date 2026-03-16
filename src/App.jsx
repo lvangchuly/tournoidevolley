@@ -473,6 +473,7 @@ export default function App() {
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
   const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
   const [knockout, setKnockout] = useState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }));
+  const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
@@ -562,6 +563,44 @@ export default function App() {
     ko: [...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals].filter((m) => isMatchResultValid(m, phaseRules)).length,
   };
 
+  const refereeMatchGroups = useMemo(() => ([
+    { title: 'Brassage 1', scope: 'brassage1', matches: brassage1.matches },
+    { title: 'Brassage 2', scope: 'brassage2', matches: brassage2.matches },
+    { title: 'Principale', scope: 'principale', matches: mainStage.principaleMatches },
+    { title: 'Consolante', scope: 'consolante', matches: mainStage.consolanteMatches },
+    { title: 'Quarts principale', scope: 'principalQuarters', matches: knockout.principalQuarters },
+    { title: 'Demi-finales principale', scope: 'principalSemis', matches: knockout.principalSemis },
+    { title: 'Finales principale', scope: 'principalFinals', matches: knockout.principalFinals },
+    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: knockout.consolanteSemis },
+    { title: 'Finales consolante', scope: 'consolanteFinals', matches: knockout.consolanteFinals },
+  ]), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout]);
+
+  const refereeSelectedEntry = useMemo(() => {
+    if (!refereeSelectedMatch) return null;
+    const group = refereeMatchGroups.find((item) => item.scope === refereeSelectedMatch.scope);
+    if (!group) return null;
+    const match = group.matches.find((item) => item.id === refereeSelectedMatch.matchId);
+    return match ? { ...group, match } : null;
+  }, [refereeSelectedMatch, refereeMatchGroups]);
+
+  useEffect(() => {
+    if (refereeSelectedMatch && !refereeSelectedEntry) {
+      setRefereeSelectedMatch(null);
+    }
+  }, [refereeSelectedMatch, refereeSelectedEntry]);
+
+  function countValidMatches(matches) {
+    return matches.filter((match) => getMatchStatusLabel(match, phaseRules) === 'Valide').length;
+  }
+
+  function confirmOverwritePlayedMatches(matches, label) {
+    const validCount = countValidMatches(matches);
+    if (!validCount) return true;
+    const first = window.confirm(`${validCount} match(s) déjà joué(s) dans ${label} seront effacés si tu continues. Veux-tu poursuivre ?`);
+    if (!first) return false;
+    return window.confirm(`Confirmation finale : ${validCount} match(s) valide(s) seront définitivement effacés dans ${label}. Confirmer ?`);
+  }
+
   function updatePhaseRule(ruleKey, field, value) {
     setPhaseRules((current) => ({ ...current, [ruleKey]: { ...current[ruleKey], [field]: value } }));
   }
@@ -576,6 +615,7 @@ export default function App() {
     setShowOrganizerLogin(false);
     setOrganizerAttempt('');
     setLoginError('');
+    setRefereeSelectedMatch(null);
   }
 
   function enterRefereeMode() {
@@ -584,6 +624,7 @@ export default function App() {
     setShowOrganizerLogin(false);
     setOrganizerAttempt('');
     setLoginError('');
+    setRefereeSelectedMatch(null);
   }
 
   function requestOrganizerMode() {
@@ -650,6 +691,17 @@ export default function App() {
   }
 
   function generateBrassage1() {
+    if (!confirmOverwritePlayedMatches([
+      ...brassage1.matches,
+      ...brassage2.matches,
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ], 'le tournoi en cours')) return;
     const readyTeams = teams.filter((team) => team.name.trim());
     if (readyTeams.length !== TEAM_TARGET) {
       window.alert(`Cette application attend ${TEAM_TARGET} équipes. Actuellement : ${readyTeams.length}.`);
@@ -666,6 +718,16 @@ export default function App() {
   }
 
   function generateBrassage2() {
+    if (!confirmOverwritePlayedMatches([
+      ...brassage2.matches,
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ], 'le brassage 2 et les phases suivantes')) return;
     if (brassage1.matches.length === 0) {
       window.alert('Génère d’abord le brassage 1.');
       return;
@@ -680,6 +742,15 @@ export default function App() {
   }
 
   function generateMainStage() {
+    if (!confirmOverwritePlayedMatches([
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ], 'la principale, la consolante et les phases finales')) return;
     if (brassage2.matches.length === 0) {
       window.alert('Génère d’abord le brassage 2.');
       return;
@@ -705,6 +776,13 @@ export default function App() {
   }
 
   function generateKnockoutStage1() {
+    if (!confirmOverwritePlayedMatches([
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ], 'les phases finales')) return;
     if (!mainStage.principalePools.length || !mainStage.consolantePools.length) {
       window.alert('Génère d’abord la principale et la consolante.');
       return;
@@ -734,6 +812,11 @@ export default function App() {
   }
 
   function generateKnockoutStage2() {
+    if (!confirmOverwritePlayedMatches([
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteFinals,
+    ], 'la suite des phases finales')) return;
     if (knockout.principalQuarters.length === 0 || knockout.consolanteSemis.length === 0) {
       window.alert('Génère d’abord les quarts et les demi-finales de consolante.');
       return;
@@ -767,6 +850,7 @@ export default function App() {
   }
 
   function generatePrincipalFinals() {
+    if (!confirmOverwritePlayedMatches(knockout.principalFinals, 'la finale principale')) return;
     if (knockout.principalSemis.length === 0) {
       window.alert('Génère d’abord les demi-finales principales.');
       return;
@@ -1028,70 +1112,60 @@ export default function App() {
     );
   }
 
-  function renderRefereeMatches(matches, scope) {
-    if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
+  function renderRefereeSelectedMatch(entry) {
+    if (!entry?.match) return null;
+    const { scope, title, match } = entry;
+    const schedule = scheduleData.scheduleMap[match.id];
+    const pendingStatus = getPendingStatus(match);
+    const officialStatus = getMatchStatusLabel(match, phaseRules);
+    const isLocked = officialStatus === 'Valide';
+    const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
+    const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
+    const badgeClass = isLocked ? 'badge-success' : pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral';
+    const badgeText = isLocked ? 'Valide' : pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus;
+
     return (
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Heure</th>
-              <th>Terrain</th>
-              <th>Phase</th>
-              <th>Match</th>
-              <th>Équipe A</th>
-              <th>Score arbitre</th>
-              <th>Équipe B</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((match) => {
-              const schedule = scheduleData.scheduleMap[match.id];
-              const pendingStatus = getPendingStatus(match);
-              const officialStatus = getMatchStatusLabel(match, phaseRules);
-              const isLocked = officialStatus === 'Valide';
-              const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
-              const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
-              return (
-                <tr key={match.id} className={pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : pendingStatus === 'À valider' ? 'row-pending' : ''}>
-                  <td>{schedule?.startText || match.time}</td>
-                  <td>Terrain {match.court}</td>
-                  <td>{match.phase}</td>
-                  <td>{match.group}</td>
-                  <td>{teamName(match.teamAId)}</td>
-                  <td>
-                    {isLocked ? (
-                      <div className="score-readonly">
-                        <span className="score-chip">{displayScoreA === '' ? '-' : displayScoreA}</span>
-                        <span>-</span>
-                        <span className="score-chip">{displayScoreB === '' ? '-' : displayScoreB}</span>
-                      </div>
-                    ) : (
-                      <div className="score-inputs">
-                        <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
-                        <span>-</span>
-                        <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
-                      </div>
-                    )}
-                  </td>
-                  <td>{teamName(match.teamBId)}</td>
-                  <td>
-                    <div className="status-cell">
-                      {isLocked ? (
-                        <span className="badge badge-success">Valide</span>
-                      ) : (
-                        <span className={`badge ${pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral'}`}>{pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus}</span>
-                      )}
-                      {isLocked ? <span className="muted tiny">Saisie arbitre verrouillée</span> : null}
-                      {schedule ? <span className="muted tiny">Début prévu : {schedule.startText}</span> : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="referee-focus-card">
+        <div className="referee-focus-head">
+          <div>
+            <div className="muted small">{title}</div>
+            <h2>{teamName(match.teamAId)} <span className="muted">vs</span> {teamName(match.teamBId)}</h2>
+            <p className="muted">{match.group} • Terrain {match.court} • Début prévu : {schedule?.startText || match.time}</p>
+          </div>
+          <div className="actions-row">
+            <Button variant="secondary" onClick={() => setRefereeSelectedMatch(null)}>Choisir un autre match</Button>
+          </div>
+        </div>
+
+        <div className="referee-focus-body">
+          <div className="referee-team-card">
+            <span className="muted small">Équipe A</span>
+            <strong>{teamName(match.teamAId)}</strong>
+          </div>
+          <div className="referee-big-score">
+            {isLocked ? (
+              <div className="score-readonly score-readonly-large">
+                <span className="score-chip score-chip-large">{displayScoreA === '' ? '-' : displayScoreA}</span>
+                <span className="score-separator">-</span>
+                <span className="score-chip score-chip-large">{displayScoreB === '' ? '-' : displayScoreB}</span>
+              </div>
+            ) : (
+              <div className="score-inputs score-inputs-large">
+                <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                <span className="score-separator">-</span>
+                <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+              </div>
+            )}
+            <div className="status-cell center-status">
+              <span className={`badge ${badgeClass}`}>{badgeText}</span>
+              {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : <span className="muted tiny">La saisie arbitre sera proposée à validation à l’organisateur</span>}
+            </div>
+          </div>
+          <div className="referee-team-card">
+            <span className="muted small">Équipe B</span>
+            <strong>{teamName(match.teamBId)}</strong>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1227,7 +1301,7 @@ export default function App() {
             <div>
               <div className="hero-tag">tournoidevolley.fr</div>
               <h1>{tournamentName} — mode arbitres</h1>
-              <p>Le mode arbitres permet uniquement la saisie des scores. Les scores restent en attente tant qu’ils ne sont pas validés en mode organisateur.</p>
+              <p>Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.</p>
             </div>
             <div className="hero-controls">
               <div className="hero-pill">
@@ -1244,19 +1318,39 @@ export default function App() {
           {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="stack-gap">
-            <Section title="Brassage 1 — saisie arbitre">{renderRefereeMatches(brassage1.matches, 'brassage1')}</Section>
-            <Section title="Brassage 2 — saisie arbitre">{renderRefereeMatches(brassage2.matches, 'brassage2')}</Section>
-            <Section title="Principale — saisie arbitre">{renderRefereeMatches(mainStage.principaleMatches, 'principale')}</Section>
-            <Section title="Consolante — saisie arbitre">{renderRefereeMatches(mainStage.consolanteMatches, 'consolante')}</Section>
-            <Section title="Phases finales — saisie arbitre">
-              <div className="stack-gap compact-stack">
-                {renderRefereeMatches(knockout.principalQuarters, 'principalQuarters')}
-                {renderRefereeMatches(knockout.principalSemis, 'principalSemis')}
-                {renderRefereeMatches(knockout.principalFinals, 'principalFinals')}
-                {renderRefereeMatches(knockout.consolanteSemis, 'consolanteSemis')}
-                {renderRefereeMatches(knockout.consolanteFinals, 'consolanteFinals')}
-              </div>
-            </Section>
+            {refereeSelectedEntry ? (
+              <Section title="Saisie arbitre" subtitle="Le match sélectionné s’affiche seul pour faciliter la saisie des scores.">
+                {renderRefereeSelectedMatch(refereeSelectedEntry)}
+              </Section>
+            ) : (
+              <Section title="Choisir un match" subtitle="Sélectionne le match à saisir. Les autres matchs seront masqués tant qu’un match est ouvert.">
+                <div className="referee-selector-grid">
+                  {refereeMatchGroups.filter((group) => group.matches.length > 0).map((group) => (
+                    <div key={group.scope} className="mini-card">
+                      <div className="mini-card-head">{group.title}</div>
+                      <div className="referee-selector-list">
+                        {group.matches.map((match) => {
+                          const schedule = scheduleData.scheduleMap[match.id];
+                          const pendingStatus = getPendingStatus(match);
+                          const officialStatus = getMatchStatusLabel(match, phaseRules);
+                          const statusText = officialStatus === 'Valide' ? 'Valide' : pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus;
+                          const badgeClass = officialStatus === 'Valide' ? 'badge-success' : pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral';
+                          return (
+                            <button key={match.id} className="referee-selector-item" onClick={() => setRefereeSelectedMatch({ scope: group.scope, matchId: match.id })}>
+                              <div>
+                                <strong>{teamName(match.teamAId)} vs {teamName(match.teamBId)}</strong>
+                                <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
+                              </div>
+                              <span className={`badge ${badgeClass}`}>{statusText}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
           </div>
         </div>
       </div>

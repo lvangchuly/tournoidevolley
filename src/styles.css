@@ -270,8 +270,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: 1fr; }
-  .two-up, .three-up, .four-up, .five-up, .six-up, .form-grid.two-cols { grid-template-columns: 1fr; }
-  .section-head { flex-direction: column; align-items: stretch; }
+  .two-up, .three-up, .four-up, .five-up, .six-up, .form-grid.two-cols, .referee-selector-grid, .referee-focus-body { grid-template-columns: 1fr; }
+  .section-head, .referee-focus-head { flex-direction: column; align-items: stretch; }
   .public-match-grid, .podium-grid { grid-template-columns: 1fr; }
   .align-right { text-align: left; }
   .container { width: min(1400px, calc(100% - 20px)); }
@@ -349,3 +349,103 @@ tbody tr:last-child td { border-bottom: none; }
   word-break: break-word;
 }
 .organizer-tools { align-content: center; }
+
+
+.referee-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.referee-selector-list {
+  display: grid;
+  gap: 10px;
+}
+
+.referee-selector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+.referee-selector-item:hover {
+  border-color: #94a3b8;
+  background: #eff6ff;
+}
+
+.referee-focus-card {
+  display: grid;
+  gap: 20px;
+}
+
+.referee-focus-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.referee-focus-head h2 {
+  margin: 8px 0 6px;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.referee-focus-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.referee-team-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 18px;
+  background: #f8fafc;
+  display: grid;
+  gap: 10px;
+}
+
+.referee-team-card strong {
+  font-size: 22px;
+}
+
+.referee-big-score {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.score-inputs-large input,
+.score-chip-large {
+  width: 120px !important;
+  min-width: 120px;
+  font-size: 36px;
+  font-weight: 800;
+  padding: 16px 12px;
+}
+
+.score-readonly-large,
+.score-inputs-large {
+  align-items: center;
+  gap: 14px;
+}
+
+.score-separator {
+  font-size: 28px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.center-status {
+  justify-items: center;
+  text-align: center;
+}
