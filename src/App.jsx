@@ -1583,11 +1583,11 @@ export default function App() {
       <section className="login-card">
         <h2>Accès organisateur</h2>
         <p className="muted">Saisis le mot de passe organisateur pour déverrouiller le mode organisateur.</p>
-        <div className="login-grid">
+        <form className="login-grid" onSubmit={(e) => { e.preventDefault(); handleOrganizerLogin(); }}>
           <input type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
-          <Button variant="primary" onClick={handleOrganizerLogin}>Déverrouiller</Button>
-          <Button variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
-        </div>
+          <Button type="submit" variant="primary">Déverrouiller</Button>
+          <Button type="button" variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
+        </form>
         {loginError ? <div className="error-text">{loginError}</div> : null}
       </section>
     );
@@ -1843,16 +1843,16 @@ export default function App() {
               </Section>
 
               <Section title="Sécurité du mode organisateur" subtitle="Le mot de passe est demandé à chaque retour vers le mode organisateur depuis le mode public ou le mode arbitres.">
-                <div className="form-grid two-cols">
+                <form className="form-grid two-cols" onSubmit={(e) => { e.preventDefault(); updateOrganizerPassword(); }}>
                   <label>
                     <span>Mot de passe organisateur</span>
                     <input type="password" value={passwordDraft} onChange={(e) => setPasswordDraft(e.target.value)} />
                   </label>
                   <div className="actions-stack organizer-tools">
-                    <Button variant="primary" onClick={updateOrganizerPassword}>Mettre à jour le mot de passe</Button>
+                    <Button type="submit" variant="primary">Mettre à jour le mot de passe</Button>
                     <div className="muted small">Mot de passe actuel requis au prochain déverrouillage : {organizerPassword}</div>
                   </div>
-                </div>
+                </form>
               </Section>
 
               <Section title="Flux du tournoi" subtitle="Les scores invalides et les scores arbitres en attente ne comptent pas dans les classements ni dans le calcul du planning dynamique."
