@@ -832,6 +832,7 @@ export default function App() {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
+      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
       return {
         ...match,
         [field]: match[field],
@@ -1048,6 +1049,8 @@ export default function App() {
             {matches.map((match) => {
               const schedule = scheduleData.scheduleMap[match.id];
               const pendingStatus = getPendingStatus(match);
+              const officialStatus = getMatchStatusLabel(match, phaseRules);
+              const isLocked = officialStatus === 'Valide';
               return (
                 <tr key={match.id} className={pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : pendingStatus === 'À valider' ? 'row-pending' : ''}>
                   <td>{schedule?.startText || match.time}</td>
@@ -1057,15 +1060,20 @@ export default function App() {
                   <td>{teamName(match.teamAId)}</td>
                   <td>
                     <div className="score-inputs">
-                      <input type="number" min="0" value={match.submittedScoreA ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <input type="number" min="0" disabled={isLocked} value={match.submittedScoreA ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
-                      <input type="number" min="0" value={match.submittedScoreB ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      <input type="number" min="0" disabled={isLocked} value={match.submittedScoreB ?? ''} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
                   <td>{teamName(match.teamBId)}</td>
                   <td>
                     <div className="status-cell">
-                      <span className={`badge ${pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral'}`}>{pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus}</span>
+                      {isLocked ? (
+                        <span className="badge badge-success">Valide</span>
+                      ) : (
+                        <span className={`badge ${pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral'}`}>{pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus}</span>
+                      )}
+                      {isLocked ? <span className="muted tiny">Saisie arbitre verrouillée</span> : null}
                       {schedule ? <span className="muted tiny">Début prévu : {schedule.startText}</span> : null}
                     </div>
                   </td>
@@ -1164,7 +1172,6 @@ export default function App() {
             <div>
               <div className="hero-tag hero-tag-dark">tournoidevolley.fr</div>
               <h1>{tournamentName}</h1>
-              <p>Affichage public du tournoi, prochains matchs, classement cumulé et estimation de fin du tournoi.</p>
             </div>
             <div className="hero-controls">
               <div className="hero-pill public-pill-light">
