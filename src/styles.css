@@ -1,0 +1,262 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #f1f5f9;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: #f1f5f9; color: #0f172a; }
+a { color: inherit; }
+button, input, select { font: inherit; }
+
+.container {
+  width: min(1400px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.app-shell { min-height: 100vh; padding: 24px 0 40px; }
+.public-page { min-height: 100vh; padding: 24px 0 40px; background: #020617; color: #e2e8f0; }
+
+.hero {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  border-radius: 28px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 20px;
+  box-shadow: 0 24px 40px rgba(15, 23, 42, 0.18);
+}
+
+.public-hero { background: linear-gradient(135deg, #020617, #0f172a); }
+.hero h1 { margin: 14px 0 10px; font-size: clamp(28px, 4vw, 42px); }
+.hero p { margin: 0; max-width: 900px; color: rgba(255, 255, 255, 0.78); }
+.hero-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.hero-controls {
+  display: grid;
+  gap: 12px;
+  align-content: end;
+}
+
+.hero-controls label,
+.rule-card label {
+  display: grid;
+  gap: 6px;
+}
+
+.hero-controls span,
+.rule-card span,
+.small {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+input, select {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: white;
+  color: #0f172a;
+}
+
+.hero input, .hero select {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border-color: rgba(255,255,255,0.18);
+}
+
+.hero input::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.tab {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: white;
+  color: #334155;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  cursor: pointer;
+}
+
+.tab-active { background: #0f172a; color: white; }
+
+.stack-gap { display: grid; gap: 18px; }
+
+.cards-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.two-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.four-up { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.five-up { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.six-up { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.section-card,
+.stat-card,
+.mini-card,
+.rule-card,
+.public-match-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+
+.section-card { padding: 22px; }
+.stat-card,
+.mini-card,
+.rule-card,
+.public-match-card { padding: 18px; }
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.section-head h2,
+.rule-card h3,
+.mini-card-head,
+.public-team,
+h3 { margin: 0; }
+.section-head h2 { font-size: 24px; }
+.mini-card-head { font-weight: 700; margin-bottom: 10px; }
+.muted { color: #64748b; }
+.actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat-value { margin-top: 10px; font-size: 28px; font-weight: 800; }
+
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn-primary { background: #0f172a; color: white; }
+.btn-secondary { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
+.btn-success { background: #047857; color: white; }
+.btn-danger { background: #dc2626; color: white; }
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+  background: white;
+}
+
+thead { background: #f8fafc; }
+th, td {
+  border-bottom: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+tbody tr:last-child td { border-bottom: none; }
+.row-invalid { background: #fef2f2; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.badge-success { background: #dcfce7; color: #166534; }
+.badge-danger { background: #fee2e2; color: #b91c1c; }
+.badge-neutral { background: #e2e8f0; color: #475569; }
+
+.score-inputs {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.score-inputs input { width: 78px; text-align: center; }
+
+.empty-state {
+  border: 1px dashed #cbd5e1;
+  border-radius: 20px;
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+}
+
+.simple-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #475569;
+}
+
+.public-match-card { color: #0f172a; }
+.public-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: #94a3b8; }
+.public-match-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  margin-top: 12px;
+}
+.public-team { font-size: 22px; font-weight: 700; }
+.public-score { font-size: 34px; font-weight: 900; }
+.align-right { text-align: right; }
+
+.podium-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.podium-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+}
+
+.form-grid.two-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (max-width: 1200px) {
+  .four-up, .five-up, .six-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 920px) {
+  .hero { grid-template-columns: 1fr; }
+  .two-up, .three-up, .four-up, .five-up, .six-up, .form-grid.two-cols { grid-template-columns: 1fr; }
+  .section-head { flex-direction: column; align-items: stretch; }
+  .public-match-grid, .podium-grid { grid-template-columns: 1fr; }
+  .align-right { text-align: left; }
+  .container { width: min(1400px, calc(100% - 20px)); }
+}
