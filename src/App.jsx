@@ -1,17 +1,36 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v2';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v10';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
+const APP_VERSION = 'v11';
+
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
   brassage2: { winningScore: 21, mode: 'sec' },
   principale: { winningScore: 21, mode: 'sec' },
   consolante: { winningScore: 21, mode: 'sec' },
+  championnat: { winningScore: 21, mode: 'sec' },
+  huitieme: { winningScore: 21, mode: 'sec' },
+  quart: { winningScore: 21, mode: 'sec' },
+  demi: { winningScore: 21, mode: 'sec' },
+  finale: { winningScore: 21, mode: 'sec' },
+  petiteFinale: { winningScore: 21, mode: 'sec' },
 };
 const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', 'Principale D'];
 const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
+const CHAMPIONSHIP_POOL_NAME = 'Championnat';
+const ROUND_OF_16_PAIRINGS = [
+  [1, 16],
+  [8, 9],
+  [5, 12],
+  [4, 13],
+  [6, 11],
+  [3, 14],
+  [7, 10],
+  [2, 15],
+];
 
 function uid(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
@@ -125,6 +144,68 @@ function createPools(teamIds, names) {
 
 function createNumberedNames(prefix, count) {
   return Array.from({ length: count }, (_, index) => `${prefix} ${index + 1}`);
+}
+
+function createChampionshipPool(teamIds) {
+  return [{
+    id: uid('pool'),
+    name: CHAMPIONSHIP_POOL_NAME,
+    teamIds,
+  }];
+}
+
+function createChampionshipMatches(teamIds, phase = 'Championnat') {
+  return roundRobinMatches(teamIds, phase, CHAMPIONSHIP_POOL_NAME).map((match, index) => ({
+    ...match,
+    court: (index % 3) + 1,
+    slot: Math.floor(index / 3) + 1,
+    time: '',
+    validatedAt: match.validatedAt || null,
+  }));
+}
+
+function createSmallBracketSeeds(rankedIds) {
+  const seeds = {};
+  rankedIds.slice(0, 16).forEach((teamId, index) => {
+    seeds[index + 1] = teamId;
+  });
+  return seeds;
+}
+
+function buildRoundOf16Matches(rankedIds) {
+  const seeds = createSmallBracketSeeds(rankedIds);
+  const matches = [];
+  ROUND_OF_16_PAIRINGS.forEach(([seedA, seedB], index) => {
+    const teamAId = seeds[seedA] || null;
+    const teamBId = seeds[seedB] || null;
+    if (teamAId && teamBId) {
+      matches.push(makeKnockoutMatch('Huitième de finale', `Huitième ${index + 1}`, teamAId, teamBId));
+    }
+  });
+  return matches;
+}
+
+function resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, pairIndex, phaseRules) {
+  const seeds = createSmallBracketSeeds(rankedIds);
+  const [seedA, seedB] = ROUND_OF_16_PAIRINGS[pairIndex];
+  const teamAId = seeds[seedA] || null;
+  const teamBId = seeds[seedB] || null;
+  if (teamAId && !teamBId) return teamAId;
+  if (!teamAId && teamBId) return teamBId;
+  if (teamAId && teamBId) {
+    const match = roundOf16Matches.find((item) => item.group === `Huitième ${pairIndex + 1}`);
+    return getWinnerLoser(match, phaseRules).winner;
+  }
+  return null;
+}
+
+function buildQuarterMatchesFromChampionship(rankedIds, roundOf16Matches, phaseRules) {
+  return [
+    makeKnockoutMatch('Quart de finale', 'Quart 1', resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 0, phaseRules), resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 1, phaseRules)),
+    makeKnockoutMatch('Quart de finale', 'Quart 2', resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 2, phaseRules), resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 3, phaseRules)),
+    makeKnockoutMatch('Quart de finale', 'Quart 3', resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 4, phaseRules), resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 5, phaseRules)),
+    makeKnockoutMatch('Quart de finale', 'Quart 4', resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 6, phaseRules), resolveRoundOf16SlotWinner(rankedIds, roundOf16Matches, 7, phaseRules)),
+  ].filter((match) => match.teamAId && match.teamBId);
 }
 
 function roundRobinMatches(teamIds, phase, groupName) {
@@ -272,6 +353,12 @@ function getRuleKeyFromPhaseLabel(phaseLabel) {
   if (phaseLabel === 'Brassage 2') return 'brassage2';
   if (phaseLabel === 'Principale' || phaseLabel === 'Tableau principal') return 'principale';
   if (phaseLabel === 'Consolante' || phaseLabel === 'Tableau consolante') return 'consolante';
+  if (phaseLabel === 'Championnat') return 'championnat';
+  if (phaseLabel === 'Huitième de finale') return 'huitieme';
+  if (phaseLabel === 'Quart de finale') return 'quart';
+  if (phaseLabel === 'Demi-finale') return 'demi';
+  if (phaseLabel === 'Finale') return 'finale';
+  if (phaseLabel === 'Petite finale') return 'petiteFinale';
   return 'brassage1';
 }
 
@@ -558,11 +645,15 @@ export default function App() {
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
   const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
   const [knockout, setKnockout] = useState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }));
+  const [championship, setChampionship] = useState(safeClone(initial?.championship, { pools: [], matches: [] }));
+  const [singleKnockout, setSingleKnockout] = useState(safeClone(initial?.singleKnockout, { roundOf16: [], quarters: [], semis: [], finals: [] }));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
-  const allTeamIds = useMemo(() => teams.map((team) => team.id), [teams]);
+  const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
+  const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
+  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
 
   const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
   const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
@@ -571,7 +662,15 @@ export default function App() {
 
   const rankingAfterBrassage1 = useMemo(() => computeRanking(allTeamIds, brassage1.matches, teamMap, phaseRules), [allTeamIds, brassage1.matches, teamMap, phaseRules]);
   const rankingAfterBrassages = useMemo(() => computeRanking(allTeamIds, [...brassage1.matches, ...brassage2.matches], teamMap, phaseRules), [allTeamIds, brassage1.matches, brassage2.matches, teamMap, phaseRules]);
-  const overallRanking = useMemo(() => computeRanking(allTeamIds, [
+  const championshipStandings = useMemo(() => computeGroupStandings(championship.pools, championship.matches, teamMap, phaseRules), [championship, teamMap, phaseRules]);
+  const championshipRanking = useMemo(() => computeRanking(allTeamIds, championship.matches, teamMap, phaseRules), [allTeamIds, championship.matches, teamMap, phaseRules]);
+  const overallRanking = useMemo(() => computeRanking(allTeamIds, isSmallTournamentMode ? [
+    ...championship.matches,
+    ...singleKnockout.roundOf16,
+    ...singleKnockout.quarters,
+    ...singleKnockout.semis,
+    ...singleKnockout.finals,
+  ] : [
     ...brassage1.matches,
     ...brassage2.matches,
     ...mainStage.principaleMatches,
@@ -581,7 +680,7 @@ export default function App() {
     ...knockout.principalFinals,
     ...knockout.consolanteSemis,
     ...knockout.consolanteFinals,
-  ], teamMap, phaseRules), [allTeamIds, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
+  ], teamMap, phaseRules), [allTeamIds, isSmallTournamentMode, championship.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
 
   function getPersistedState(savedAt = lastSavedAt) {
     return {
@@ -592,6 +691,8 @@ export default function App() {
       brassage2,
       mainStage,
       knockout,
+      championship,
+      singleKnockout,
     };
   }
 
@@ -608,21 +709,33 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, brassage1, brassage2, mainStage, knockout]);
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, brassage1, brassage2, mainStage, knockout, championship, singleKnockout]);
 
-  const scheduleData = useMemo(() => computeTournamentSchedule([
+  const scheduleData = useMemo(() => computeTournamentSchedule(isSmallTournamentMode ? [
+    championship.matches,
+    singleKnockout.roundOf16,
+    singleKnockout.quarters,
+    singleKnockout.semis,
+    singleKnockout.finals,
+  ] : [
     brassage1.matches,
     brassage2.matches,
     [...mainStage.principaleMatches, ...mainStage.consolanteMatches],
     [...knockout.principalQuarters, ...knockout.consolanteSemis],
     [...knockout.principalSemis, ...knockout.consolanteFinals],
     knockout.principalFinals,
-  ], startTime, phaseRules), [startTime, phaseRules, brassage1.matches, brassage2.matches, mainStage, knockout]);
+  ], startTime, phaseRules), [startTime, phaseRules, isSmallTournamentMode, championship.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout]);
 
   const estimatedTournamentEnd = scheduleData.estimatedEndText;
 
   const nextMatches = useMemo(() => {
-    const allMatches = [
+    const allMatches = isSmallTournamentMode ? [
+      ...championship.matches,
+      ...singleKnockout.roundOf16,
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ] : [
       ...brassage1.matches,
       ...brassage2.matches,
       ...mainStage.principaleMatches,
@@ -638,9 +751,15 @@ export default function App() {
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, 3)
       .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }));
-  }, [brassage1.matches, brassage2.matches, mainStage, knockout, phaseRules, scheduleData]);
+  }, [isSmallTournamentMode, championship.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, phaseRules, scheduleData]);
 
-  const completedMatchCounts = {
+  const completedMatchCounts = isSmallTournamentMode ? {
+    championnat: championship.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    huitieme: singleKnockout.roundOf16.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    quart: singleKnockout.quarters.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    demi: singleKnockout.semis.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    finale: singleKnockout.finals.filter((m) => isMatchResultValid(m, phaseRules)).length,
+  } : {
     b1: brassage1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
     b2: brassage2.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
     principale: mainStage.principaleMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
@@ -648,7 +767,12 @@ export default function App() {
     ko: [...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals].filter((m) => isMatchResultValid(m, phaseRules)).length,
   };
 
-  const stageValidation = useMemo(() => ({
+  const stageValidation = useMemo(() => isSmallTournamentMode ? ({
+    championnatComplete: championship.matches.length > 0 && championship.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    roundOf16Complete: singleKnockout.roundOf16.length === 0 || singleKnockout.roundOf16.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    quarterComplete: singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    semiComplete: singleKnockout.semis.length === 0 || singleKnockout.semis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+  }) : ({
     brassage1Complete: brassage1.matches.length > 0 && brassage1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     brassage2Complete: brassage2.matches.length > 0 && brassage2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -656,9 +780,15 @@ export default function App() {
     principalQuartersComplete: knockout.principalQuarters.length > 0 && knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalSemisComplete: knockout.principalSemis.length > 0 && knockout.principalSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-  }), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
+  }), [isSmallTournamentMode, championship.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
-  const refereeMatchGroups = useMemo(() => ([
+  const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
+    { title: 'Championnat', scope: 'championship', matches: championship.matches, isUnlocked: true, lockReason: '' },
+    { title: 'Huitièmes de finale', scope: 'roundOf16', matches: singleKnockout.roundOf16, isUnlocked: stageValidation.championnatComplete, lockReason: 'Tous les scores du Championnat doivent être valides.' },
+    { title: 'Quarts de finale', scope: 'quarters', matches: singleKnockout.quarters, isUnlocked: stageValidation.championnatComplete && stageValidation.roundOf16Complete, lockReason: 'Tous les scores du Championnat et des huitièmes doivent être valides.' },
+    { title: 'Demi-finales', scope: 'semis', matches: singleKnockout.semis, isUnlocked: stageValidation.quarterComplete, lockReason: 'Tous les scores des quarts de finale doivent être valides.' },
+    { title: 'Finale et petite finale', scope: 'finals', matches: singleKnockout.finals, isUnlocked: stageValidation.semiComplete, lockReason: 'Tous les scores des demi-finales doivent être valides.' },
+  ] : [
     { title: 'Brassage 1', scope: 'brassage1', matches: brassage1.matches, isUnlocked: true, lockReason: '' },
     { title: 'Brassage 2', scope: 'brassage2', matches: brassage2.matches, isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
     { title: 'Principale', scope: 'principale', matches: mainStage.principaleMatches, isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
@@ -668,7 +798,7 @@ export default function App() {
     { title: 'Finales principale', scope: 'principalFinals', matches: knockout.principalFinals, isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
     { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: knockout.consolanteSemis, isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
     { title: 'Finales consolante', scope: 'consolanteFinals', matches: knockout.consolanteFinals, isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
-  ]), [brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation]);
+  ]), [isSmallTournamentMode, championship.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -683,6 +813,14 @@ export default function App() {
       setRefereeSelectedMatch(null);
     }
   }, [refereeSelectedMatch, refereeSelectedEntry]);
+
+
+  useEffect(() => {
+    const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
+    if (!allowedTabs.includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [isSmallTournamentMode, activeTab]);
 
   function countValidMatches(matches) {
     return matches.filter((match) => getMatchStatusLabel(match, phaseRules) === 'Valide').length;
@@ -768,6 +906,8 @@ export default function App() {
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setChampionship({ pools: [], matches: [] });
+    setSingleKnockout({ roundOf16: [], quarters: [], semis: [], finals: [] });
   }
 
   function resetTournament() {
@@ -783,6 +923,8 @@ export default function App() {
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setChampionship({ pools: [], matches: [] });
+    setSingleKnockout({ roundOf16: [], quarters: [], semis: [], finals: [] });
   }
 
   function generateBrassage1() {
@@ -796,10 +938,32 @@ export default function App() {
       ...knockout.principalFinals,
       ...knockout.consolanteSemis,
       ...knockout.consolanteFinals,
+      ...championship.matches,
+      ...singleKnockout.roundOf16,
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
     ], 'le tournoi en cours')) return;
-    const readyTeams = teams.filter((team) => team.name.trim());
+    const readyTeams = activeTeams;
+    if (readyTeams.length < 2) {
+      window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
+      return;
+    }
+    if (readyTeams.length < 10) {
+      const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
+      const pools = createChampionshipPool(seededIds);
+      const matches = createChampionshipMatches(seededIds);
+      setChampionship({ pools, matches });
+      setSingleKnockout({ roundOf16: [], quarters: [], semis: [], finals: [] });
+      setBrassage1({ pools: [], matches: [] });
+      setBrassage2({ pools: [], matches: [] });
+      setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
+      setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+      setActiveTab('championship');
+      return;
+    }
     if (readyTeams.length !== TEAM_TARGET) {
-      window.alert(`Cette application attend ${TEAM_TARGET} équipes. Actuellement : ${readyTeams.length}.`);
+      window.alert(`Cette application attend ${TEAM_TARGET} équipes pour le mode standard. Actuellement : ${readyTeams.length}. Pour moins de 10 équipes, un mode Championnat unique est utilisé automatiquement.`);
       return;
     }
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
@@ -809,6 +973,8 @@ export default function App() {
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setChampionship({ pools: [], matches: [] });
+    setSingleKnockout({ roundOf16: [], quarters: [], semis: [], finals: [] });
     setActiveTab('brassage1');
   }
 
@@ -834,6 +1000,94 @@ export default function App() {
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
     setActiveTab('brassage2');
+  }
+
+
+  function generateSmallKnockoutStage1() {
+    if (!confirmOverwritePlayedMatches([
+      ...singleKnockout.roundOf16,
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ], 'le tableau final du Championnat')) return;
+    if (championship.matches.length === 0) {
+      window.alert('Génère d’abord le Championnat.');
+      return;
+    }
+    const rankedIds = championshipRanking.map((row) => row.teamId);
+    const roundOf16 = assignSchedule(buildRoundOf16Matches(rankedIds), stageSlotCount(championship.matches.length));
+    setSingleKnockout({ roundOf16, quarters: [], semis: [], finals: [] });
+    setActiveTab('finales');
+  }
+
+  function generateSmallKnockoutStage2() {
+    if (!confirmOverwritePlayedMatches([
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ], 'les quarts, demies et finales du Championnat')) return;
+    if (!stageValidation.championnatComplete) {
+      window.alert('Tous les scores du Championnat doivent être valides.');
+      return;
+    }
+    if (!stageValidation.roundOf16Complete) {
+      window.alert('Tous les scores des huitièmes de finale doivent être valides.');
+      return;
+    }
+    const rankedIds = championshipRanking.map((row) => row.teamId);
+    const quarters = assignSchedule(
+      buildQuarterMatchesFromChampionship(rankedIds, singleKnockout.roundOf16, phaseRules),
+      stageSlotCount(championship.matches.length) + stageSlotCount(singleKnockout.roundOf16.length)
+    );
+    setSingleKnockout((current) => ({ ...current, quarters, semis: [], finals: [] }));
+  }
+
+  function generateSmallKnockoutStage3() {
+    if (!confirmOverwritePlayedMatches([
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ], 'les demi-finales et finales du Championnat')) return;
+    if (!stageValidation.quarterComplete) {
+      window.alert('Tous les scores des quarts de finale doivent être valides.');
+      return;
+    }
+    if (singleKnockout.quarters.length === 0) {
+      window.alert('Génère d’abord les quarts de finale.');
+      return;
+    }
+    const quarterWinners = singleKnockout.quarters.map((match) => getWinnerLoser(match, phaseRules).winner);
+    if (quarterWinners.some((winner) => !winner)) {
+      window.alert('Tous les quarts doivent avoir un score valide.');
+      return;
+    }
+    const semis = assignSchedule([
+      makeKnockoutMatch('Demi-finale', 'Demi 1', quarterWinners[0], quarterWinners[1]),
+      makeKnockoutMatch('Demi-finale', 'Demi 2', quarterWinners[2], quarterWinners[3]),
+    ], stageSlotCount(championship.matches.length) + stageSlotCount(singleKnockout.roundOf16.length) + stageSlotCount(singleKnockout.quarters.length));
+    setSingleKnockout((current) => ({ ...current, semis, finals: [] }));
+  }
+
+  function generateSmallFinals() {
+    if (!confirmOverwritePlayedMatches(singleKnockout.finals, 'la finale du Championnat')) return;
+    if (!stageValidation.semiComplete) {
+      window.alert('Tous les scores des demi-finales doivent être valides.');
+      return;
+    }
+    if (singleKnockout.semis.length === 0) {
+      window.alert('Génère d’abord les demi-finales.');
+      return;
+    }
+    const semi1 = getWinnerLoser(singleKnockout.semis[0], phaseRules);
+    const semi2 = getWinnerLoser(singleKnockout.semis[1], phaseRules);
+    if (!semi1.winner || !semi2.winner) {
+      window.alert('Tous les scores des demi-finales doivent être valides.');
+      return;
+    }
+    const finals = assignSchedule([
+      makeKnockoutMatch('Petite finale', 'Petite finale', semi1.loser, semi2.loser),
+      makeKnockoutMatch('Finale', 'Finale', semi1.winner, semi2.winner),
+    ], stageSlotCount(championship.matches.length) + stageSlotCount(singleKnockout.roundOf16.length) + stageSlotCount(singleKnockout.quarters.length) + stageSlotCount(singleKnockout.semis.length));
+    setSingleKnockout((current) => ({ ...current, finals }));
   }
 
   function generateMainStage() {
@@ -965,6 +1219,11 @@ export default function App() {
   }
 
   function updateMatchesInScope(scope, updater) {
+    if (scope === 'championship') return setChampionship((current) => ({ ...current, matches: updater(current.matches) }));
+    if (scope === 'roundOf16') return setSingleKnockout((current) => ({ ...current, roundOf16: updater(current.roundOf16) }));
+    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: updater(current.quarters) }));
+    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: updater(current.semis) }));
+    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: updater(current.finals) }));
     if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: updater(current.matches) }));
     if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: updater(current.matches) }));
     if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: updater(current.principaleMatches) }));
@@ -1088,6 +1347,8 @@ export default function App() {
         if (parsed.brassage2) setBrassage2(parsed.brassage2);
         if (parsed.mainStage) setMainStage(parsed.mainStage);
         if (parsed.knockout) setKnockout(parsed.knockout);
+        if (parsed.championship) setChampionship(parsed.championship);
+        if (parsed.singleKnockout) setSingleKnockout(parsed.singleKnockout);
         window.alert('Import réussi.');
       } catch {
         window.alert('Le fichier JSON est invalide.');
@@ -1332,7 +1593,14 @@ export default function App() {
     );
   }
 
-  const tabs = [
+  const tabs = isSmallTournamentMode ? [
+    { id: 'dashboard', label: 'Vue d’ensemble' },
+    { id: 'equipes', label: 'Équipes' },
+    { id: 'championship', label: 'Championnat' },
+    { id: 'finales', label: 'Phases finales' },
+    { id: 'public', label: 'Affichage public' },
+    { id: 'export', label: 'Sauvegarde' },
+  ] : [
     { id: 'dashboard', label: 'Vue d’ensemble' },
     { id: 'equipes', label: 'Équipes' },
     { id: 'brassage1', label: 'Brassage 1' },
@@ -1343,13 +1611,17 @@ export default function App() {
     { id: 'export', label: 'Sauvegarde' },
   ];
 
+
   if (mode === 'public') {
     return (
       <div className="public-page">
         <div className="container">
           <header className="hero public-hero public-hero-light">
             <div>
-              <div className="hero-tag hero-tag-dark">tournoidevolley.fr</div>
+              <div className="hero-brand">
+                <div className="hero-tag hero-tag-dark">tournoidevolley.fr</div>
+                <div className="hero-version hero-version-dark">Version {APP_VERSION}</div>
+              </div>
               <h1>{tournamentName}</h1>
             </div>
             <div className="hero-controls">
@@ -1394,9 +1666,12 @@ export default function App() {
         <div className="container">
           <header className="hero referee-hero">
             <div>
-              <div className="hero-tag">tournoidevolley.fr</div>
+              <div className="hero-brand">
+                <div className="hero-tag">tournoidevolley.fr</div>
+                <div className="hero-version">Version {APP_VERSION}</div>
+              </div>
               <h1>{tournamentName} — mode arbitres</h1>
-              <p>Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.</p>
+              <p>{isSmallTournamentMode ? 'Sélectionne un match du Championnat ou du tableau final unique pour saisir les scores.' : 'Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.'}</p>
             </div>
             <div className="hero-controls">
               <div className="hero-pill">
@@ -1464,7 +1739,10 @@ export default function App() {
       <div className="container">
         <header className="hero">
           <div>
-            <div className="hero-tag">tournoidevolley.fr</div>
+            <div className="hero-brand">
+              <div className="hero-tag">tournoidevolley.fr</div>
+              <div className="hero-version">Version {APP_VERSION}</div>
+            </div>
             <h1>{tournamentName}</h1>
             <p>Gestionnaire organisateur du tournoi. Les scores saisis par les arbitres apparaissent ici avec le statut “À valider”.</p>
           </div>
@@ -1509,12 +1787,24 @@ export default function App() {
           {activeTab === 'dashboard' && (
             <>
               <div className="cards-grid six-up">
-                <StatCard label="Équipes" value={teams.length} subvalue="Cible : 18" />
-                <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${brassage1.matches.length || 0}`} subvalue="6 poules de 3" />
-                <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${brassage2.matches.length || 0}`} subvalue="6 poules de 3" />
-                <StatCard label="Principale" value={`${completedMatchCounts.principale}/${mainStage.principaleMatches.length || 0}`} subvalue="4 poules de 3" />
-                <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${mainStage.consolanteMatches.length || 0}`} subvalue="2 poules de 3" />
-                <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
+                <StatCard label="Équipes" value={teams.length} subvalue={isSmallTournamentMode ? 'Mode Championnat' : 'Cible : 18'} />
+                {isSmallTournamentMode ? (
+                  <>
+                    <StatCard label="Championnat" value={`${completedMatchCounts.championnat}/${championship.matches.length || 0}`} subvalue="Poule unique" />
+                    <StatCard label="Huitièmes" value={`${completedMatchCounts.huitieme}/${singleKnockout.roundOf16.length || 0}`} subvalue="Tableau final" />
+                    <StatCard label="Quarts" value={`${completedMatchCounts.quart}/${singleKnockout.quarters.length || 0}`} subvalue="Tableau final" />
+                    <StatCard label="Demies" value={`${completedMatchCounts.demi}/${singleKnockout.semis.length || 0}`} subvalue="Tableau final" />
+                    <StatCard label="Leader" value={championshipRanking[0]?.teamName || '-'} subvalue={`${championshipRanking[0]?.tournamentPoints ?? 0} pts`} />
+                  </>
+                ) : (
+                  <>
+                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${brassage1.matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${brassage2.matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Principale" value={`${completedMatchCounts.principale}/${mainStage.principaleMatches.length || 0}`} subvalue="4 poules de 3" />
+                    <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${mainStage.consolanteMatches.length || 0}`} subvalue="2 poules de 3" />
+                    <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
+                  </>
+                )}
               </div>
 
               <Section title="Identité du tournoi" subtitle="Le nom du tournoi est affiché sur le mode organisateur, le mode arbitres, le mode public et dans le nom du fichier JSON exporté.">
@@ -1532,10 +1822,23 @@ export default function App() {
 
               <Section title="Paramètres de score par phase" subtitle="En mode sec, il faut atteindre exactement le score cible. En mode avec 2 points d’écart, il faut atteindre au moins le score cible avec 2 points d’avance minimum.">
                 <div className="cards-grid two-up">
-                  <PhaseRuleEditor title="Brassage 1" value={phaseRules.brassage1} onScoreChange={(value) => updatePhaseRule('brassage1', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage1', 'mode', value)} />
-                  <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
-                  <PhaseRuleEditor title="Principale" value={phaseRules.principale} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
-                  <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                  {isSmallTournamentMode ? (
+                    <>
+                      <PhaseRuleEditor title="Championnat" value={phaseRules.championnat} onScoreChange={(value) => updatePhaseRule('championnat', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnat', 'mode', value)} />
+                      <PhaseRuleEditor title="Huitième de finale" value={phaseRules.huitieme} onScoreChange={(value) => updatePhaseRule('huitieme', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('huitieme', 'mode', value)} />
+                      <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} />
+                      <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} />
+                      <PhaseRuleEditor title="Finale" value={phaseRules.finale} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} />
+                      <PhaseRuleEditor title="Petite finale" value={phaseRules.petiteFinale} onScoreChange={(value) => updatePhaseRule('petiteFinale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('petiteFinale', 'mode', value)} />
+                    </>
+                  ) : (
+                    <>
+                      <PhaseRuleEditor title="Brassage 1" value={phaseRules.brassage1} onScoreChange={(value) => updatePhaseRule('brassage1', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage1', 'mode', value)} />
+                      <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
+                      <PhaseRuleEditor title="Principale" value={phaseRules.principale} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
+                      <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                    </>
+                  )}
                 </div>
               </Section>
 
@@ -1555,20 +1858,26 @@ export default function App() {
               <Section title="Flux du tournoi" subtitle="Les scores invalides et les scores arbitres en attente ne comptent pas dans les classements ni dans le calcul du planning dynamique."
                 right={
                   <>
-                    <Button onClick={generateBrassage1}>1. Générer brassage 1</Button>
-                    <Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button>
-                    <Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button>
+                    <Button onClick={generateBrassage1}>{isSmallTournamentMode ? '1. Générer Championnat' : '1. Générer brassage 1'}</Button>
+                    {isSmallTournamentMode ? <Button variant="secondary" onClick={generateSmallKnockoutStage1}>2. Générer huitièmes / quarts</Button> : <Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button>}
+                    {isSmallTournamentMode ? <Button variant="success" onClick={generateSmallKnockoutStage2}>3. Générer quarts</Button> : <Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button>}
                   </>
                 }
               >
                 <div className="cards-grid five-up">
-                  {[
+                  {(isSmallTournamentMode ? [
+                    ['Championnat', 'Poule unique où toutes les équipes se rencontrent.'],
+                    ['Classement', 'Le classement général du Championnat détermine les têtes de série du tableau final.'],
+                    ['Huitièmes', 'Les meilleurs sont positionnés dans un tableau à 16 avec byes automatiques si besoin.'],
+                    ['Quarts / Demies', 'Les tours suivants se débloquent au fur et à mesure des validations.'],
+                    ['Finales', 'Finale et petite finale sans principale ni consolante.'],
+                  ] : [
                     ['Brassage 1', '6 poules de 3 créées selon le niveau des équipes.'],
                     ['Brassage 2', '6 poules de 3 créées selon les points du brassage 1.'],
                     ['Répartition', 'Les 12 meilleurs vont en principale, les 6 autres en consolante.'],
                     ['Principale', '4 poules de 3 puis quarts, demies, finale et petite finale.'],
                     ['Consolante', '2 poules de 3 puis demi-finales, finale et petite finale.'],
-                  ].map(([title, text]) => (
+                  ]).map(([title, text]) => (
                     <div key={title} className="mini-card">
                       <div className="mini-card-head">{title}</div>
                       <p className="muted">{text}</p>
@@ -1618,7 +1927,20 @@ export default function App() {
             </Section>
           )}
 
-          {activeTab === 'brassage1' && (
+
+          {activeTab === 'championship' && isSmallTournamentMode && (
+            <>
+              <Section title="Championnat" subtitle="Poule unique où toutes les équipes se rencontrent pour établir le classement général." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
+                {renderStandings(championshipStandings)}
+              </Section>
+              <Section title="Matchs du Championnat">{renderOrganizerMatches(championship.matches, 'championship')}</Section>
+              <Section title="Classement général du Championnat" subtitle="Utilisé pour construire les huitièmes de finale, puis les quarts, demies et finales.">
+                {renderOverallRanking(championshipRanking)}
+              </Section>
+            </>
+          )}
+
+          {activeTab === 'brassage1' && !isSmallTournamentMode && (
             <>
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
@@ -1630,7 +1952,7 @@ export default function App() {
             </>
           )}
 
-          {activeTab === 'brassage2' && (
+          {activeTab === 'brassage2' && !isSmallTournamentMode && (
             <>
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
@@ -1642,7 +1964,7 @@ export default function App() {
             </>
           )}
 
-          {activeTab === 'principale' && (
+          {activeTab === 'principale' && !isSmallTournamentMode && (
             <>
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
@@ -1657,44 +1979,73 @@ export default function App() {
 
           {activeTab === 'finales' && (
             <>
-              <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
-                <div className="cards-grid two-up">
-                  <div>
-                    <h3>Quarts de finale principale</h3>
-                    {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
-                  </div>
-                  <div>
-                    <h3>Demi-finales consolante</h3>
-                    {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
-                  </div>
-                </div>
-              </Section>
+              {isSmallTournamentMode ? (
+                <>
+                  <Section title="Huitièmes de finale" subtitle="Créés à partir du classement du Championnat. Les byes automatiques permettent d’arriver à un tableau final cohérent." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer les huitièmes</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les quarts</Button></>}>
+                    {renderOrganizerMatches(singleKnockout.roundOf16, 'roundOf16')}
+                  </Section>
 
-              <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
-                <div className="cards-grid two-up">
-                  <div>
-                    <h3>Demi-finales principale</h3>
-                    {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
-                  </div>
-                  <div>
-                    <h3>Finales consolante</h3>
-                    {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
-                  </div>
-                </div>
-              </Section>
+                  <Section title="Quarts de finale" subtitle="Ils deviennent jouables une fois le Championnat et les éventuels huitièmes validés." right={<Button variant="success" onClick={generateSmallKnockoutStage3}>Générer les demi-finales</Button>}>
+                    {renderOrganizerMatches(singleKnockout.quarters, 'quarters')}
+                  </Section>
 
-              <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
-                {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
-              </Section>
+                  <Section title="Demi-finales" subtitle="Elles se construisent automatiquement à partir des quarts validés." right={<Button variant="success" onClick={generateSmallFinals}>Générer la finale et la petite finale</Button>}>
+                    {renderOrganizerMatches(singleKnockout.semis, 'semis')}
+                  </Section>
 
-              <Section title="Podiums" subtitle="Le podium principal donne les places 1 à 3 du tournoi. Le podium consolante donne les places 1 à 3 de la consolante.">
-                <div className="cards-grid two-up">
-                  {renderPodium('Tableau principal', knockout.principalFinals)}
-                  {renderPodium('Tableau consolante', knockout.consolanteFinals)}
-                </div>
-              </Section>
+                  <Section title="Finale et petite finale" subtitle="Dernière étape du tournoi unique.">
+                    {renderOrganizerMatches(singleKnockout.finals, 'finals')}
+                  </Section>
+
+                  <Section title="Podium" subtitle="Le podium du tournoi s’affiche dès que la finale et la petite finale sont validées.">
+                    <div className="cards-grid two-up">
+                      {renderPodium('Tournoi', singleKnockout.finals)}
+                    </div>
+                  </Section>
+                </>
+              ) : (
+                <>
+                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
+                    <div className="cards-grid two-up">
+                      <div>
+                        <h3>Quarts de finale principale</h3>
+                        {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
+                      </div>
+                      <div>
+                        <h3>Demi-finales consolante</h3>
+                        {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
+                      </div>
+                    </div>
+                  </Section>
+
+                  <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
+                    <div className="cards-grid two-up">
+                      <div>
+                        <h3>Demi-finales principale</h3>
+                        {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
+                      </div>
+                      <div>
+                        <h3>Finales consolante</h3>
+                        {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
+                      </div>
+                    </div>
+                  </Section>
+
+                  <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
+                    {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
+                  </Section>
+
+                  <Section title="Podiums" subtitle="Le podium principal donne les places 1 à 3 du tournoi. Le podium consolante donne les places 1 à 3 de la consolante.">
+                    <div className="cards-grid two-up">
+                      {renderPodium('Tableau principal', knockout.principalFinals)}
+                      {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                    </div>
+                  </Section>
+                </>
+              )}
             </>
           )}
+
 
           {activeTab === 'export' && (
             <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
