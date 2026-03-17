@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v14e';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v14f';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v14e';
+const APP_VERSION = 'v14f';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -678,7 +678,7 @@ export default function App() {
   const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
-  const [phaseRules, setPhaseRules] = useState({ ...DEFAULT_PHASE_RULES, ...(safeClone(initial?.settings?.phaseRules, {}) || {}) });
+  const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
   const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
@@ -1945,11 +1945,14 @@ export default function App() {
                   </thead>
                   <tbody>
                     {teamsSortedByLevel.map((team, index) => (
-                      <tr key={team.id} className={`team-level-row ${getLevelClass(team.level)}`}>
+                      <tr key={team.id}>
                         <td>{index + 1}</td>
-                        <td><input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} /></td>
                         <td>
-                          <div className={`team-level-pill ${getLevelClass(team.level)}`}>{team.level}</div>
+                          <div className={`team-name-chip team-input-chip ${getLevelClass(team.level)}`}>
+                            <input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} aria-label={`Nom ${team.name || index + 1}`} />
+                          </div>
+                        </td>
+                        <td>
                           <select value={team.level} onChange={(e) => updateTeam(team.id, 'level', e.target.value)}>
                             {LEVEL_DISPLAY_ORDER.map((level) => <option key={level} value={level}>{level}</option>)}
                           </select>

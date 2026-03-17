@@ -538,31 +538,6 @@ tbody tr:last-child td { border-bottom: none; }
   text-align: center;
 }
 
-.team-level-row td {
-  transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-
-.team-level-row.team-level-n td {
-  background: rgba(239, 68, 68, 0.18);
-}
-
-.team-level-row.team-level-np td {
-  background: rgba(249, 115, 22, 0.18);
-}
-
-.team-level-row.team-level-r td {
-  background: rgba(245, 158, 11, 0.18);
-}
-
-.team-level-row.team-level-d td {
-  background: rgba(14, 165, 233, 0.18);
-}
-
-.team-level-row.team-level-l td {
-  background: rgba(59, 130, 246, 0.18);
-}
-
-
 .team-name-chip {
   display: inline-flex;
   align-items: center;
@@ -581,6 +556,32 @@ tbody tr:last-child td { border-bottom: none; }
 .team-name-chip.team-name-chip-large {
   font-size: 18px;
   padding: 10px 14px;
+}
+
+
+.team-input-chip {
+  display: flex;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.team-input-chip input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.team-input-chip input::placeholder {
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.team-input-chip input:focus {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 .team-name-chip.team-level-n {
