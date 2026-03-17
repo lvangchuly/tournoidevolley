@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v14f';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v14h';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v14f';
+const APP_VERSION = 'v14h';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -678,7 +678,7 @@ export default function App() {
   const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
-  const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
+  const [phaseRules, setPhaseRules] = useState(() => ({ ...DEFAULT_PHASE_RULES, ...(safeClone(initial?.settings?.phaseRules, {}) || {}) }));
   const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
@@ -988,7 +988,7 @@ export default function App() {
     setTeams(defaultTeams());
     setStartTime('09:00');
     setSlotDuration(20);
-    setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
+    setPhaseRules({ ...DEFAULT_PHASE_RULES });
     setOrganizerPassword('Chuly0ne');
     setPasswordDraft('Chuly0ne');
     setTournamentName('Tournoi de volley');
@@ -1428,7 +1428,7 @@ export default function App() {
         if (Array.isArray(parsed.teams)) setTeams(parsed.teams);
         if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
         if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
-        if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
+        if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...(parsed.settings.phaseRules || {}) });
         if (parsed.settings?.organizerPassword) {
           setOrganizerPassword(parsed.settings.organizerPassword);
           setPasswordDraft(parsed.settings.organizerPassword);
