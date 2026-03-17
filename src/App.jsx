@@ -4,7 +4,7 @@ const STORAGE_KEY = 'tournoidevolley-react-vite-v14';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v14';
+const APP_VERSION = 'v14b';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -23,6 +23,19 @@ const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
 const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
+const LEVEL_DISPLAY_ORDER = ['N', 'NP', 'R', 'D', 'L'];
+
+function getLevelClass(level) {
+  return `team-level-${String(level || '').replace(/[^a-zA-Z0-9]+/g, '').toLowerCase()}`;
+}
+
+function formatGroupDisplay(group) {
+  return String(group || '')
+    .replace(/^Brassage\s*1\s*-\s*/i, '')
+    .replace(/^Brassage\s*2\s*-\s*/i, '')
+    .replace(/^Championnat\s*Aller\s*-\s*/i, '')
+    .replace(/^Championnat\s*Retour\s*-\s*/i, '');
+}
 
 function uid(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
@@ -1465,7 +1478,7 @@ export default function App() {
     );
   }
 
-  function renderOrganizerMatches(matches, scope) {
+  function renderOrganizerMatches(matches, scope, groupLabel = 'Match') {
     if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <div className="table-wrap">
@@ -1474,10 +1487,9 @@ export default function App() {
             <tr>
               <th>Heure</th>
               <th>Terrain</th>
-              <th>Phase</th>
-              <th>Match</th>
+              <th>{groupLabel}</th>
               <th>Équipe A</th>
-              <th>Score officiel</th>
+              <th className="score-header-cell">Score officiel</th>
               <th>Équipe B</th>
               <th>Statut</th>
             </tr>
@@ -1491,10 +1503,9 @@ export default function App() {
                 <tr key={match.id} className={status === 'Score invalide' || pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : ''}>
                   <td>{schedule?.startText || match.time}</td>
                   <td>Terrain {match.court}</td>
-                  <td>{match.phase}</td>
-                  <td>{match.group}</td>
+                  <td>{formatGroupDisplay(match.group)}</td>
                   <td>{teamName(match.teamAId)}</td>
-                  <td>
+                  <td className="score-cell">
                     <div className="score-inputs">
                       <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
@@ -1921,13 +1932,14 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {teams.map((team, index) => (
-                      <tr key={team.id}>
+                    {teamsSortedByLevel.map((team, index) => (
+                      <tr key={team.id} className={`team-level-row ${getLevelClass(team.level)}`}>
                         <td>{index + 1}</td>
                         <td><input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} /></td>
                         <td>
+                          <div className={`team-level-pill ${getLevelClass(team.level)}`}>{team.level}</div>
                           <select value={team.level} onChange={(e) => updateTeam(team.id, 'level', e.target.value)}>
-                            {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+                            {LEVEL_DISPLAY_ORDER.map((level) => <option key={level} value={level}>{level}</option>)}
                           </select>
                         </td>
                         <td><input value={team.club} onChange={(e) => updateTeam(team.id, 'club', e.target.value)} /></td>
@@ -1947,11 +1959,11 @@ export default function App() {
               <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
                 {renderStandings(championshipLeg1Standings)}
               </Section>
-              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1', 'Poule')}</Section>
               <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
                 {renderStandings(championshipLeg2Standings)}
               </Section>
-              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
+              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2', 'Poule')}</Section>
               <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
                 {renderOverallRanking(championshipRanking)}
               </Section>
@@ -1963,7 +1975,7 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1', 'Poule')}</Section>
               <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
@@ -1975,7 +1987,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2', 'Poule')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -1987,11 +1999,11 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
+              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale', 'Poule')}</Section>
               <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante', 'Poule')}</Section>
             </>
           )}
 
