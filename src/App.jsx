@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v14';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v14e';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v14c';
+const APP_VERSION = 'v14e';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -678,7 +678,7 @@ export default function App() {
   const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
-  const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
+  const [phaseRules, setPhaseRules] = useState({ ...DEFAULT_PHASE_RULES, ...(safeClone(initial?.settings?.phaseRules, {}) || {}) });
   const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');

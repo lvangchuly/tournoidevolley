@@ -543,23 +543,23 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .team-level-row.team-level-n td {
-  background: rgba(239, 68, 68, 0.08);
+  background: rgba(239, 68, 68, 0.18);
 }
 
 .team-level-row.team-level-np td {
-  background: rgba(249, 115, 22, 0.08);
+  background: rgba(249, 115, 22, 0.18);
 }
 
 .team-level-row.team-level-r td {
-  background: rgba(234, 179, 8, 0.08);
+  background: rgba(245, 158, 11, 0.18);
 }
 
 .team-level-row.team-level-d td {
-  background: rgba(14, 165, 233, 0.08);
+  background: rgba(14, 165, 233, 0.18);
 }
 
 .team-level-row.team-level-l td {
-  background: rgba(59, 130, 246, 0.08);
+  background: rgba(59, 130, 246, 0.18);
 }
 
 
