@@ -4,7 +4,7 @@ const STORAGE_KEY = 'tournoidevolley-react-vite-v14';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v14b';
+const APP_VERSION = 'v14c';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -698,6 +698,12 @@ export default function App() {
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
+  const teamsSortedByLevel = useMemo(() => [...teams].sort((a, b) => {
+    const diff = (LEVEL_WEIGHT[b.level] || 0) - (LEVEL_WEIGHT[a.level] || 0);
+    if (diff !== 0) return diff;
+    return a.name.localeCompare(b.name, 'fr');
+  }), [teams]);
+
 
   const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
   const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
