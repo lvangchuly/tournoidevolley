@@ -562,6 +562,52 @@ tbody tr:last-child td { border-bottom: none; }
   background: rgba(59, 130, 246, 0.08);
 }
 
+
+.team-name-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.team-name-chip.block-chip {
+  width: 100%;
+  justify-content: center;
+}
+
+.team-name-chip.team-name-chip-large {
+  font-size: 18px;
+  padding: 10px 14px;
+}
+
+.team-name-chip.team-level-n {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.team-name-chip.team-level-np {
+  background: rgba(249, 115, 22, 0.18);
+}
+
+.team-name-chip.team-level-r {
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.team-name-chip.team-level-d {
+  background: rgba(14, 165, 233, 0.18);
+}
+
+.team-name-chip.team-level-l {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.public-team .team-name-chip {
+  font-size: 22px;
+  font-weight: 800;
+}
+
 .team-level-pill {
   display: inline-flex;
   align-items: center;

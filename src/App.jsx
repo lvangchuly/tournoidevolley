@@ -630,9 +630,9 @@ function LargePublicMatch({ title, match, teamName }) {
       <div className="public-match-grid">
         <div>
           <div className="muted small">{match.time} • Terrain {match.court}</div>
-          <div className="public-team">{teamName(match.teamAId)}</div>
+          <div className="public-team">{renderTeamBadge(match.teamAId)}</div>
           <div className="muted small">vs</div>
-          <div className="public-team">{teamName(match.teamBId)}</div>
+          <div className="public-team">{renderTeamBadge(match.teamBId)}</div>
         </div>
         <div className="align-right">
           <div className="muted small">{match.group}</div>
@@ -892,6 +892,12 @@ export default function App() {
 
   function teamName(teamId) {
     return teamMap.get(teamId)?.name || 'À définir';
+  }
+
+  function renderTeamBadge(teamId, extraClass = '') {
+    const team = teamMap.get(teamId);
+    const classes = ['team-name-chip', getLevelClass(team?.level), extraClass].filter(Boolean).join(' ');
+    return <span className={classes}>{team?.name || 'À définir'}</span>;
   }
 
   function enterPublicMode() {
@@ -1468,7 +1474,7 @@ export default function App() {
                   {rows.map((row, index) => (
                     <tr key={row.teamId}>
                       <td>{index + 1}</td>
-                      <td>{row.teamName}</td>
+                      <td>{renderTeamBadge(row.teamId)}</td>
                       <td>{row.played}</td>
                       <td>{row.wins}</td>
                       <td>{row.tournamentPoints}</td>
@@ -1510,7 +1516,7 @@ export default function App() {
                   <td>{schedule?.startText || match.time}</td>
                   <td>Terrain {match.court}</td>
                   <td>{formatGroupDisplay(match.group)}</td>
-                  <td>{teamName(match.teamAId)}</td>
+                  <td>{renderTeamBadge(match.teamAId)}</td>
                   <td className="score-cell">
                     <div className="score-inputs">
                       <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
@@ -1518,7 +1524,7 @@ export default function App() {
                       <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
-                  <td>{teamName(match.teamBId)}</td>
+                  <td>{renderTeamBadge(match.teamBId)}</td>
                   <td>
                     <div className="status-cell">
                       <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
@@ -1570,7 +1576,7 @@ export default function App() {
         <div className="referee-focus-head">
           <div>
             <div className="muted small">{title}</div>
-            <h2>{teamName(match.teamAId)} <span className="muted">vs</span> {teamName(match.teamBId)}</h2>
+            <h2>{renderTeamBadge(match.teamAId, 'team-name-chip-large')} <span className="muted">vs</span> {renderTeamBadge(match.teamBId, 'team-name-chip-large')}</h2>
             <p className="muted">{match.group} • Terrain {match.court} • Début prévu : {schedule?.startText || match.time}</p>
           </div>
           <div className="actions-row">
@@ -1581,7 +1587,7 @@ export default function App() {
         <div className="referee-focus-body">
           <div className="referee-team-card">
             <span className="muted small">Équipe A</span>
-            <strong>{teamName(match.teamAId)}</strong>
+            {renderTeamBadge(match.teamAId, 'team-name-chip-large block-chip')}
           </div>
           <div className="referee-big-score">
             {isLocked ? (
@@ -1604,7 +1610,7 @@ export default function App() {
           </div>
           <div className="referee-team-card">
             <span className="muted small">Équipe B</span>
-            <strong>{teamName(match.teamBId)}</strong>
+            {renderTeamBadge(match.teamBId, 'team-name-chip-large block-chip')}
           </div>
         </div>
       </div>
@@ -1631,8 +1637,8 @@ export default function App() {
             {rows.map((row, index) => (
               <tr key={row.teamId}>
                 <td>{index + 1}</td>
-                <td>{row.teamName}</td>
-                <td>{row.level}</td>
+                <td>{renderTeamBadge(row.teamId)}</td>
+                <td><span className={`team-level-pill ${getLevelClass(row.level)}`}>{row.level}</span></td>
                 <td>{row.played}</td>
                 <td>{row.wins}</td>
                 <td>{row.tournamentPoints}</td>
@@ -1655,9 +1661,9 @@ export default function App() {
       <div className="mini-card">
         <div className="mini-card-head">{title}</div>
         <div className="podium-grid">
-          <div className="podium-item"><strong>1er</strong><span>{finalResult.winner ? teamName(finalResult.winner) : 'À venir'}</span></div>
-          <div className="podium-item"><strong>2e</strong><span>{finalResult.loser ? teamName(finalResult.loser) : 'À venir'}</span></div>
-          <div className="podium-item"><strong>3e</strong><span>{smallResult.winner ? teamName(smallResult.winner) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>1er</strong><span>{finalResult.winner ? renderTeamBadge(finalResult.winner) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>2e</strong><span>{finalResult.loser ? renderTeamBadge(finalResult.loser) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>3e</strong><span>{smallResult.winner ? renderTeamBadge(smallResult.winner) : 'À venir'}</span></div>
         </div>
       </div>
     );
@@ -1800,7 +1806,7 @@ export default function App() {
                               title={group.isUnlocked ? '' : group.lockReason}
                             >
                               <div>
-                                <strong>{teamName(match.teamAId)} vs {teamName(match.teamBId)}</strong>
+                                <strong>{renderTeamBadge(match.teamAId)} <span className="muted">vs</span> {renderTeamBadge(match.teamBId)}</strong>
                                 <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
                               </div>
                               <span className={`badge ${group.isUnlocked ? badgeClass : 'badge-neutral'}`}>{group.isUnlocked ? statusText : 'Verrouillé'}</span>
