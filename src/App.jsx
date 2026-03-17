@@ -1497,12 +1497,12 @@ export default function App() {
         <table>
           <thead>
             <tr>
-              <th>Heure</th>
-              <th>Terrain</th>
+              <th className="time-header-cell">Heure</th>
+              <th className="court-header-cell">Terrain</th>
               <th>{groupLabel}</th>
-              <th>Équipe A</th>
+              <th className="team-col-header">Équipe A</th>
               <th className="score-header-cell">Score officiel</th>
-              <th>Équipe B</th>
+              <th className="team-col-header">Équipe B</th>
               <th>Statut</th>
             </tr>
           </thead>
@@ -1513,10 +1513,10 @@ export default function App() {
               const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' || pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : ''}>
-                  <td>{schedule?.startText || match.time}</td>
-                  <td>Terrain {match.court}</td>
+                  <td className="time-cell">{schedule?.startText || match.time}</td>
+                  <td className="court-cell">Terrain {match.court}</td>
                   <td>{formatGroupDisplay(match.group)}</td>
-                  <td>{renderTeamBadge(match.teamAId)}</td>
+                  <td className="team-col-cell team-col-cell-a">{renderTeamBadge(match.teamAId)}</td>
                   <td className="score-cell">
                     <div className="score-inputs">
                       <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
@@ -1524,7 +1524,7 @@ export default function App() {
                       <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
-                  <td>{renderTeamBadge(match.teamBId)}</td>
+                  <td className="team-col-cell team-col-cell-b">{renderTeamBadge(match.teamBId)}</td>
                   <td>
                     <div className="status-cell">
                       <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
