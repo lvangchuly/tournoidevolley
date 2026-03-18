@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v15h';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16b';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v15h';
+const APP_VERSION = 'v16b';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -655,6 +656,11 @@ function buildDefaultSharedTournamentId(name) {
   return `${slugify(name)}-partage`;
 }
 
+function buildFirebaseTournamentUrl(sharedTournamentId) {
+  const effectiveId = encodeURIComponent(String(sharedTournamentId || '').trim());
+  return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments/${effectiveId}.json`;
+}
+
 function buildRefereeAccessUrl(sharedTournamentId) {
   if (typeof window === 'undefined') return '?mode=referee';
   const url = new URL(window.location.href);
@@ -809,11 +815,15 @@ export default function App() {
   async function fetchTournamentFromCloudRaw(targetId = sharedTournamentId) {
     const effectiveId = String(targetId || '').trim();
     if (!effectiveId) return null;
-    const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`);
+    const response = await fetch(buildFirebaseTournamentUrl(effectiveId));
     if (!response.ok) {
-      throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis OVHcloud.');
+      throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis Firebase.');
     }
-    return response.json();
+    const payload = await response.json();
+    if (!payload) {
+      throw new Error('Aucune sauvegarde distante trouvée pour cet identifiant.');
+    }
+    return payload;
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
@@ -844,7 +854,7 @@ export default function App() {
     if (!payload) return;
     if (payload?.meta?.remoteSavedAt) setRemoteSavedAt(payload.meta.remoteSavedAt);
     if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
-      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
+      setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
     }
     if (payload.brassage1?.matches) setBrassage1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage1.matches) }));
     if (payload.brassage2?.matches) setBrassage2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage2.matches) }));
@@ -880,22 +890,22 @@ export default function App() {
   async function loadTournamentFromCloud(targetId = sharedTournamentId, showMessage = true) {
     const effectiveId = String(targetId || '').trim();
     if (!effectiveId) {
-      window.alert('Renseigne un identifiant de tournoi partagé avant de charger depuis OVHcloud.');
+      window.alert('Renseigne un identifiant de tournoi partagé avant de charger depuis Firebase.');
       return false;
     }
     setIsRemoteSyncing(true);
-    setRemoteSyncMessage('Chargement OVHcloud en cours...');
+    setRemoteSyncMessage('Chargement Firebase en cours...');
     try {
       const payload = await fetchTournamentFromCloudRaw(effectiveId);
       applyPersistedState(payload);
       setSharedTournamentId(effectiveId);
       setRemoteSavedAt(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || '');
-      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
-      if (showMessage) window.alert('Tournoi chargé depuis OVHcloud.');
+      setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
+      if (showMessage) window.alert('Tournoi chargé depuis Firebase.');
       return true;
     } catch (error) {
-      setRemoteSyncMessage(error.message || 'Échec du chargement OVHcloud.');
-      if (showMessage) window.alert(error.message || 'Échec du chargement OVHcloud.');
+      setRemoteSyncMessage(error.message || 'Échec du chargement Firebase.');
+      if (showMessage) window.alert(error.message || 'Échec du chargement Firebase.');
       return false;
     } finally {
       if (!silent) setIsRemoteSyncing(false);
@@ -911,29 +921,29 @@ export default function App() {
     payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
     if (!silent) {
       setIsRemoteSyncing(true);
-      setRemoteSyncMessage('Sauvegarde OVHcloud en cours...');
+      setRemoteSyncMessage('Sauvegarde Firebase en cours...');
     }
     try {
-      const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`, {
+      const response = await fetch(buildFirebaseTournamentUrl(effectiveId), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(body?.error || 'Impossible de sauvegarder sur OVHcloud.');
+        throw new Error(body?.error || 'Impossible de sauvegarder sur Firebase.');
       }
       setLastSavedAt(savedAt);
       setRemoteSavedAt(savedAt);
-      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(savedAt)}`);
+      setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       }
-      if (showMessage) window.alert('Tournoi partagé sauvegardé sur OVHcloud.');
+      if (showMessage) window.alert('Tournoi partagé sauvegardé sur Firebase.');
       return true;
     } catch (error) {
-      if (!silent) setRemoteSyncMessage(error.message || 'Échec de la sauvegarde OVHcloud.');
-      if (showMessage) window.alert(error.message || 'Échec de la sauvegarde OVHcloud.');
+      if (!silent) setRemoteSyncMessage(error.message || 'Échec de la sauvegarde Firebase.');
+      if (showMessage) window.alert(error.message || 'Échec de la sauvegarde Firebase.');
       return false;
     } finally {
       if (!silent) setIsRemoteSyncing(false);
@@ -2209,9 +2219,9 @@ export default function App() {
               <Button variant="secondary" onClick={enterPublicMode}>Affichage public</Button>
               <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller</Button>
             </div>
-            <div className="muted small banner-meta">Identifiant partagé OVHcloud : <strong>{sharedTournamentId}</strong></div>
+            <div className="muted small banner-meta">Identifiant partagé Firebase : <strong>{sharedTournamentId}</strong></div>
             {lastSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
-            {remoteSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde OVHcloud : {new Date(remoteSavedAt).toLocaleString('fr-FR')}</div> : null}
+            {remoteSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde Firebase : {new Date(remoteSavedAt).toLocaleString('fr-FR')}</div> : null}
             {remoteSyncMessage ? <div className="muted small banner-meta">{remoteSyncMessage}</div> : null}
           </div>
           <div className="banner-side banner-right">
@@ -2453,7 +2463,7 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage OVHcloud du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur OVHcloud</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger OVHcloud</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
+            <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage Firebase du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur Firebase</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger Firebase</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up">
                 <div className="mini-card">
@@ -2470,7 +2480,7 @@ export default function App() {
                   <div className="mini-card-head">Sauvegarde et export</div>
                   <div className="field-stack">
                     <label>
-                      <span>Identifiant partagé OVHcloud</span>
+                      <span>Identifiant partagé Firebase</span>
                       <input value={sharedTournamentId} onChange={(e) => setSharedTournamentId(slugify(e.target.value))} placeholder="tournoi-partage" />
                     </label>
                   </div>

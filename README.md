@@ -68,13 +68,13 @@ Cette version sauvegarde les données dans le navigateur via `localStorage`.
 Pour un partage temps réel entre plusieurs appareils, ajoute ensuite une base distante comme Supabase ou Firebase.
 
 
-## Sauvegarde OVHcloud partagée (v15)
+## Sauvegarde Firebase partagée (v15)
 
-Cette version ajoute une sauvegarde JSON partagée sur **OVHcloud Object Storage** via une **Function Vercel** (`api/shared-tournament.js`).
+Cette version ajoute une sauvegarde JSON partagée sur **Firebase Object Storage** via une **Function Vercel** (`api/shared-tournament.js`).
 
-### Préparer OVHcloud
+### Préparer Firebase
 
-Crée un bucket Object Storage et un utilisateur Object Storage disposant d'une **Access key** et d'une **Secret key**. OVHcloud indique que ces clés se récupèrent depuis l'onglet **Object Storage users**, et que l'endpoint de bucket se récupère dans les détails du bucket.
+Crée un bucket Object Storage et un utilisateur Object Storage disposant d'une **Access key** et d'une **Secret key**. Firebase indique que ces clés se récupèrent depuis l'onglet **Object Storage users**, et que l'endpoint de bucket se récupère dans les détails du bucket.
 
 ### Variables d'environnement Vercel
 
@@ -91,10 +91,16 @@ Un exemple est fourni dans `.env.example`.
 
 ### Comportement
 
-- **Sauvegarder sur OVHcloud** écrit un JSON partagé dans le bucket
-- **Charger depuis OVHcloud** recharge le tournoi partagé
+- **Sauvegarder sur Firebase** écrit un JSON partagé dans le bucket
+- **Charger depuis Firebase** recharge le tournoi partagé
 - le **QR code arbitres** embarque l'identifiant partagé du tournoi, ce qui permet au téléphone arbitre de charger automatiquement le tournoi distant après scan
 
 ### Important
 
-Le zip `dist` reste un build **statique**. La sauvegarde OVHcloud fonctionne lorsque le projet source est déployé sur **Vercel** avec le dossier `api/` et les variables d'environnement configurées.
+Le zip `dist` reste un build **statique**. La sauvegarde Firebase fonctionne lorsque le projet source est déployé sur **Vercel** avec le dossier `api/` et les variables d'environnement configurées.
+
+
+## Firebase
+
+Cette version v16b utilise Firebase Realtime Database via l'URL configurée dans `src/firebaseConfig.js`.
+Pour fonctionner, la base doit autoriser temporairement la lecture/écriture REST, ou une couche d'authentification Firebase devra être ajoutée ensuite pour des règles sécurisées.
