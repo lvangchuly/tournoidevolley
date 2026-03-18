@@ -66,35 +66,3 @@ Le site statique généré sera dans `dist/`.
 
 Cette version sauvegarde les données dans le navigateur via `localStorage`.
 Pour un partage temps réel entre plusieurs appareils, ajoute ensuite une base distante comme Supabase ou Firebase.
-
-
-## Sauvegarde OVHcloud partagée (v15)
-
-Cette version ajoute une sauvegarde JSON partagée sur **OVHcloud Object Storage** via une **Function Vercel** (`api/shared-tournament.js`).
-
-### Préparer OVHcloud
-
-Crée un bucket Object Storage et un utilisateur Object Storage disposant d'une **Access key** et d'une **Secret key**. OVHcloud indique que ces clés se récupèrent depuis l'onglet **Object Storage users**, et que l'endpoint de bucket se récupère dans les détails du bucket.
-
-### Variables d'environnement Vercel
-
-Ajoute ces variables dans **Project Settings > Environment Variables** sur Vercel :
-
-- `OVH_S3_ENDPOINT`
-- `OVH_S3_REGION`
-- `OVH_S3_BUCKET`
-- `OVH_S3_ACCESS_KEY`
-- `OVH_S3_SECRET_KEY`
-- `OVH_S3_PREFIX` (optionnel)
-
-Un exemple est fourni dans `.env.example`.
-
-### Comportement
-
-- **Sauvegarder sur OVHcloud** écrit un JSON partagé dans le bucket
-- **Charger depuis OVHcloud** recharge le tournoi partagé
-- le **QR code arbitres** embarque l'identifiant partagé du tournoi, ce qui permet au téléphone arbitre de charger automatiquement le tournoi distant après scan
-
-### Important
-
-Le zip `dist` reste un build **statique**. La sauvegarde OVHcloud fonctionne lorsque le projet source est déployé sur **Vercel** avec le dossier `api/` et les variables d'environnement configurées.

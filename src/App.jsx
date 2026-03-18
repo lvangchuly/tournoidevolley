@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v14';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v15';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const APP_VERSION = 'v15b';
+const APP_VERSION = 'v15';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -23,6 +23,19 @@ const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
 const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
+const LEVEL_DISPLAY_ORDER = ['N', 'NP', 'R', 'D', 'L'];
+
+function getLevelClass(level) {
+  return `team-level-${String(level || '').replace(/[^a-zA-Z0-9]+/g, '').toLowerCase()}`;
+}
+
+function formatGroupDisplay(group) {
+  return String(group || '')
+    .replace(/^Brassage\s*1\s*-\s*/i, '')
+    .replace(/^Brassage\s*2\s*-\s*/i, '')
+    .replace(/^Championnat\s*Aller\s*-\s*/i, '')
+    .replace(/^Championnat\s*Retour\s*-\s*/i, '');
+}
 
 function uid(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
@@ -586,30 +599,31 @@ function StatCard({ label, value, subvalue }) {
   );
 }
 
-function PhaseRuleEditor({ title, value, onScoreChange, onModeChange }) {
+function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled = false, lockReason = '' }) {
   const estimatedDuration = estimatePhaseDurationMinutes(value);
   return (
-    <div className="rule-card">
+    <div className={`rule-card ${disabled ? 'rule-card-locked' : ''}`}>
       <h3>{title}</h3>
       <div className="form-grid two-cols">
         <label>
           <span>Score gagnant</span>
-          <input type="number" min="1" value={value.winningScore} onChange={(e) => onScoreChange(Number(e.target.value) || 21)} />
+          <input type="number" min="1" value={value.winningScore} onChange={(e) => onScoreChange(Number(e.target.value) || 21)} disabled={disabled} />
         </label>
         <label>
           <span>Contexte</span>
-          <select value={value.mode} onChange={(e) => onModeChange(e.target.value)}>
+          <select value={value.mode} onChange={(e) => onModeChange(e.target.value)} disabled={disabled}>
             <option value="sec">Sec</option>
             <option value="twoPointGap">Avec 2 points d’écart</option>
           </select>
         </label>
       </div>
       <p className="muted small helper-text">Durée estimée utilisée pour le planning : {estimatedDuration} min (échauffement inclus).</p>
+      {disabled && lockReason ? <p className="muted small helper-text rule-lock-text">{lockReason}</p> : null}
     </div>
   );
 }
 
-function LargePublicMatch({ title, match, teamName }) {
+function LargePublicMatch({ title, match, teamName, renderTeamBadge }) {
   if (!match) return null;
   return (
     <div className="public-match-card">
@@ -617,9 +631,9 @@ function LargePublicMatch({ title, match, teamName }) {
       <div className="public-match-grid">
         <div>
           <div className="muted small">{match.time} • Terrain {match.court}</div>
-          <div className="public-team">{teamName(match.teamAId)}</div>
+          <div className="public-team">{renderTeamBadge(match.teamAId)}</div>
           <div className="muted small">vs</div>
-          <div className="public-team">{teamName(match.teamBId)}</div>
+          <div className="public-team">{renderTeamBadge(match.teamBId)}</div>
         </div>
         <div className="align-right">
           <div className="muted small">{match.group}</div>
@@ -632,54 +646,20 @@ function LargePublicMatch({ title, match, teamName }) {
 
 
 
-function slugify(value) {
-  return String(value || 'tournoi')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase() || 'tournoi';
-}
-
-function buildDefaultSharedTournamentId(name) {
-  return `${slugify(name)}-partage`;
-}
-
-function buildRefereeAccessUrl(sharedTournamentId) {
+function buildRefereeAccessUrl() {
   if (typeof window === 'undefined') return '?mode=referee';
   const url = new URL(window.location.href);
   url.searchParams.set('mode', 'referee');
-  if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
-  }
   return url.toString();
 }
 
-
-function buildPublicAccessUrl(sharedTournamentId) {
-  if (typeof window === 'undefined') return '?sharedTournamentId=demo';
-  const url = new URL(window.location.href);
-  url.searchParams.delete('mode');
-  if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
-  }
-  return url.toString();
-}
-
-function formatRemoteTimestamp(value) {
-  if (!value) return 'Jamais';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Jamais';
-  return date.toLocaleString('fr-FR');
-}
-
-function AccessQrCode({ url, title, caption, alt }) {
+function RefereeQrCode({ url }) {
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
   return (
     <div className="referee-qr-card">
-      <div className="referee-qr-title">{title}</div>
-      <img className="referee-qr-image" src={qrSrc} alt={alt} />
-      <div className="referee-qr-caption">{caption}</div>
+      <div className="referee-qr-title">Accès arbitres</div>
+      <img className="referee-qr-image" src={qrSrc} alt="QR code d’accès au mode arbitres" />
+      <div className="referee-qr-caption">Scanne ce QR code pour ouvrir directement le mode Arbitres.</div>
     </div>
   );
 }
@@ -699,15 +679,11 @@ export default function App() {
   const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
-  const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
+  const [phaseRules, setPhaseRules] = useState(() => ({ ...DEFAULT_PHASE_RULES, ...(safeClone(initial?.settings?.phaseRules, {}) || {}) }));
   const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
-  const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley'));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
-  const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
-  const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
-  const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
   const [brassage1, setBrassage1] = useState(safeClone(initial?.brassage1, { pools: [], matches: [] }));
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
   const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
@@ -717,13 +693,19 @@ export default function App() {
   const [singleKnockout, setSingleKnockout] = useState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] }));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
-  const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
-  const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
+  const organizerPasswordInputRef = useRef(null);
+  const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(), []);
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
+  const teamsSortedByLevel = useMemo(() => [...teams].sort((a, b) => {
+    const diff = (LEVEL_WEIGHT[b.level] || 0) - (LEVEL_WEIGHT[a.level] || 0);
+    if (diff !== 0) return diff;
+    return a.name.localeCompare(b.name, 'fr');
+  }), [teams]);
+
 
   const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
   const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
@@ -756,8 +738,8 @@ export default function App() {
   function getPersistedState(savedAt = lastSavedAt) {
     return {
       teams,
-      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId },
-      meta: { lastSavedAt: savedAt, remoteSavedAt },
+      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName },
+      meta: { lastSavedAt: savedAt },
       brassage1,
       brassage2,
       mainStage,
@@ -766,95 +748,6 @@ export default function App() {
       championshipLeg2,
       singleKnockout,
     };
-  }
-
-  function applyPersistedState(parsed, options = {}) {
-    if (!parsed) return;
-    if (Array.isArray(parsed.teams)) setTeams(parsed.teams);
-    if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
-    if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
-    if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
-    if (parsed.settings?.organizerPassword) {
-      setOrganizerPassword(parsed.settings.organizerPassword);
-      setPasswordDraft(parsed.settings.organizerPassword);
-    }
-    if (parsed.settings?.tournamentName) setTournamentName(parsed.settings.tournamentName);
-    if (parsed.settings?.sharedTournamentId) setSharedTournamentId(parsed.settings.sharedTournamentId);
-    if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
-    if (parsed.meta?.remoteSavedAt) setRemoteSavedAt(parsed.meta.remoteSavedAt);
-    if (parsed.brassage1) setBrassage1(parsed.brassage1);
-    if (parsed.brassage2) setBrassage2(parsed.brassage2);
-    if (parsed.mainStage) setMainStage(parsed.mainStage);
-    if (parsed.knockout) setKnockout(parsed.knockout);
-    if (parsed.championshipLeg1) setChampionshipLeg1(parsed.championshipLeg1);
-    if (parsed.championshipLeg2) setChampionshipLeg2(parsed.championshipLeg2);
-    if (parsed.singleKnockout) setSingleKnockout(parsed.singleKnockout);
-    if (!options.preserveSelection) setRefereeSelectedMatch(null);
-  }
-
-  async function loadTournamentFromCloud(targetId = sharedTournamentId, showMessage = true) {
-    const effectiveId = String(targetId || '').trim();
-    if (!effectiveId) {
-      window.alert('Renseigne un identifiant de tournoi partagé avant de charger depuis OVHcloud.');
-      return false;
-    }
-    setIsRemoteSyncing(true);
-    setRemoteSyncMessage('Chargement OVHcloud en cours...');
-    try {
-      const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`);
-      if (!response.ok) {
-        throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis OVHcloud.');
-      }
-      const payload = await response.json();
-      applyPersistedState(payload);
-      setSharedTournamentId(effectiveId);
-      setRemoteSavedAt(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || '');
-      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
-      if (showMessage) window.alert('Tournoi chargé depuis OVHcloud.');
-      return true;
-    } catch (error) {
-      setRemoteSyncMessage(error.message || 'Échec du chargement OVHcloud.');
-      if (showMessage) window.alert(error.message || 'Échec du chargement OVHcloud.');
-      return false;
-    } finally {
-      setIsRemoteSyncing(false);
-    }
-  }
-
-  async function saveTournamentToCloud(showMessage = true) {
-    const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
-    if (!sharedTournamentId) setSharedTournamentId(effectiveId);
-    const savedAt = new Date().toISOString();
-    const payload = getPersistedState(savedAt);
-    payload.settings.sharedTournamentId = effectiveId;
-    payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
-    setIsRemoteSyncing(true);
-    setRemoteSyncMessage('Sauvegarde OVHcloud en cours...');
-    try {
-      const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(body?.error || 'Impossible de sauvegarder sur OVHcloud.');
-      }
-      setLastSavedAt(savedAt);
-      setRemoteSavedAt(savedAt);
-      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(savedAt)}`);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-      }
-      if (showMessage) window.alert('Tournoi partagé sauvegardé sur OVHcloud.');
-      return true;
-    } catch (error) {
-      setRemoteSyncMessage(error.message || 'Échec de la sauvegarde OVHcloud.');
-      if (showMessage) window.alert(error.message || 'Échec de la sauvegarde OVHcloud.');
-      return false;
-    } finally {
-      setIsRemoteSyncing(false);
-    }
   }
 
   function saveTournamentState(showMessage = true) {
@@ -870,17 +763,7 @@ export default function App() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const requestedSharedId = params.get('sharedTournamentId');
-    if (requestedSharedId) {
-      setSharedTournamentId(requestedSharedId);
-      loadTournamentFromCloud(requestedSharedId, false);
-    }
-  }, []);
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   const scheduleData = useMemo(() => computeTournamentSchedule(isSmallTournamentMode ? [
     championshipLeg1.matches,
@@ -953,6 +836,99 @@ export default function App() {
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
+
+  const hasValidatedMatch = (matches, predicate = null) => matches.some((match) => getMatchStatusLabel(match, phaseRules) === 'Valide' && (!predicate || predicate(match)));
+
+  const phaseRuleLocks = useMemo(() => ({
+    brassage1: hasValidatedMatch([
+      ...brassage1.matches,
+      ...brassage2.matches,
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ]),
+    brassage2: hasValidatedMatch([
+      ...brassage2.matches,
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ]),
+    principale: hasValidatedMatch([
+      ...mainStage.principaleMatches,
+      ...knockout.principalQuarters,
+      ...knockout.principalSemis,
+      ...knockout.principalFinals,
+    ]),
+    consolante: hasValidatedMatch([
+      ...mainStage.consolanteMatches,
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ]),
+    championnatAller: hasValidatedMatch([
+      ...championshipLeg1.matches,
+      ...championshipLeg2.matches,
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ]),
+    championnatRetour: hasValidatedMatch([
+      ...championshipLeg2.matches,
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ]),
+    quart: hasValidatedMatch([
+      ...singleKnockout.quarters,
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ]),
+    demi: hasValidatedMatch([
+      ...singleKnockout.semis,
+      ...singleKnockout.finals,
+    ]),
+    finale: hasValidatedMatch(singleKnockout.finals, (match) => match.phase === 'Finale'),
+    petiteFinale: hasValidatedMatch(singleKnockout.finals, (match) => match.phase === 'Petite finale'),
+  }), [
+    brassage1.matches,
+    brassage2.matches,
+    mainStage.principaleMatches,
+    mainStage.consolanteMatches,
+    knockout.principalQuarters,
+    knockout.principalSemis,
+    knockout.principalFinals,
+    knockout.consolanteSemis,
+    knockout.consolanteFinals,
+    championshipLeg1.matches,
+    championshipLeg2.matches,
+    singleKnockout.quarters,
+    singleKnockout.semis,
+    singleKnockout.finals,
+    phaseRules,
+  ]);
+
+  const teamLevelLocked = useMemo(() => isSmallTournamentMode ? hasValidatedMatch(championshipLeg1.matches) : hasValidatedMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
+
+  const phaseRuleLockMessages = {
+    brassage1: 'Le paramètre de score du Brassage 1 est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    brassage2: 'Le paramètre de score du Brassage 2 est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    principale: 'Le paramètre de score de la Principale est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    consolante: 'Le paramètre de score de la Consolante est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    championnatAller: 'Le paramètre de score du Championnat Aller est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    championnatRetour: 'Le paramètre de score du Championnat Retour est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    quart: 'Le paramètre de score des quarts de finale est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    demi: 'Le paramètre de score des demi-finales est verrouillé car au moins un match valide existe dans cette phase ou une phase suivante.',
+    finale: 'Le paramètre de score de la finale est verrouillé car un match valide existe déjà dans cette phase.',
+    petiteFinale: 'Le paramètre de score de la petite finale est verrouillé car un match valide existe déjà dans cette phase.',
+  };
+
   const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
     { title: 'Championnat Aller', scope: 'championshipLeg1', matches: championshipLeg1.matches, isUnlocked: true, lockReason: '' },
     { title: 'Championnat Retour', scope: 'championshipLeg2', matches: championshipLeg2.matches, isUnlocked: stageValidation.championnatAllerComplete, lockReason: 'Tous les scores du Championnat Aller doivent être valides.' },
@@ -985,6 +961,11 @@ export default function App() {
     }
   }, [refereeSelectedMatch, refereeSelectedEntry]);
 
+  useEffect(() => {
+    if (showOrganizerLogin) {
+      window.setTimeout(() => organizerPasswordInputRef.current?.focus(), 0);
+    }
+  }, [showOrganizerLogin]);
 
   useEffect(() => {
     const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
@@ -1006,11 +987,21 @@ export default function App() {
   }
 
   function updatePhaseRule(ruleKey, field, value) {
+    if (phaseRuleLocks[ruleKey]) {
+      window.alert(phaseRuleLockMessages[ruleKey] || 'Ce paramètre de score est verrouillé.');
+      return;
+    }
     setPhaseRules((current) => ({ ...current, [ruleKey]: { ...current[ruleKey], [field]: value } }));
   }
 
   function teamName(teamId) {
     return teamMap.get(teamId)?.name || 'À définir';
+  }
+
+  function renderTeamBadge(teamId, extraClass = '') {
+    const team = teamMap.get(teamId);
+    const classes = ['team-name-chip', getLevelClass(team?.level), extraClass].filter(Boolean).join(' ');
+    return <span className={classes}>{team?.name || 'À définir'}</span>;
   }
 
   function enterPublicMode() {
@@ -1101,7 +1092,7 @@ export default function App() {
     setTeams(defaultTeams());
     setStartTime('09:00');
     setSlotDuration(20);
-    setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
+    setPhaseRules({ ...DEFAULT_PHASE_RULES });
     setOrganizerPassword('Chuly0ne');
     setPasswordDraft('Chuly0ne');
     setTournamentName('Tournoi de volley');
@@ -1184,6 +1175,10 @@ export default function App() {
         window.alert('Génère d’abord le Championnat Aller.');
         return;
       }
+      if (!stageValidation.championnatAllerComplete) {
+        window.alert('Tous les matchs du Championnat Aller doivent être valides avant de générer le Championnat Retour.');
+        return;
+      }
       if (!confirmOverwritePlayedMatches([
         ...championshipLeg2.matches,
         ...singleKnockout.quarters,
@@ -1200,6 +1195,10 @@ export default function App() {
     }
     if (brassage1.matches.length === 0) {
       window.alert('Génère d’abord le brassage 1.');
+      return;
+    }
+    if (!stageValidation.brassage1Complete) {
+      window.alert('Tous les matchs du Brassage 1 doivent être valides avant de générer le Brassage 2.');
       return;
     }
     const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
@@ -1309,6 +1308,10 @@ export default function App() {
       window.alert('Génère d’abord le brassage 2.');
       return;
     }
+    if (!stageValidation.brassage2Complete) {
+      window.alert('Tous les matchs du Brassage 2 doivent être valides avant de générer la Principale et la Consolante.');
+      return;
+    }
     const rankedIds = rankingAfterBrassages.map((row) => row.teamId);
     const principaleIds = rankedIds.slice(0, 12);
     const consolanteIds = rankedIds.slice(12, 18);
@@ -1339,6 +1342,10 @@ export default function App() {
     ], 'les phases finales')) return;
     if (!mainStage.principalePools.length || !mainStage.consolantePools.length) {
       window.alert('Génère d’abord la principale et la consolante.');
+      return;
+    }
+    if (!stageValidation.principalePoolsComplete || !stageValidation.consolantePoolsComplete) {
+      window.alert('Tous les matchs des poules Principale et Consolante doivent être valides avant de générer les phases finales.');
       return;
     }
     const pMap = new Map(principaleStandings.map((entry) => [entry.pool.name, entry.rows]));
@@ -1375,6 +1382,10 @@ export default function App() {
       window.alert('Génère d’abord les quarts et les demi-finales de consolante.');
       return;
     }
+    if (!stageValidation.principalQuartersComplete || !stageValidation.consolanteSemisComplete) {
+      window.alert('Tous les matchs des quarts principaux et des demi-finales de consolante doivent être valides avant de générer la suite des phases finales.');
+      return;
+    }
     const q1 = getWinnerLoser(knockout.principalQuarters[0], phaseRules);
     const q2 = getWinnerLoser(knockout.principalQuarters[1], phaseRules);
     const q3 = getWinnerLoser(knockout.principalQuarters[2], phaseRules);
@@ -1407,6 +1418,10 @@ export default function App() {
     if (!confirmOverwritePlayedMatches(knockout.principalFinals, 'la finale principale')) return;
     if (knockout.principalSemis.length === 0) {
       window.alert('Génère d’abord les demi-finales principales.');
+      return;
+    }
+    if (!stageValidation.principalSemisComplete) {
+      window.alert('Tous les matchs des demi-finales principales doivent être valides avant de générer la finale principale.');
       return;
     }
     const s1 = getWinnerLoser(knockout.principalSemis[0], phaseRules);
@@ -1538,7 +1553,23 @@ export default function App() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(String(reader.result));
-        applyPersistedState(parsed);
+        if (Array.isArray(parsed.teams)) setTeams(parsed.teams);
+        if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
+        if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
+        if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...(parsed.settings.phaseRules || {}) });
+        if (parsed.settings?.organizerPassword) {
+          setOrganizerPassword(parsed.settings.organizerPassword);
+          setPasswordDraft(parsed.settings.organizerPassword);
+        }
+        if (parsed.settings?.tournamentName) setTournamentName(parsed.settings.tournamentName);
+        if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
+        if (parsed.brassage1) setBrassage1(parsed.brassage1);
+        if (parsed.brassage2) setBrassage2(parsed.brassage2);
+        if (parsed.mainStage) setMainStage(parsed.mainStage);
+        if (parsed.knockout) setKnockout(parsed.knockout);
+        if (parsed.championshipLeg1) setChampionshipLeg1(parsed.championshipLeg1);
+        if (parsed.championshipLeg2) setChampionshipLeg2(parsed.championshipLeg2);
+        if (parsed.singleKnockout) setSingleKnockout(parsed.singleKnockout);
         window.alert('Import réussi.');
       } catch {
         window.alert('Le fichier JSON est invalide.');
@@ -1571,7 +1602,7 @@ export default function App() {
                   {rows.map((row, index) => (
                     <tr key={row.teamId}>
                       <td>{index + 1}</td>
-                      <td>{row.teamName}</td>
+                      <td>{renderTeamBadge(row.teamId)}</td>
                       <td>{row.played}</td>
                       <td>{row.wins}</td>
                       <td>{row.tournamentPoints}</td>
@@ -1587,20 +1618,19 @@ export default function App() {
     );
   }
 
-  function renderOrganizerMatches(matches, scope) {
+  function renderOrganizerMatches(matches, scope, groupLabel = 'Match') {
     if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Heure</th>
-              <th>Terrain</th>
-              <th>Phase</th>
-              <th>Match</th>
-              <th>Équipe A</th>
-              <th>Score officiel</th>
-              <th>Équipe B</th>
+              <th className="time-header-cell">Heure</th>
+              <th className="court-header-cell">Terrain</th>
+              <th>{groupLabel}</th>
+              <th className="team-col-header">Équipe A</th>
+              <th className="score-header-cell">Score officiel</th>
+              <th className="team-col-header">Équipe B</th>
               <th>Statut</th>
             </tr>
           </thead>
@@ -1611,19 +1641,18 @@ export default function App() {
               const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' || pendingStatus === 'Saisie arbitre invalide' ? 'row-invalid' : ''}>
-                  <td>{schedule?.startText || match.time}</td>
-                  <td>Terrain {match.court}</td>
-                  <td>{match.phase}</td>
-                  <td>{match.group}</td>
-                  <td>{teamName(match.teamAId)}</td>
-                  <td>
+                  <td className="time-cell">{schedule?.startText || match.time}</td>
+                  <td className="court-cell">Terrain {match.court}</td>
+                  <td>{formatGroupDisplay(match.group)}</td>
+                  <td className="team-col-cell team-col-cell-a">{renderTeamBadge(match.teamAId)}</td>
+                  <td className="score-cell">
                     <div className="score-inputs">
                       <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
                       <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
-                  <td>{teamName(match.teamBId)}</td>
+                  <td className="team-col-cell team-col-cell-b">{renderTeamBadge(match.teamBId)}</td>
                   <td>
                     <div className="status-cell">
                       <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
@@ -1675,7 +1704,7 @@ export default function App() {
         <div className="referee-focus-head">
           <div>
             <div className="muted small">{title}</div>
-            <h2>{teamName(match.teamAId)} <span className="muted">vs</span> {teamName(match.teamBId)}</h2>
+            <h2>{renderTeamBadge(match.teamAId, 'team-name-chip-large')} <span className="muted">vs</span> {renderTeamBadge(match.teamBId, 'team-name-chip-large')}</h2>
             <p className="muted">{match.group} • Terrain {match.court} • Début prévu : {schedule?.startText || match.time}</p>
           </div>
           <div className="actions-row">
@@ -1686,7 +1715,7 @@ export default function App() {
         <div className="referee-focus-body">
           <div className="referee-team-card">
             <span className="muted small">Équipe A</span>
-            <strong>{teamName(match.teamAId)}</strong>
+            {renderTeamBadge(match.teamAId, 'team-name-chip-large block-chip')}
           </div>
           <div className="referee-big-score">
             {isLocked ? (
@@ -1709,7 +1738,7 @@ export default function App() {
           </div>
           <div className="referee-team-card">
             <span className="muted small">Équipe B</span>
-            <strong>{teamName(match.teamBId)}</strong>
+            {renderTeamBadge(match.teamBId, 'team-name-chip-large block-chip')}
           </div>
         </div>
       </div>
@@ -1736,8 +1765,8 @@ export default function App() {
             {rows.map((row, index) => (
               <tr key={row.teamId}>
                 <td>{index + 1}</td>
-                <td>{row.teamName}</td>
-                <td>{row.level}</td>
+                <td>{renderTeamBadge(row.teamId)}</td>
+                <td><span className={`team-level-pill ${getLevelClass(row.level)}`}>{row.level}</span></td>
                 <td>{row.played}</td>
                 <td>{row.wins}</td>
                 <td>{row.tournamentPoints}</td>
@@ -1760,9 +1789,9 @@ export default function App() {
       <div className="mini-card">
         <div className="mini-card-head">{title}</div>
         <div className="podium-grid">
-          <div className="podium-item"><strong>1er</strong><span>{finalResult.winner ? teamName(finalResult.winner) : 'À venir'}</span></div>
-          <div className="podium-item"><strong>2e</strong><span>{finalResult.loser ? teamName(finalResult.loser) : 'À venir'}</span></div>
-          <div className="podium-item"><strong>3e</strong><span>{smallResult.winner ? teamName(smallResult.winner) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>1er</strong><span>{finalResult.winner ? renderTeamBadge(finalResult.winner) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>2e</strong><span>{finalResult.loser ? renderTeamBadge(finalResult.loser) : 'À venir'}</span></div>
+          <div className="podium-item"><strong>3e</strong><span>{smallResult.winner ? renderTeamBadge(smallResult.winner) : 'À venir'}</span></div>
         </div>
       </div>
     );
@@ -1774,7 +1803,7 @@ export default function App() {
         <h2>Accès organisateur</h2>
         <p className="muted">Saisis le mot de passe organisateur pour déverrouiller le mode organisateur.</p>
         <form className="login-grid" onSubmit={(e) => { e.preventDefault(); handleOrganizerLogin(); }}>
-          <input type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
+          <input ref={organizerPasswordInputRef} type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
           <Button type="submit" variant="primary">Déverrouiller</Button>
           <Button type="button" variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
         </form>
@@ -1830,7 +1859,7 @@ export default function App() {
 
           <div className="cards-grid three-up">
             {nextMatches.map((match, index) => (
-              <LargePublicMatch key={match.id} title={`Prochain match ${index + 1}`} match={match} teamName={teamName} />
+              <LargePublicMatch key={match.id} title={`Prochain match ${index + 1}`} match={match} teamName={teamName} renderTeamBadge={renderTeamBadge} />
             ))}
           </div>
 
@@ -1905,7 +1934,7 @@ export default function App() {
                               title={group.isUnlocked ? '' : group.lockReason}
                             >
                               <div>
-                                <strong>{teamName(match.teamAId)} vs {teamName(match.teamBId)}</strong>
+                                <strong>{renderTeamBadge(match.teamAId)} <span className="muted">vs</span> {renderTeamBadge(match.teamBId)}</strong>
                                 <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
                               </div>
                               <span className={`badge ${group.isUnlocked ? badgeClass : 'badge-neutral'}`}>{group.isUnlocked ? statusText : 'Verrouillé'}</span>
@@ -1927,21 +1956,16 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="container">
-        <header className="hero hero-organizer-banner">
-          <div className="banner-side banner-left">
-            <AccessQrCode
-              url={refereeAccessUrl}
-              title="Accès arbitres"
-              alt="QR code d’accès au mode arbitres"
-              caption="Scanne ce QR code pour ouvrir directement le mode Arbitres."
-            />
-          </div>
-          <div className="hero-controls hero-controls-centered">
+        <header className="hero">
+          <div>
             <div className="hero-brand">
               <div className="hero-tag">tournoidevolley.fr</div>
               <div className="hero-version">Version {APP_VERSION}</div>
             </div>
             <h1>{tournamentName}</h1>
+            <RefereeQrCode url={refereeAccessUrl} />
+          </div>
+          <div className="hero-controls">
             <label>
               <span>Début</span>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
@@ -1950,24 +1974,13 @@ export default function App() {
               <span>Fin estimée du tournoi</span>
               <strong>{estimatedTournamentEnd}</strong>
             </div>
-            <div className="actions-stack hero-actions-centered">
+            <div className="actions-stack">
               <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
               <Button variant="secondary" onClick={enterRefereeMode}>Mode arbitres</Button>
               <Button variant="secondary" onClick={enterPublicMode}>Affichage public</Button>
               <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller</Button>
             </div>
-            <div className="muted small banner-meta">Identifiant partagé OVHcloud : <strong>{sharedTournamentId}</strong></div>
-            {lastSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
-            {remoteSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde OVHcloud : {new Date(remoteSavedAt).toLocaleString('fr-FR')}</div> : null}
-            {remoteSyncMessage ? <div className="muted small banner-meta">{remoteSyncMessage}</div> : null}
-          </div>
-          <div className="banner-side banner-right">
-            <AccessQrCode
-              url={publicAccessUrl}
-              title="Accès public"
-              alt="QR code d’accès à l’affichage public"
-              caption="Scanne ce QR code pour ouvrir directement l’affichage public du tournoi."
-            />
+            {lastSavedAt ? <div className="muted small">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
           </div>
         </header>
 
@@ -2017,19 +2030,19 @@ export default function App() {
                 <div className="cards-grid two-up">
                   {isSmallTournamentMode ? (
                     <>
-                      <PhaseRuleEditor title="Championnat Aller" value={phaseRules.championnatAller} onScoreChange={(value) => updatePhaseRule('championnatAller', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatAller', 'mode', value)} />
-                      <PhaseRuleEditor title="Championnat Retour" value={phaseRules.championnatRetour} onScoreChange={(value) => updatePhaseRule('championnatRetour', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatRetour', 'mode', value)} />
-                      <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} />
-                      <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} />
-                      <PhaseRuleEditor title="Finale" value={phaseRules.finale} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} />
-                      <PhaseRuleEditor title="Petite finale" value={phaseRules.petiteFinale} onScoreChange={(value) => updatePhaseRule('petiteFinale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('petiteFinale', 'mode', value)} />
+                      <PhaseRuleEditor title="Championnat Aller" value={phaseRules.championnatAller} onScoreChange={(value) => updatePhaseRule('championnatAller', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatAller', 'mode', value)} disabled={phaseRuleLocks.championnatAller} lockReason={phaseRuleLockMessages.championnatAller} />
+                      <PhaseRuleEditor title="Championnat Retour" value={phaseRules.championnatRetour} onScoreChange={(value) => updatePhaseRule('championnatRetour', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatRetour', 'mode', value)} disabled={phaseRuleLocks.championnatRetour} lockReason={phaseRuleLockMessages.championnatRetour} />
+                      <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} disabled={phaseRuleLocks.quart} lockReason={phaseRuleLockMessages.quart} />
+                      <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} disabled={phaseRuleLocks.demi} lockReason={phaseRuleLockMessages.demi} />
+                      <PhaseRuleEditor title="Finale" value={phaseRules.finale} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} disabled={phaseRuleLocks.finale} lockReason={phaseRuleLockMessages.finale} />
+                      <PhaseRuleEditor title="Petite finale" value={phaseRules.petiteFinale} onScoreChange={(value) => updatePhaseRule('petiteFinale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('petiteFinale', 'mode', value)} disabled={phaseRuleLocks.petiteFinale} lockReason={phaseRuleLockMessages.petiteFinale} />
                     </>
                   ) : (
                     <>
-                      <PhaseRuleEditor title="Brassage 1" value={phaseRules.brassage1} onScoreChange={(value) => updatePhaseRule('brassage1', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage1', 'mode', value)} />
-                      <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
-                      <PhaseRuleEditor title="Principale" value={phaseRules.principale} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
-                      <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                      <PhaseRuleEditor title="Brassage 1" value={phaseRules.brassage1} onScoreChange={(value) => updatePhaseRule('brassage1', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage1', 'mode', value)} disabled={phaseRuleLocks.brassage1} lockReason={phaseRuleLockMessages.brassage1} />
+                      <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} disabled={phaseRuleLocks.brassage2} lockReason={phaseRuleLockMessages.brassage2} />
+                      <PhaseRuleEditor title="Principale" value={phaseRules.principale} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} disabled={phaseRuleLocks.principale} lockReason={phaseRuleLockMessages.principale} />
+                      <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} disabled={phaseRuleLocks.consolante} lockReason={phaseRuleLockMessages.consolante} />
                     </>
                   )}
                 </div>
@@ -2045,7 +2058,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle={teamLevelLocked ? "N = 5, NP = 4, R = 3, D = 2, L = 1. Le niveau des équipes est désormais verrouillé car au moins un match valide existe déjà dans la première phase. Le nom de l’équipe reste modifiable." : "N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série."} right={<><Button variant="secondary" onClick={addTeam}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -2059,13 +2072,17 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {teams.map((team, index) => (
+                    {teamsSortedByLevel.map((team, index) => (
                       <tr key={team.id}>
                         <td>{index + 1}</td>
-                        <td><input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} /></td>
                         <td>
-                          <select value={team.level} onChange={(e) => updateTeam(team.id, 'level', e.target.value)}>
-                            {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
+                          <div className={`team-name-chip team-input-chip ${getLevelClass(team.level)}`}>
+                            <input value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} aria-label={`Nom ${team.name || index + 1}`} />
+                          </div>
+                        </td>
+                        <td>
+                          <select value={team.level} onChange={(e) => updateTeam(team.id, 'level', e.target.value)} disabled={teamLevelLocked}>
+                            {LEVEL_DISPLAY_ORDER.map((level) => <option key={level} value={level}>{level}</option>)}
                           </select>
                         </td>
                         <td><input value={team.club} onChange={(e) => updateTeam(team.id, 'club', e.target.value)} /></td>
@@ -2085,11 +2102,11 @@ export default function App() {
               <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
                 {renderStandings(championshipLeg1Standings)}
               </Section>
-              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1', 'Poule')}</Section>
               <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
                 {renderStandings(championshipLeg2Standings)}
               </Section>
-              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
+              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2', 'Poule')}</Section>
               <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
                 {renderOverallRanking(championshipRanking)}
               </Section>
@@ -2101,7 +2118,7 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1', 'Poule')}</Section>
               <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
@@ -2113,7 +2130,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2', 'Poule')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -2125,11 +2142,11 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
+              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale', 'Poule')}</Section>
               <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante', 'Poule')}</Section>
             </>
           )}
 
@@ -2199,7 +2216,7 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage OVHcloud du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur OVHcloud</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger OVHcloud</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
+            <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up">
                 <div className="mini-card">
@@ -2214,15 +2231,8 @@ export default function App() {
                 </div>
                 <div className="mini-card">
                   <div className="mini-card-head">Sauvegarde et export</div>
-                  <div className="field-stack">
-                    <label>
-                      <span>Identifiant partagé OVHcloud</span>
-                      <input value={sharedTournamentId} onChange={(e) => setSharedTournamentId(slugify(e.target.value))} placeholder="tournoi-partage" />
-                    </label>
-                  </div>
                   <ul className="simple-list">
                     <li>Sauvegarde locale automatique et bouton de sauvegarde manuelle</li>
-                    <li>Partage OVHcloud via JSON commun pour organisateur et arbitres</li>
                     <li>Nom du tournoi intégré au nom du fichier JSON exporté</li>
                     <li>Date et heure de sauvegarde intégrées au nom du fichier</li>
                     <li>Import complet depuis un export JSON précédent</li>
