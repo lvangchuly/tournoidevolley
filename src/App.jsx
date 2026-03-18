@@ -622,7 +622,7 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange }) {
   );
 }
 
-function LargePublicMatch({ title, match, teamName }) {
+function LargePublicMatch({ title, match, teamName, renderTeamBadge }) {
   if (!match) return null;
   return (
     <div className="public-match-card">
@@ -1731,7 +1731,7 @@ export default function App() {
 
           <div className="cards-grid three-up">
             {nextMatches.map((match, index) => (
-              <LargePublicMatch key={match.id} title={`Prochain match ${index + 1}`} match={match} teamName={teamName} />
+              <LargePublicMatch key={match.id} title={`Prochain match ${index + 1}`} match={match} teamName={teamName} renderTeamBadge={renderTeamBadge} />
             ))}
           </div>
 
