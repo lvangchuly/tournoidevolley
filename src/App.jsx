@@ -6,7 +6,7 @@ const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16c';
+const APP_VERSION = 'v16b';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -908,7 +908,7 @@ export default function App() {
       if (showMessage) window.alert(error.message || 'Échec du chargement Firebase.');
       return false;
     } finally {
-      setIsRemoteSyncing(false);
+      if (!silent) setIsRemoteSyncing(false);
     }
   }
 
@@ -989,7 +989,7 @@ export default function App() {
     };
 
     pollRemoteRefereeState();
-    const intervalId = window.setInterval(pollRemoteRefereeState, 1000);
+    const intervalId = window.setInterval(pollRemoteRefereeState, 2000);
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
@@ -1062,7 +1062,8 @@ export default function App() {
     ];
     return allMatches
       .filter((match) => {
-        if (match.refereeInProgress) return false;
+        const pendingStatus = getPendingStatus(match);
+        if (pendingStatus === 'Match en cours') return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
@@ -1743,14 +1744,6 @@ export default function App() {
     )));
   }
 
-  function reassignRefereeWithoutReset(scope, matchId) {
-    updateMatchesInScope(scope, (matches) => matches.map((match) => (
-      match.id === matchId
-        ? { ...match, refereeInProgress: false }
-        : match
-    )));
-  }
-
   function releaseRefereeSelectedMatch(entry) {
     if (!entry?.match) {
       setRefereeSelectedMatch(null);
@@ -1900,7 +1893,6 @@ export default function App() {
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                           <div className="actions-row compact-actions">
-                            <Button variant="secondary" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
                             <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Effacer</Button>
                           </div>
                         </>
@@ -2157,19 +2149,10 @@ export default function App() {
                           const schedule = scheduleData.scheduleMap[match.id];
                           const pendingStatus = getPendingStatus(match);
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
-                          const statusText = officialStatus === 'Valide'
-                            ? 'Valide'
-                            : match.refereeInProgress
-                              ? 'Match en cours'
-                              : pendingStatus === 'À valider'
-                                ? 'À valider'
-                                : 'À saisir';
-                          const badgeClass = officialStatus === 'Valide'
-                            ? 'badge-success'
-                            : statusText === 'À valider'
-                              ? 'badge-warning'
-                              : 'badge-neutral';
-                          const canSelect = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress;
+                          const statusText = officialStatus === 'Valide' ? 'Valide' : pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus;
+                          const badgeClass = officialStatus === 'Valide' ? 'badge-success' : pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Match en cours' ? 'badge-neutral' : 'badge-neutral';
+                          const isInProgress = pendingStatus === 'Match en cours';
+                          const canSelect = group.isUnlocked && !isInProgress;
                           return (
                             <button
                               key={match.id}
@@ -2182,7 +2165,7 @@ export default function App() {
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
                               }}
                               disabled={!canSelect}
-                              title={!group.isUnlocked ? group.lockReason : match.refereeInProgress ? 'Match déjà en cours de saisie par un arbitre.' : ''}
+                              title={!group.isUnlocked ? group.lockReason : isInProgress ? 'Match déjà en cours de saisie par un arbitre.' : ''}
                             >
                               <div>
                                 <div className="referee-selector-teams"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /><span className="muted tiny">vs</span><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></div>
