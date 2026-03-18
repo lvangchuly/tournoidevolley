@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v15g';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v15h';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v15g';
+const APP_VERSION = 'v15h';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -728,6 +728,7 @@ export default function App() {
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
+  const autoRefereeSyncTimeoutRef = useRef(null);
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
 
@@ -804,6 +805,78 @@ export default function App() {
     if (!options.preserveSelection) setRefereeSelectedMatch(null);
   }
 
+
+  async function fetchTournamentFromCloudRaw(targetId = sharedTournamentId) {
+    const effectiveId = String(targetId || '').trim();
+    if (!effectiveId) return null;
+    const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`);
+    if (!response.ok) {
+      throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis OVHcloud.');
+    }
+    return response.json();
+  }
+
+  function mergeRemoteMatches(localMatches, remoteMatches = []) {
+    let changed = false;
+    const remoteById = new Map((remoteMatches || []).map((match) => [match.id, match]));
+    const merged = localMatches.map((match) => {
+      const remote = remoteById.get(match.id);
+      if (!remote) return match;
+      const updates = {
+        submittedScoreA: remote.submittedScoreA ?? '',
+        submittedScoreB: remote.submittedScoreB ?? '',
+        submittedAt: remote.submittedAt ?? null,
+        refereeInProgress: Boolean(remote.refereeInProgress),
+      };
+      const hasChanged =
+        (match.submittedScoreA ?? '') !== updates.submittedScoreA ||
+        (match.submittedScoreB ?? '') !== updates.submittedScoreB ||
+        (match.submittedAt ?? null) !== updates.submittedAt ||
+        Boolean(match.refereeInProgress) !== updates.refereeInProgress;
+      if (!hasChanged) return match;
+      changed = true;
+      return { ...match, ...updates };
+    });
+    return changed ? merged : localMatches;
+  }
+
+  function mergeRemoteRefereeState(payload) {
+    if (!payload) return;
+    if (payload?.meta?.remoteSavedAt) setRemoteSavedAt(payload.meta.remoteSavedAt);
+    if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
+      setRemoteSyncMessage(`Dernière synchro OVHcloud : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
+    }
+    if (payload.brassage1?.matches) setBrassage1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage1.matches) }));
+    if (payload.brassage2?.matches) setBrassage2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage2.matches) }));
+    if (payload.mainStage?.principaleMatches || payload.mainStage?.consolanteMatches) {
+      setMainStage((current) => ({
+        ...current,
+        principaleMatches: mergeRemoteMatches(current.principaleMatches, payload.mainStage?.principaleMatches || []),
+        consolanteMatches: mergeRemoteMatches(current.consolanteMatches, payload.mainStage?.consolanteMatches || []),
+      }));
+    }
+    if (payload.knockout) {
+      setKnockout((current) => ({
+        ...current,
+        principalQuarters: mergeRemoteMatches(current.principalQuarters, payload.knockout?.principalQuarters || []),
+        principalSemis: mergeRemoteMatches(current.principalSemis, payload.knockout?.principalSemis || []),
+        principalFinals: mergeRemoteMatches(current.principalFinals, payload.knockout?.principalFinals || []),
+        consolanteSemis: mergeRemoteMatches(current.consolanteSemis, payload.knockout?.consolanteSemis || []),
+        consolanteFinals: mergeRemoteMatches(current.consolanteFinals, payload.knockout?.consolanteFinals || []),
+      }));
+    }
+    if (payload.championshipLeg1?.matches) setChampionshipLeg1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg1.matches) }));
+    if (payload.championshipLeg2?.matches) setChampionshipLeg2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg2.matches) }));
+    if (payload.singleKnockout) {
+      setSingleKnockout((current) => ({
+        ...current,
+        quarters: mergeRemoteMatches(current.quarters, payload.singleKnockout?.quarters || []),
+        semis: mergeRemoteMatches(current.semis, payload.singleKnockout?.semis || []),
+        finals: mergeRemoteMatches(current.finals, payload.singleKnockout?.finals || []),
+      }));
+    }
+  }
+
   async function loadTournamentFromCloud(targetId = sharedTournamentId, showMessage = true) {
     const effectiveId = String(targetId || '').trim();
     if (!effectiveId) {
@@ -813,11 +886,7 @@ export default function App() {
     setIsRemoteSyncing(true);
     setRemoteSyncMessage('Chargement OVHcloud en cours...');
     try {
-      const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`);
-      if (!response.ok) {
-        throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis OVHcloud.');
-      }
-      const payload = await response.json();
+      const payload = await fetchTournamentFromCloudRaw(effectiveId);
       applyPersistedState(payload);
       setSharedTournamentId(effectiveId);
       setRemoteSavedAt(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || '');
@@ -829,19 +898,21 @@ export default function App() {
       if (showMessage) window.alert(error.message || 'Échec du chargement OVHcloud.');
       return false;
     } finally {
-      setIsRemoteSyncing(false);
+      if (!silent) setIsRemoteSyncing(false);
     }
   }
 
-  async function saveTournamentToCloud(showMessage = true) {
+  async function saveTournamentToCloud(showMessage = true, silent = false) {
     const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
     if (!sharedTournamentId) setSharedTournamentId(effectiveId);
     const savedAt = new Date().toISOString();
     const payload = getPersistedState(savedAt);
     payload.settings.sharedTournamentId = effectiveId;
     payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
-    setIsRemoteSyncing(true);
-    setRemoteSyncMessage('Sauvegarde OVHcloud en cours...');
+    if (!silent) {
+      setIsRemoteSyncing(true);
+      setRemoteSyncMessage('Sauvegarde OVHcloud en cours...');
+    }
     try {
       const response = await fetch(`/api/shared-tournament?id=${encodeURIComponent(effectiveId)}`, {
         method: 'PUT',
@@ -861,11 +932,11 @@ export default function App() {
       if (showMessage) window.alert('Tournoi partagé sauvegardé sur OVHcloud.');
       return true;
     } catch (error) {
-      setRemoteSyncMessage(error.message || 'Échec de la sauvegarde OVHcloud.');
+      if (!silent) setRemoteSyncMessage(error.message || 'Échec de la sauvegarde OVHcloud.');
       if (showMessage) window.alert(error.message || 'Échec de la sauvegarde OVHcloud.');
       return false;
     } finally {
-      setIsRemoteSyncing(false);
+      if (!silent) setIsRemoteSyncing(false);
     }
   }
 
@@ -893,6 +964,56 @@ export default function App() {
       loadTournamentFromCloud(requestedSharedId, false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!sharedTournamentId || mode === 'referee') return;
+    let cancelled = false;
+
+    const pollRemoteRefereeState = async () => {
+      try {
+        const payload = await fetchTournamentFromCloudRaw(sharedTournamentId);
+        if (!cancelled) mergeRemoteRefereeState(payload);
+      } catch (error) {
+        // ignore background sync errors
+      }
+    };
+
+    pollRemoteRefereeState();
+    const intervalId = window.setInterval(pollRemoteRefereeState, 2000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [sharedTournamentId, mode]);
+
+  const refereeRealtimeSignature = useMemo(() => JSON.stringify({
+    selected: refereeSelectedMatch,
+    b1: brassage1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    b2: brassage2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    pm: mainStage.principaleMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    cm: mainStage.consolanteMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    pq: knockout.principalQuarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    ps: knockout.principalSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    pf: knockout.principalFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    cs: knockout.consolanteSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    cf: knockout.consolanteFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    c1: championshipLeg1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    c2: championshipLeg2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    sq: singleKnockout.quarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    ss: singleKnockout.semis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+  }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
+
+  useEffect(() => {
+    if (mode !== 'referee' || !sharedTournamentId) return;
+    if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
+    autoRefereeSyncTimeoutRef.current = window.setTimeout(() => {
+      saveTournamentToCloud(false, true);
+    }, 500);
+    return () => {
+      if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
+    };
+  }, [mode, sharedTournamentId, refereeRealtimeSignature]);
 
   const scheduleData = useMemo(() => computeTournamentSchedule(isSmallTournamentMode ? [
     championshipLeg1.matches,
