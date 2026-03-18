@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v14';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v15d';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v15c';
+const APP_VERSION = 'v15d';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1758,8 +1758,12 @@ export default function App() {
     const isLocked = officialStatus === 'Valide';
     const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
     const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
+    const pendingA = toNumber(match.submittedScoreA);
+    const pendingB = toNumber(match.submittedScoreB);
+    const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
+    const canChooseAnotherMatch = !hasStarted;
     const badgeClass = isLocked ? 'badge-success' : pendingStatus === 'À valider' ? 'badge-warning' : pendingStatus === 'Saisie arbitre invalide' ? 'badge-danger' : 'badge-neutral';
-    const badgeText = isLocked ? 'Valide' : pendingStatus === 'Aucun' ? 'À saisir' : pendingStatus;
+    const badgeText = isLocked ? 'Valide' : pendingStatus === 'Aucun' ? 'En cours' : pendingStatus;
 
     return (
       <div className="referee-focus-card">
@@ -1770,7 +1774,7 @@ export default function App() {
             <p className="muted">{match.group} • Terrain {match.court} • Début prévu : {schedule?.startText || match.time}</p>
           </div>
           <div className="actions-row">
-            <Button variant="secondary" onClick={() => setRefereeSelectedMatch(null)}>Choisir un autre match</Button>
+            <Button variant="secondary" onClick={() => setRefereeSelectedMatch(null)} disabled={!canChooseAnotherMatch}>Choisir un autre match</Button>
           </div>
         </div>
 
@@ -1795,7 +1799,7 @@ export default function App() {
             )}
             <div className="status-cell center-status">
               <span className={`badge ${badgeClass}`}>{badgeText}</span>
-              {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : <span className="muted tiny">La saisie arbitre sera proposée à validation à l’organisateur</span>}
+              {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : hasStarted ? <span className="muted tiny">Match en cours : termine la saisie ou remets les scores à 0 pour choisir un autre match</span> : <span className="muted tiny">La saisie arbitre sera proposée à validation à l’organisateur</span>}
             </div>
           </div>
           <div className="referee-team-card">

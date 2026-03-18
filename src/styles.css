@@ -260,6 +260,7 @@ h3 { margin: 0; }
 .btn-secondary { background: white; color: #0f172a; border: 1px solid #cbd5e1; }
 .btn-success { background: #047857; color: white; }
 .btn-danger { background: #dc2626; color: white; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; filter: grayscale(0.2); }
 
 .table-wrap {
   overflow: auto;
