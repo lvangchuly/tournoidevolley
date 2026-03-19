@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16g';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16h';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16g';
+const APP_VERSION = 'v16h';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1742,8 +1742,8 @@ export default function App() {
       if (pendingA === null || pendingB === null) return 'Match en cours';
       return isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? 'À valider' : 'Match en cours';
     }
-    if (pendingA === null || pendingB === null) return 'Aucun';
-    return isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? 'À valider' : 'Match en cours';
+    if (pendingA === null || pendingB === null) return 'À saisir';
+    return 'À saisir';
   }
 
   function updateOfficialMatchScore(scope, matchId, field, value) {
@@ -1967,10 +1967,15 @@ export default function App() {
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                           <div className="actions-row compact-actions">
-                            <Button variant="primary" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
+                            <Button variant="info" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
                             <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Effacer</Button>
                           </div>
                         </>
+                      ) : null}
+                      {pendingStatus !== 'Match en cours' && pendingStatus !== 'À valider' ? (
+                        <div className="actions-row compact-actions">
+                          <Button variant="secondary" disabled>Changer l’arbitre</Button>
+                        </div>
                       ) : null}
                       {schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
                     </div>
