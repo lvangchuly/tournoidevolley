@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16j';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16k';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16j';
+const APP_VERSION = 'v16k';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1746,12 +1746,9 @@ export default function App() {
   function getPendingStatus(match) {
     const pendingA = toNumber(match.submittedScoreA);
     const pendingB = toNumber(match.submittedScoreB);
-    const hasPendingScores = pendingA !== null || pendingB !== null;
-    if (match.refereeInProgress) {
+    const hasStarted = ((pendingA ?? 0) > 0) || ((pendingB ?? 0) > 0);
+    if (match.refereeInProgress || hasStarted) {
       return 'Match en cours';
-    }
-    if (hasPendingScores) {
-      return 'À saisir';
     }
     return 'À saisir';
   }
@@ -2243,15 +2240,13 @@ export default function App() {
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
                           const statusText = officialStatus === 'Valide'
                             ? 'Valide'
-                            : match.refereeInProgress
+                            : pendingStatus === 'Match en cours'
                               ? 'Match en cours'
-                              : pendingStatus === 'À valider'
-                                ? 'À valider'
-                                : 'À saisir';
+                              : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : statusText === 'À valider'
-                              ? 'badge-warning'
+                            : match.refereeInProgress
+                              ? 'badge-danger'
                               : 'badge-neutral';
                           const canSelect = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress;
                           return (
