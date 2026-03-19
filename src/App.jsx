@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16h';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16i';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16h';
+const APP_VERSION = 'v16i';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1808,13 +1808,15 @@ export default function App() {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
-    updateMatchesInScope(scope, (matches) => matches.map((match) => (
-      match.id === matchId
-        ? { ...match, refereeInProgress: false }
-        : match
-    )));
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      return {
+        ...match,
+        refereeInProgress: false,
+      };
+    }));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(0);
   }
 
   function releaseRefereeSelectedMatch(entry) {
@@ -1966,17 +1968,17 @@ export default function App() {
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                          <div className="actions-row compact-actions">
-                            <Button variant="info" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
-                            <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Effacer</Button>
-                          </div>
                         </>
                       ) : null}
-                      {pendingStatus !== 'Match en cours' && pendingStatus !== 'À valider' ? (
-                        <div className="actions-row compact-actions">
-                          <Button variant="secondary" disabled>Changer l’arbitre</Button>
-                        </div>
-                      ) : null}
+                      <div className="actions-row compact-actions">
+                        <Button
+                          variant={match.refereeInProgress ? 'info' : 'secondary'}
+                          onClick={() => reassignRefereeWithoutReset(scope, match.id)}
+                          disabled={!match.refereeInProgress}
+                        >
+                          Changer l’arbitre
+                        </Button>
+                      </div>
                       {schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
                     </div>
                   </td>
