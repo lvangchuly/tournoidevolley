@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16l';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16m';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16l';
+const APP_VERSION = 'V16M';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -67,6 +67,13 @@ function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
+
+function normalizeScoreInput(value) {
+  const raw = String(value ?? '');
+  const digitsOnly = raw.replace(/[^\d]/g, '');
+  return digitsOnly;
+}
+
 
 function safeClone(value, fallback) {
   try {
@@ -1024,6 +1031,24 @@ export default function App() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
   }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleStorage = (event) => {
+      if (event.key !== STORAGE_KEY || !event.newValue) return;
+      try {
+        const payload = JSON.parse(event.newValue);
+        mergeRemoteRefereeState(payload);
+      } catch {
+        // ignore malformed local sync payloads
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [phaseRules]);
+
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
     const previousDefaultId = buildDefaultSharedTournamentId(previousName);
@@ -1783,9 +1808,7 @@ export default function App() {
   }
 
   function getPendingStatus(match) {
-    const pendingA = toNumber(match.submittedScoreA);
-    const pendingB = toNumber(match.submittedScoreB);
-    const hasStarted = ((pendingA ?? 0) > 0) || ((pendingB ?? 0) > 0);
+    const hasStarted = String(match.submittedScoreA ?? '').trim() !== '' || String(match.submittedScoreB ?? '').trim() !== '';
     if (match.refereeInProgress || hasStarted) {
       return 'Match en cours';
     }
@@ -1793,7 +1816,7 @@ export default function App() {
   }
 
   function updateOfficialMatchScore(scope, matchId, field, value) {
-    const normalized = value === '' ? '' : Math.max(0, Number(value));
+    const normalized = normalizeScoreInput(value);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const updated = {
@@ -1807,11 +1830,11 @@ export default function App() {
       updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
       return updated;
     }));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(50);
   }
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const normalized = value === '' ? '' : Math.max(0, Number(value));
+    const normalized = normalizeScoreInput(value);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
@@ -1823,7 +1846,7 @@ export default function App() {
         refereeInProgress: true,
       };
     }));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(50);
   }
 
   function approveRefereeScore(scope, matchId) {
@@ -1996,9 +2019,9 @@ export default function App() {
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
                   <td>
                     <div className="score-inputs">
-                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <input type="text" inputMode="numeric" pattern="[0-9]*" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
-                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      <input type="text" inputMode="numeric" pattern="[0-9]*" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
@@ -2008,7 +2031,7 @@ export default function App() {
                       {!isValid && pendingStatus === 'Match en cours' ? (
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
-                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                          <span className="muted tiny">Saisie arbitre en direct : {match.submittedScoreA === '' ? '-' : match.submittedScoreA} - {match.submittedScoreB === '' ? '-' : match.submittedScoreB}</span>
                           {canApprovePending ? (
                             <div className="actions-row compact-actions">
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
@@ -2091,9 +2114,9 @@ export default function App() {
               </div>
             ) : (
               <div className="score-inputs score-inputs-large">
-                <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                <input type="text" inputMode="numeric" pattern="[0-9]*" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                 <span className="score-separator">-</span>
-                <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                <input type="text" inputMode="numeric" pattern="[0-9]*" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
               </div>
             )}
             <div className="status-cell center-status">
