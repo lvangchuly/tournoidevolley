@@ -6,7 +6,7 @@ const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16d';
+const APP_VERSION = 'v16e';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -734,6 +734,7 @@ export default function App() {
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
+  const refereeSessionId = useMemo(() => getRefereeSessionId(), []);
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -849,12 +850,16 @@ export default function App() {
         submittedScoreB: remote.submittedScoreB ?? '',
         submittedAt: remote.submittedAt ?? null,
         refereeInProgress: Boolean(remote.refereeInProgress),
+        refereeLockOwner: remote.refereeLockOwner ?? '',
+        refereeLockAt: remote.refereeLockAt ?? null,
       };
       const hasChanged =
         (match.submittedScoreA ?? '') !== updates.submittedScoreA ||
         (match.submittedScoreB ?? '') !== updates.submittedScoreB ||
         (match.submittedAt ?? null) !== updates.submittedAt ||
-        Boolean(match.refereeInProgress) !== updates.refereeInProgress;
+        Boolean(match.refereeInProgress) !== updates.refereeInProgress ||
+        (match.refereeLockOwner ?? '') !== updates.refereeLockOwner ||
+        (match.refereeLockAt ?? null) !== updates.refereeLockAt;
       if (!hasChanged) return match;
       changed = true;
       return { ...match, ...updates };
@@ -1017,20 +1022,20 @@ export default function App() {
 
   const refereeRealtimeSignature = useMemo(() => JSON.stringify({
     selected: refereeSelectedMatch,
-    b1: brassage1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    b2: brassage2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pm: mainStage.principaleMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cm: mainStage.consolanteMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pq: knockout.principalQuarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    ps: knockout.principalSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pf: knockout.principalFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cs: knockout.consolanteSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cf: knockout.consolanteFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    c1: championshipLeg1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    c2: championshipLeg2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    sq: singleKnockout.quarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    ss: singleKnockout.semis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    b1: brassage1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    b2: brassage2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    pm: mainStage.principaleMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    cm: mainStage.consolanteMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    pq: knockout.principalQuarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    ps: knockout.principalSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    pf: knockout.principalFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    cs: knockout.consolanteSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    cf: knockout.consolanteFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    c1: championshipLeg1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    c2: championshipLeg2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    sq: singleKnockout.quarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    ss: singleKnockout.semis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
+    sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, refereeLockOwner, refereeLockAt })),
   }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
 
   useEffect(() => {
@@ -1716,6 +1721,8 @@ export default function App() {
         submittedScoreB: '',
         submittedAt: null,
         refereeInProgress: false,
+        refereeLockOwner: '',
+        refereeLockAt: null,
       };
       updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
       return updated;
@@ -1734,6 +1741,8 @@ export default function App() {
         [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
         submittedAt: new Date().toISOString(),
         refereeInProgress: true,
+        refereeLockOwner: refereeSessionId,
+        refereeLockAt: new Date().toISOString(),
       };
     }));
     queueBackgroundCloudSave();
@@ -1750,6 +1759,8 @@ export default function App() {
         submittedScoreB: '',
         submittedAt: null,
         refereeInProgress: false,
+        refereeLockOwner: '',
+        refereeLockAt: null,
       };
       approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
       return approved;
@@ -1760,7 +1771,7 @@ export default function App() {
   function rejectRefereeScore(scope, matchId) {
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
-        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: null, refereeInProgress: false }
+        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: null, refereeInProgress: false, refereeLockOwner: '', refereeLockAt: null }
         : match
     )));
     queueBackgroundCloudSave();
@@ -1769,7 +1780,7 @@ export default function App() {
   function reassignRefereeWithoutReset(scope, matchId) {
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
-        ? { ...match, refereeInProgress: false }
+        ? { ...match, refereeInProgress: false, refereeLockOwner: '', refereeLockAt: null }
         : match
     )));
     queueBackgroundCloudSave();
@@ -1786,7 +1797,7 @@ export default function App() {
     if (!hasStarted && getMatchStatusLabel(entry.match, phaseRules) !== 'Valide') {
       updateMatchesInScope(entry.scope, (matches) => matches.map((match) => (
         match.id === entry.match.id
-          ? { ...match, refereeInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: null }
+          ? { ...match, refereeInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: null, refereeLockOwner: '', refereeLockAt: null }
           : match
       )));
       queueBackgroundCloudSave();
@@ -2194,7 +2205,9 @@ export default function App() {
                             : statusText === 'À valider'
                               ? 'badge-warning'
                               : 'badge-neutral';
-                          const canSelect = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress;
+                          const isLockedByOtherReferee = Boolean(match.refereeInProgress) && (match.refereeLockOwner ? match.refereeLockOwner !== refereeSessionId : true);
+                          const canResumeOwnSelection = Boolean(match.refereeInProgress) && match.refereeLockOwner === refereeSessionId;
+                          const canSelect = group.isUnlocked && officialStatus !== 'Valide' && (!isLockedByOtherReferee);
                           return (
                             <button
                               key={match.id}
@@ -2202,13 +2215,19 @@ export default function App() {
                               onClick={() => {
                                 if (!canSelect) return;
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
-                                  item.id === match.id ? { ...item, refereeInProgress: true, submittedAt: item.submittedAt || new Date().toISOString() } : item
+                                  item.id === match.id ? {
+                                    ...item,
+                                    refereeInProgress: true,
+                                    refereeLockOwner: refereeSessionId,
+                                    refereeLockAt: new Date().toISOString(),
+                                    submittedAt: item.submittedAt || new Date().toISOString(),
+                                  } : item
                                 )));
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
-                                queueBackgroundCloudSave(50);
+                                queueBackgroundCloudSave(20);
                               }}
                               disabled={!canSelect}
-                              title={!group.isUnlocked ? group.lockReason : match.refereeInProgress ? 'Match déjà en cours de saisie par un arbitre.' : ''}
+                              title={!group.isUnlocked ? group.lockReason : isLockedByOtherReferee ? 'Match déjà en cours de saisie par un autre arbitre.' : canResumeOwnSelection ? 'Reprendre ce match en cours.' : ''}
                             >
                               <div>
                                 <div className="referee-selector-teams"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /><span className="muted tiny">vs</span><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></div>
