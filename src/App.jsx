@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16k';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16l';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16k';
+const APP_VERSION = 'v16l';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1946,7 +1946,8 @@ export default function App() {
               const pendingStatus = getPendingStatus(match);
               const pendingA = toNumber(match.submittedScoreA);
               const pendingB = toNumber(match.submittedScoreB);
-              const canApprovePending = match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+              const isValid = status === 'Valide';
+              const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
               const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -1964,8 +1965,8 @@ export default function App() {
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
                   <td>
                     <div className="status-cell">
-                      <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                      {pendingStatus === 'Match en cours' ? (
+                      <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                      {!isValid && pendingStatus === 'Match en cours' ? (
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
@@ -1977,16 +1978,18 @@ export default function App() {
                           ) : null}
                         </>
                       ) : null}
-                      <div className="actions-row compact-actions">
-                        <Button
-                          variant={match.refereeInProgress ? 'info' : 'secondary'}
-                          onClick={() => reassignRefereeWithoutReset(scope, match.id)}
-                          disabled={!match.refereeInProgress}
-                        >
-                          Changer l’arbitre
-                        </Button>
-                      </div>
-                      {schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
+                      {!isValid ? (
+                        <div className="actions-row compact-actions">
+                          <Button
+                            variant={match.refereeInProgress ? 'info' : 'secondary'}
+                            onClick={() => reassignRefereeWithoutReset(scope, match.id)}
+                            disabled={!match.refereeInProgress}
+                          >
+                            Changer l’arbitre
+                          </Button>
+                        </div>
+                      ) : null}
+                      {!isValid && schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
                     </div>
                   </td>
                 </tr>
