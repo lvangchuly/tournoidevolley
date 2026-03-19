@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16m';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16l';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V16M';
+const APP_VERSION = 'v16l';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -67,13 +67,6 @@ function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
-
-function normalizeScoreInput(value) {
-  const raw = String(value ?? '');
-  const digitsOnly = raw.replace(/[^\d]/g, '');
-  return digitsOnly;
-}
-
 
 function safeClone(value, fallback) {
   try {
@@ -735,6 +728,7 @@ export default function App() {
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
+  const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
   const [brassage1, setBrassage1] = useState(safeClone(initial?.brassage1, { pools: [], matches: [] }));
   const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
   const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
@@ -918,6 +912,7 @@ export default function App() {
 
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
+    setRemoteStateInitialized(true);
     if (payload?.meta?.remoteSavedAt) setRemoteSavedAt(payload.meta.remoteSavedAt);
     if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
@@ -964,6 +959,7 @@ export default function App() {
     try {
       const payload = await fetchTournamentFromCloudRaw(effectiveId);
       applyPersistedState(payload);
+      setRemoteStateInitialized(true);
       setSharedTournamentId(effectiveId);
       setRemoteSavedAt(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || '');
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
@@ -979,6 +975,12 @@ export default function App() {
   }
 
   async function saveTournamentToCloud(showMessage = true, silent = false) {
+    if (mode === 'referee' && !remoteStateInitialized) {
+      if (!silent) {
+        setRemoteSyncMessage('Chargement Firebase en cours...');
+      }
+      return false;
+    }
     const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
     if (!sharedTournamentId) setSharedTournamentId(effectiveId);
     const savedAt = new Date().toISOString();
@@ -1031,24 +1033,6 @@ export default function App() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
   }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
-    const handleStorage = (event) => {
-      if (event.key !== STORAGE_KEY || !event.newValue) return;
-      try {
-        const payload = JSON.parse(event.newValue);
-        mergeRemoteRefereeState(payload);
-      } catch {
-        // ignore malformed local sync payloads
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [phaseRules]);
-
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
     const previousDefaultId = buildDefaultSharedTournamentId(previousName);
@@ -1073,6 +1057,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const requestedSharedId = params.get('sharedTournamentId');
     if (requestedSharedId) {
+      setRemoteStateInitialized(false);
       setSharedTournamentId(requestedSharedId);
       loadTournamentFromCloud(requestedSharedId, false);
     }
@@ -1118,7 +1103,7 @@ export default function App() {
   }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
 
   useEffect(() => {
-    if (mode !== 'referee' || !sharedTournamentId) return;
+    if (mode !== 'referee' || !sharedTournamentId || !remoteStateInitialized) return;
     if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
     autoRefereeSyncTimeoutRef.current = window.setTimeout(() => {
       saveTournamentToCloud(false, true);
@@ -1126,7 +1111,7 @@ export default function App() {
     return () => {
       if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
     };
-  }, [mode, sharedTournamentId, refereeRealtimeSignature]);
+  }, [mode, sharedTournamentId, remoteStateInitialized, refereeRealtimeSignature]);
 
   const organizerCloudSignature = useMemo(() => JSON.stringify({
     tournamentName,
@@ -1808,7 +1793,9 @@ export default function App() {
   }
 
   function getPendingStatus(match) {
-    const hasStarted = String(match.submittedScoreA ?? '').trim() !== '' || String(match.submittedScoreB ?? '').trim() !== '';
+    const pendingA = toNumber(match.submittedScoreA);
+    const pendingB = toNumber(match.submittedScoreB);
+    const hasStarted = ((pendingA ?? 0) > 0) || ((pendingB ?? 0) > 0);
     if (match.refereeInProgress || hasStarted) {
       return 'Match en cours';
     }
@@ -1816,7 +1803,7 @@ export default function App() {
   }
 
   function updateOfficialMatchScore(scope, matchId, field, value) {
-    const normalized = normalizeScoreInput(value);
+    const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const updated = {
@@ -1830,11 +1817,11 @@ export default function App() {
       updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
       return updated;
     }));
-    queueBackgroundCloudSave(50);
+    queueBackgroundCloudSave();
   }
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const normalized = normalizeScoreInput(value);
+    const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
@@ -1846,7 +1833,7 @@ export default function App() {
         refereeInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(50);
+    queueBackgroundCloudSave();
   }
 
   function approveRefereeScore(scope, matchId) {
@@ -2019,9 +2006,9 @@ export default function App() {
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
                   <td>
                     <div className="score-inputs">
-                      <input type="text" inputMode="numeric" pattern="[0-9]*" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
-                      <input type="text" inputMode="numeric" pattern="[0-9]*" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
@@ -2031,7 +2018,7 @@ export default function App() {
                       {!isValid && pendingStatus === 'Match en cours' ? (
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
-                          <span className="muted tiny">Saisie arbitre en direct : {match.submittedScoreA === '' ? '-' : match.submittedScoreA} - {match.submittedScoreB === '' ? '-' : match.submittedScoreB}</span>
+                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                           {canApprovePending ? (
                             <div className="actions-row compact-actions">
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
@@ -2114,9 +2101,9 @@ export default function App() {
               </div>
             ) : (
               <div className="score-inputs score-inputs-large">
-                <input type="text" inputMode="numeric" pattern="[0-9]*" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                 <span className="score-separator">-</span>
-                <input type="text" inputMode="numeric" pattern="[0-9]*" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
               </div>
             )}
             <div className="status-cell center-status">
@@ -2295,6 +2282,7 @@ export default function App() {
           {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="stack-gap">
+            {!remoteStateInitialized ? <div className="info-banner">Chargement des données partagées en cours…</div> : null}
             {refereeSelectedEntry ? (
               <Section title="Saisie arbitre" subtitle="Le match sélectionné s’affiche seul pour faciliter la saisie des scores.">
                 {renderRefereeSelectedMatch(refereeSelectedEntry)}
