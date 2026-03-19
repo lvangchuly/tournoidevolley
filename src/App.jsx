@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16i';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16j';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16i';
+const APP_VERSION = 'v16j';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -735,6 +735,7 @@ export default function App() {
   const organizerLoginInputRef = useRef(null);
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
+  const recentRefereeReleaseRef = useRef(new Map());
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -841,15 +842,22 @@ export default function App() {
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
     let changed = false;
     const remoteById = new Map((remoteMatches || []).map((match) => [match.id, match]));
+    const now = Date.now();
     const merged = localMatches.map((match) => {
       const remote = remoteById.get(match.id);
       if (!remote) return match;
+      const recentRelease = recentRefereeReleaseRef.current.get(match.id);
+      const remoteInProgress = Boolean(remote.refereeInProgress);
+      const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
       const updates = {
         submittedScoreA: remote.submittedScoreA ?? '',
         submittedScoreB: remote.submittedScoreB ?? '',
         submittedAt: remote.submittedAt ?? null,
-        refereeInProgress: Boolean(remote.refereeInProgress),
+        refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
       };
+      if (!remoteInProgress && recentRelease) {
+        recentRefereeReleaseRef.current.delete(match.id);
+      }
       const hasChanged =
         (match.submittedScoreA ?? '') !== updates.submittedScoreA ||
         (match.submittedScoreB ?? '') !== updates.submittedScoreB ||
@@ -1738,11 +1746,13 @@ export default function App() {
   function getPendingStatus(match) {
     const pendingA = toNumber(match.submittedScoreA);
     const pendingB = toNumber(match.submittedScoreB);
+    const hasPendingScores = pendingA !== null || pendingB !== null;
     if (match.refereeInProgress) {
-      if (pendingA === null || pendingB === null) return 'Match en cours';
-      return isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? 'À valider' : 'Match en cours';
+      return 'Match en cours';
     }
-    if (pendingA === null || pendingB === null) return 'À saisir';
+    if (hasPendingScores) {
+      return 'À saisir';
+    }
     return 'À saisir';
   }
 
@@ -1808,6 +1818,7 @@ export default function App() {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
+    recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       return {
@@ -1816,7 +1827,7 @@ export default function App() {
       };
     }));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
-    queueBackgroundCloudSave(0);
+    queueBackgroundCloudSave(250);
   }
 
   function releaseRefereeSelectedMatch(entry) {
@@ -1936,6 +1947,9 @@ export default function App() {
             {matches.map((match) => {
               const status = getMatchStatusLabel(match, phaseRules);
               const pendingStatus = getPendingStatus(match);
+              const pendingA = toNumber(match.submittedScoreA);
+              const pendingB = toNumber(match.submittedScoreB);
+              const canApprovePending = match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
               const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -1954,20 +1968,16 @@ export default function App() {
                   <td>
                     <div className="status-cell">
                       <span className={`badge ${status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                      {pendingStatus === 'À valider' ? (
-                        <>
-                          <span className="badge badge-warning">À valider</span>
-                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                          <div className="actions-row compact-actions">
-                            <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
-                            <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
-                          </div>
-                        </>
-                      ) : null}
                       {pendingStatus === 'Match en cours' ? (
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                          {canApprovePending ? (
+                            <div className="actions-row compact-actions">
+                              <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                              <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                            </div>
+                          ) : null}
                         </>
                       ) : null}
                       <div className="actions-row compact-actions">
