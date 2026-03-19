@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16f';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16g';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16f';
+const APP_VERSION = 'v16g';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1046,7 +1046,7 @@ export default function App() {
   }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
 
   useEffect(() => {
-    if ((mode !== 'referee' && mode !== 'organizer') || !sharedTournamentId) return;
+    if (mode !== 'referee' || !sharedTournamentId) return;
     if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
     autoRefereeSyncTimeoutRef.current = window.setTimeout(() => {
       saveTournamentToCloud(false, true);
@@ -1813,6 +1813,7 @@ export default function App() {
         ? { ...match, refereeInProgress: false }
         : match
     )));
+    setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
     queueBackgroundCloudSave();
   }
 
@@ -1966,7 +1967,7 @@ export default function App() {
                           <span className="badge badge-neutral">Match en cours</span>
                           <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                           <div className="actions-row compact-actions">
-                            <Button variant="secondary" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
+                            <Button variant="primary" onClick={() => reassignRefereeWithoutReset(scope, match.id)}>Changer l’arbitre</Button>
                             <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Effacer</Button>
                           </div>
                         </>
