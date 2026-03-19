@@ -399,6 +399,11 @@ function getMatchStatusLabel(match, phaseRules) {
   return isMatchResultValid(match, phaseRules) ? 'Valide' : 'Score invalide';
 }
 
+function toTimestamp(value) {
+  const stamp = Date.parse(value || '');
+  return Number.isFinite(stamp) ? stamp : 0;
+}
+
 function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
   const scheduleMap = {};
   const sorted = [...matches].sort((a, b) => {
@@ -846,26 +851,60 @@ export default function App() {
     const merged = localMatches.map((match) => {
       const remote = remoteById.get(match.id);
       if (!remote) return match;
+
       const recentRelease = recentRefereeReleaseRef.current.get(match.id);
       const remoteInProgress = Boolean(remote.refereeInProgress);
       const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
-      const updates = {
-        submittedScoreA: remote.submittedScoreA ?? '',
-        submittedScoreB: remote.submittedScoreB ?? '',
-        submittedAt: remote.submittedAt ?? null,
-        refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
-      };
+      const localSubmittedAt = toTimestamp(match.submittedAt);
+      const remoteSubmittedAt = toTimestamp(remote.submittedAt);
+      const localValidatedAt = toTimestamp(match.validatedAt);
+      const remoteValidatedAt = toTimestamp(remote.validatedAt);
+      const remoteIsValid = isMatchResultValid(remote, phaseRules);
+      const localIsValid = isMatchResultValid(match, phaseRules);
+
+      let nextMatch = match;
+
+      if (remoteIsValid && (!localIsValid || remoteValidatedAt >= localValidatedAt)) {
+        nextMatch = {
+          ...nextMatch,
+          scoreA: remote.scoreA ?? '',
+          scoreB: remote.scoreB ?? '',
+          validatedAt: remote.validatedAt ?? null,
+          submittedScoreA: '',
+          submittedScoreB: '',
+          submittedAt: null,
+          refereeInProgress: false,
+        };
+      } else if (remoteSubmittedAt >= localSubmittedAt) {
+        nextMatch = {
+          ...nextMatch,
+          submittedScoreA: remote.submittedScoreA ?? '',
+          submittedScoreB: remote.submittedScoreB ?? '',
+          submittedAt: remote.submittedAt ?? null,
+          refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
+        };
+      } else if (shouldIgnoreRemoteLock) {
+        nextMatch = {
+          ...nextMatch,
+          refereeInProgress: false,
+        };
+      }
+
       if (!remoteInProgress && recentRelease) {
         recentRefereeReleaseRef.current.delete(match.id);
       }
+
       const hasChanged =
-        (match.submittedScoreA ?? '') !== updates.submittedScoreA ||
-        (match.submittedScoreB ?? '') !== updates.submittedScoreB ||
-        (match.submittedAt ?? null) !== updates.submittedAt ||
-        Boolean(match.refereeInProgress) !== updates.refereeInProgress;
+        (match.scoreA ?? '') !== (nextMatch.scoreA ?? '') ||
+        (match.scoreB ?? '') !== (nextMatch.scoreB ?? '') ||
+        (match.validatedAt ?? null) !== (nextMatch.validatedAt ?? null) ||
+        (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
+        (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
+        (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
+        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress);
       if (!hasChanged) return match;
       changed = true;
-      return { ...match, ...updates };
+      return nextMatch;
     });
     return changed ? merged : localMatches;
   }
@@ -2014,8 +2053,16 @@ export default function App() {
     const pendingB = toNumber(match.submittedScoreB);
     const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
     const canChooseAnotherMatch = !hasStarted;
-    const badgeClass = isLocked ? 'badge-success' : 'badge-neutral';
-    const badgeText = isLocked ? 'Valide' : 'En cours';
+    const badgeText = officialStatus === 'Valide'
+      ? 'Valide'
+      : pendingStatus === 'Match en cours'
+        ? 'Match en cours'
+        : 'À saisir';
+    const badgeClass = officialStatus === 'Valide'
+      ? 'badge-success'
+      : pendingStatus === 'Match en cours'
+        ? 'badge-danger'
+        : 'badge-neutral';
 
     return (
       <div className="referee-focus-card">
