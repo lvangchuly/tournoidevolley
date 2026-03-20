@@ -2276,14 +2276,20 @@ export default function App() {
       : match.refereeInProgress
         ? 'badge-danger'
         : 'badge-neutral';
+    const phaseRule = getRuleForPhaseLabel(match.phase, phaseRules);
+    const winningScore = Number(phaseRule?.winningScore) || 21;
+    const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
+    const contextText = `${match.group} • Terrain ${match.court} • Début prévu : ${schedule?.startText || match.time}`;
+    const phaseCaption = (match.phase || title || '').toUpperCase();
 
     return (
       <div className="referee-focus-card">
         <div className="referee-focus-head">
           <div>
-            <div className="muted small">{title}</div>
+            <div className="referee-phase-caption">{phaseCaption}</div>
             <h2>{resolveTeam(match.teamAId).name} <span className="muted">vs</span> {resolveTeam(match.teamBId).name}</h2>
-            <p className="muted">{match.group} • Terrain {match.court} • Début prévu : {schedule?.startText || match.time}</p>
+            <p className="muted referee-match-context">{contextText}</p>
+            <p className="referee-match-format">Match en {winningScore} {modeLabel}</p>
           </div>
           <div className="actions-row">
             <Button variant="secondary" onClick={() => releaseRefereeSelectedMatch(entry)} disabled={!canChooseAnotherMatch}>Choisir un autre match</Button>
