@@ -2255,7 +2255,7 @@ export default function App() {
         : 'À saisir';
     const badgeClass = officialStatus === 'Valide'
       ? 'badge-success'
-      : pendingStatus === 'Match en cours'
+      : match.refereeInProgress
         ? 'badge-danger'
         : 'badge-neutral';
 
@@ -2500,7 +2500,7 @@ export default function App() {
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : match.refereeInProgress || match.matchInProgress
+                            : match.refereeInProgress
                               ? 'badge-danger'
                               : 'badge-neutral';
                           const canSelectExistingInProgressMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && Boolean(match.matchInProgress);
