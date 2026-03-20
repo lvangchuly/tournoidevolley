@@ -2018,6 +2018,24 @@ export default function App() {
     queueBackgroundCloudSave(0);
   }
 
+  function stepRefereeMatchScore(scope, matchId, field, delta) {
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
+      const currentValue = toNumber(field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB) ?? 0;
+      const nextValue = Math.max(0, currentValue + delta);
+      return {
+        ...match,
+        [field]: match[field],
+        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: nextValue,
+        submittedAt: new Date().toISOString(),
+        refereeInProgress: true,
+        matchInProgress: true,
+      };
+    }));
+    queueBackgroundCloudSave(0);
+  }
+
   function approveRefereeScore(scope, matchId) {
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -2286,9 +2304,59 @@ export default function App() {
               </div>
             ) : (
               <div className="score-inputs score-inputs-large">
-                <input type="number" min="0" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                <div className="score-stepper">
+                  <button
+                    type="button"
+                    className="score-stepper-btn"
+                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', 1)}
+                    aria-label={`Augmenter le score de ${resolveTeam(match.teamAId).name}`}
+                  >
+                    ▲
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={displayScoreA}
+                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="score-stepper-btn"
+                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', -1)}
+                    aria-label={`Diminuer le score de ${resolveTeam(match.teamAId).name}`}
+                    disabled={(toNumber(displayScoreA) ?? 0) <= 0}
+                  >
+                    ▼
+                  </button>
+                </div>
                 <span className="score-separator">-</span>
-                <input type="number" min="0" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                <div className="score-stepper">
+                  <button
+                    type="button"
+                    className="score-stepper-btn"
+                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', 1)}
+                    aria-label={`Augmenter le score de ${resolveTeam(match.teamBId).name}`}
+                  >
+                    ▲
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={displayScoreB}
+                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="score-stepper-btn"
+                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', -1)}
+                    aria-label={`Diminuer le score de ${resolveTeam(match.teamBId).name}`}
+                    disabled={(toNumber(displayScoreB) ?? 0) <= 0}
+                  >
+                    ▼
+                  </button>
+                </div>
               </div>
             )}
             <div className="status-cell center-status">
