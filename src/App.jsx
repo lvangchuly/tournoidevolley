@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16m';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v16N';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16m';
+const APP_VERSION = 'v16N';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -76,11 +76,28 @@ function safeClone(value, fallback) {
   }
 }
 
+function normalizeTeamsList(inputTeams) {
+  if (!Array.isArray(inputTeams) || inputTeams.length === 0) return defaultTeams();
+  return inputTeams
+    .filter(Boolean)
+    .slice(0, TEAM_TARGET)
+    .map((team, index) => ({
+      id: team?.id || uid('team'),
+      name: team?.name || `Équipe ${index + 1}`,
+      level: LEVELS.includes(team?.level) ? team.level : 'D',
+      club: team?.club || '',
+      contact: team?.contact || '',
+    }));
+}
+
 function loadState() {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed?.teams)) parsed.teams = normalizeTeamsList(parsed.teams);
+    return parsed;
   } catch {
     return null;
   }
@@ -716,7 +733,7 @@ export default function App() {
   const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
   const [organizerAttempt, setOrganizerAttempt] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [teams, setTeams] = useState(safeClone(initial?.teams, defaultTeams()));
+  const [teams, setTeams] = useState(() => normalizeTeamsList(safeClone(initial?.teams, defaultTeams())));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
@@ -797,7 +814,7 @@ export default function App() {
 
   function applyPersistedState(parsed, options = {}) {
     if (!parsed) return;
-    if (Array.isArray(parsed.teams)) setTeams(parsed.teams);
+    if (Array.isArray(parsed.teams)) setTeams(normalizeTeamsList(parsed.teams));
     if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
     if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
     if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
@@ -1272,8 +1289,16 @@ export default function App() {
     return countMatchesWithStatus(matches, 'Valide') > 0;
   }
 
+  function hasAnyOfficiallyValidatedMatch(matches) {
+    return matches.some((match) => Boolean(match?.validatedAt) && isMatchResultValid(match, phaseRules));
+  }
+
   const teamLevelLocked = useMemo(() => isSmallTournamentMode ? hasAnyValidMatch(championshipLeg1.matches) : hasAnyValidMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
-  const teamDeletionLocked = useMemo(() => isSmallTournamentMode ? hasAnyValidMatch(championshipLeg1.matches) : hasAnyValidMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
+  const teamDeletionLocked = useMemo(() => isSmallTournamentMode ? hasAnyOfficiallyValidatedMatch(championshipLeg1.matches) : hasAnyOfficiallyValidatedMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
+  const teamAdditionLocked = useMemo(() => {
+    const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
+    return teams.length >= TEAM_TARGET || firstPhaseGenerated;
+  }, [isSmallTournamentMode, championshipLeg1.matches.length, brassage1.matches.length, teams.length]);
 
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
@@ -1416,7 +1441,18 @@ export default function App() {
   }
 
   function addTeam() {
-    setTeams((current) => [...current, { id: uid('team'), name: `Équipe ${current.length + 1}`, level: 'D', club: '', contact: '' }]);
+    const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
+    if (firstPhaseGenerated) {
+      window.alert(isSmallTournamentMode ? 'Impossible d’ajouter une équipe après la génération du Championnat Aller.' : 'Impossible d’ajouter une équipe après la génération du Brassage 1.');
+      return;
+    }
+    setTeams((current) => {
+      if (current.length >= TEAM_TARGET) {
+        window.alert(`Le tournoi standard est limité à ${TEAM_TARGET} équipes.`);
+        return current;
+      }
+      return [...current, { id: uid('team'), name: `Équipe ${current.length + 1}`, level: 'D', club: '', contact: '' }];
+    });
   }
 
   function removeTeam(teamId) {
@@ -2475,7 +2511,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -2507,7 +2543,8 @@ export default function App() {
                 </table>
               </div>
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
-              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est au statut Valide.</p> : null}
+              <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
+              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est officiellement validé.</p> : null}
             </Section>
           )}
 
