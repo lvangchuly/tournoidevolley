@@ -1273,6 +1273,7 @@ export default function App() {
   }
 
   const teamLevelLocked = useMemo(() => isSmallTournamentMode ? hasAnyValidMatch(championshipLeg1.matches) : hasAnyValidMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
+  const teamDeletionLocked = useMemo(() => (isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0), [isSmallTournamentMode, championshipLeg1.matches.length, brassage1.matches.length]);
 
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
@@ -2499,13 +2500,14 @@ export default function App() {
                         </td>
                         <td><input value={team.club} onChange={(e) => updateTeam(team.id, 'club', e.target.value)} /></td>
                         <td><input value={team.contact} onChange={(e) => updateTeam(team.id, 'contact', e.target.value)} /></td>
-                        <td><Button variant="danger" onClick={() => removeTeam(team.id)}>Supprimer</Button></td>
+                        <td>{teamDeletionLocked ? null : <Button variant="danger" onClick={() => removeTeam(team.id)}>Supprimer</Button>}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
+              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès que la première phase du tournoi a été générée.</p> : null}
             </Section>
           )}
 
