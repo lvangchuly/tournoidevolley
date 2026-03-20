@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V16P';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v17A';
+const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V16P';
+const APP_VERSION = 'v17A';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -416,6 +417,12 @@ function getMatchStatusLabel(match, phaseRules) {
   return isMatchResultValid(match, phaseRules) ? 'Valide' : 'Score invalide';
 }
 
+function isMatchCurrentlyInProgress(match, phaseRules) {
+  if (!match) return false;
+  if (getMatchStatusLabel(match, phaseRules) === 'Valide') return false;
+  return Boolean(match.refereeInProgress || match.matchInProgress);
+}
+
 function toTimestamp(value) {
   const stamp = Date.parse(value || '');
   return Number.isFinite(stamp) ? stamp : 0;
@@ -642,8 +649,11 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled =
   );
 }
 
-function LargePublicMatch({ title, match, resolveTeam }) {
+function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   if (!match) return null;
+  const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
+  const displayScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
+  const displayScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
   return (
     <div className="public-match-card">
       <div className="public-label">{title}</div>
@@ -656,7 +666,7 @@ function LargePublicMatch({ title, match, resolveTeam }) {
         </div>
         <div className="align-right">
           <div className="muted small">{match.group}</div>
-          <div className="public-score">{match.scoreA === '' ? '-' : match.scoreA} : {match.scoreB === '' ? '-' : match.scoreB}</div>
+          <div className="public-score">{displayScoreA === '' ? '-' : displayScoreA} : {displayScoreB === '' ? '-' : displayScoreB}</div>
         </div>
       </div>
     </div>
@@ -797,47 +807,37 @@ export default function App() {
     ...knockout.consolanteFinals,
   ] , teamMap, phaseRules), [allTeamIds, isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
 
-  const activeRefereeTeamIds = useMemo(() => {
+  const allCompetitionMatches = useMemo(() => (isSmallTournamentMode ? [
+    ...championshipLeg1.matches,
+    ...championshipLeg2.matches,
+    ...singleKnockout.quarters,
+    ...singleKnockout.semis,
+    ...singleKnockout.finals,
+  ] : [
+    ...brassage1.matches,
+    ...brassage2.matches,
+    ...mainStage.principaleMatches,
+    ...mainStage.consolanteMatches,
+    ...knockout.principalQuarters,
+    ...knockout.principalSemis,
+    ...knockout.principalFinals,
+    ...knockout.consolanteSemis,
+    ...knockout.consolanteFinals,
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout]);
+
+  const activeInProgressTeamIds = useMemo(() => {
     const ids = new Set();
-    [
-      brassage1.matches,
-      brassage2.matches,
-      mainStage.principaleMatches,
-      mainStage.consolanteMatches,
-      knockout.principalQuarters,
-      knockout.principalSemis,
-      knockout.principalFinals,
-      knockout.consolanteSemis,
-      knockout.consolanteFinals,
-      championshipLeg1.matches,
-      championshipLeg2.matches,
-      singleKnockout.quarters,
-      singleKnockout.semis,
-      singleKnockout.finals,
-    ].forEach((matches) => {
-      matches.forEach((match) => {
-        if (!match?.refereeInProgress) return;
-        if (match.teamAId) ids.add(match.teamAId);
-        if (match.teamBId) ids.add(match.teamBId);
-      });
+    allCompetitionMatches.forEach((match) => {
+      if (!isMatchCurrentlyInProgress(match, phaseRules)) return;
+      if (match.teamAId) ids.add(match.teamAId);
+      if (match.teamBId) ids.add(match.teamBId);
     });
     return ids;
-  }, [
-    brassage1.matches,
-    brassage2.matches,
-    mainStage.principaleMatches,
-    mainStage.consolanteMatches,
-    knockout.principalQuarters,
-    knockout.principalSemis,
-    knockout.principalFinals,
-    knockout.consolanteSemis,
-    knockout.consolanteFinals,
-    championshipLeg1.matches,
-    championshipLeg2.matches,
-    singleKnockout.quarters,
-    singleKnockout.semis,
-    singleKnockout.finals,
-  ]);
+  }, [allCompetitionMatches, phaseRules]);
+
+  const activeOccupiedMatchCount = useMemo(() => (
+    allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
+  ), [allCompetitionMatches, phaseRules]);
 
   function getPersistedState(savedAt = lastSavedAt) {
     return {
@@ -914,6 +914,8 @@ export default function App() {
 
       const recentRelease = recentRefereeReleaseRef.current.get(match.id);
       const remoteInProgress = Boolean(remote.refereeInProgress);
+      const remoteMatchInProgress = Boolean(remote.matchInProgress || remote.refereeInProgress);
+      const localMatchInProgress = Boolean(match.matchInProgress || match.refereeInProgress);
       const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
       const localSubmittedAt = toTimestamp(match.submittedAt);
       const remoteSubmittedAt = toTimestamp(remote.submittedAt);
@@ -927,7 +929,7 @@ export default function App() {
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
         pendingScoresDiffer &&
-        (remoteInProgress || Boolean(remote.submittedAt));
+        (remoteMatchInProgress || Boolean(remote.submittedAt));
 
       let nextMatch = match;
 
@@ -941,6 +943,7 @@ export default function App() {
           submittedScoreB: '',
           submittedAt: null,
           refereeInProgress: false,
+          matchInProgress: false,
         };
       } else if (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp) {
         nextMatch = {
@@ -949,15 +952,17 @@ export default function App() {
           submittedScoreB: remote.submittedScoreB ?? '',
           submittedAt: remote.submittedAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
+          matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : remoteMatchInProgress,
         };
       } else if (shouldIgnoreRemoteLock) {
         nextMatch = {
           ...nextMatch,
           refereeInProgress: false,
+          matchInProgress: localMatchInProgress || remoteMatchInProgress,
         };
       }
 
-      if (!remoteInProgress && recentRelease) {
+      if (!remoteInProgress && !remoteMatchInProgress && recentRelease) {
         recentRefereeReleaseRef.current.delete(match.id);
       }
 
@@ -968,7 +973,8 @@ export default function App() {
         (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
         (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
         (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
-        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress);
+        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress) ||
+        Boolean(match.matchInProgress) !== Boolean(nextMatch.matchInProgress);
       if (!hasChanged) return match;
       changed = true;
       return nextMatch;
@@ -1153,20 +1159,20 @@ export default function App() {
 
   const refereeRealtimeSignature = useMemo(() => JSON.stringify({
     selected: refereeSelectedMatch,
-    b1: brassage1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    b2: brassage2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pm: mainStage.principaleMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cm: mainStage.consolanteMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pq: knockout.principalQuarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    ps: knockout.principalSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    pf: knockout.principalFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cs: knockout.consolanteSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    cf: knockout.consolanteFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    c1: championshipLeg1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    c2: championshipLeg2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    sq: singleKnockout.quarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    ss: singleKnockout.semis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
-    sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress })),
+    b1: brassage1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    b2: brassage2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    pm: mainStage.principaleMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    cm: mainStage.consolanteMatches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    pq: knockout.principalQuarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    ps: knockout.principalSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    pf: knockout.principalFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    cs: knockout.consolanteSemis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    cf: knockout.consolanteFinals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    c1: championshipLeg1.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    c2: championshipLeg2.matches.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    sq: singleKnockout.quarters.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    ss: singleKnockout.semis.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
+    sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
   }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
 
   useEffect(() => {
@@ -1224,33 +1230,39 @@ export default function App() {
 
   const estimatedTournamentEnd = scheduleData.estimatedEndText;
 
-  const nextMatches = useMemo(() => {
-    const allMatches = isSmallTournamentMode ? [
-      ...championshipLeg1.matches,
-      ...championshipLeg2.matches,
-      ...singleKnockout.quarters,
-      ...singleKnockout.semis,
-      ...singleKnockout.finals,
-    ] : [
-      ...brassage1.matches,
-      ...brassage2.matches,
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ];
-    return allMatches
+  const currentMatches = useMemo(() => (
+    allCompetitionMatches
+      .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
+      .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
+      .slice(0, MAX_ACTIVE_COURTS)
+      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }))
+  ), [allCompetitionMatches, phaseRules, scheduleData]);
+
+  const upcomingMatches = useMemo(() => (
+    allCompetitionMatches
       .filter((match) => {
-        if (match.refereeInProgress) return false;
+        if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
-      .slice(0, 3)
-      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }));
-  }, [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, phaseRules, scheduleData]);
+      .slice(0, MAX_ACTIVE_COURTS)
+      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }))
+  ), [allCompetitionMatches, phaseRules, scheduleData]);
+
+  const featuredPublicMatches = useMemo(() => {
+    const items = currentMatches.map((match, index) => ({
+      title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
+      match,
+    }));
+    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
+    upcomingMatches.slice(0, remainingSlots).forEach((match, index) => {
+      items.push({
+        title: `Prochain match ${index + 1}`,
+        match,
+      });
+    });
+    return items;
+  }, [currentMatches, upcomingMatches]);
 
   const completedMatchCounts = isSmallTournamentMode ? {
     championnatAller: championshipLeg1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
@@ -1940,7 +1952,7 @@ export default function App() {
     const pendingA = toNumber(match.submittedScoreA);
     const pendingB = toNumber(match.submittedScoreB);
     const hasStarted = ((pendingA ?? 0) > 0) || ((pendingB ?? 0) > 0);
-    if (match.refereeInProgress || hasStarted) {
+    if (match.refereeInProgress || match.matchInProgress || hasStarted) {
       return 'Match en cours';
     }
     return 'À saisir';
@@ -1957,6 +1969,7 @@ export default function App() {
         submittedScoreB: '',
         submittedAt: null,
         refereeInProgress: false,
+        matchInProgress: false,
       };
       updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
       return updated;
@@ -1975,6 +1988,7 @@ export default function App() {
         [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
         submittedAt: new Date().toISOString(),
         refereeInProgress: true,
+        matchInProgress: true,
       };
     }));
     queueBackgroundCloudSave(0);
@@ -1991,6 +2005,7 @@ export default function App() {
         submittedScoreB: '',
         submittedAt: null,
         refereeInProgress: false,
+        matchInProgress: false,
       };
       approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
       return approved;
@@ -2001,7 +2016,7 @@ export default function App() {
   function rejectRefereeScore(scope, matchId) {
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
-        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: null, refereeInProgress: false }
+        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), refereeInProgress: false, matchInProgress: false }
         : match
     )));
     queueBackgroundCloudSave();
@@ -2013,7 +2028,9 @@ export default function App() {
       if (match.id !== matchId) return match;
       return {
         ...match,
+        submittedAt: new Date().toISOString(),
         refereeInProgress: false,
+        matchInProgress: true,
       };
     }));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
@@ -2031,7 +2048,7 @@ export default function App() {
     if (!hasStarted && getMatchStatusLabel(entry.match, phaseRules) !== 'Valide') {
       updateMatchesInScope(entry.scope, (matches) => matches.map((match) => (
         match.id === entry.match.id
-          ? { ...match, refereeInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: null }
+          ? { ...match, refereeInProgress: false, matchInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString() }
           : match
       )));
       queueBackgroundCloudSave();
@@ -2386,14 +2403,14 @@ export default function App() {
           {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="cards-grid three-up">
-            {nextMatches.map((match, index) => (
-              <LargePublicMatch key={match.id} title={`Prochain match ${index + 1}`} match={match} resolveTeam={resolveTeam} />
+            {featuredPublicMatches.map(({ title, match }) => (
+              <LargePublicMatch key={match.id} title={title} match={match} resolveTeam={resolveTeam} phaseRules={phaseRules} />
             ))}
           </div>
 
           <div className="stack-gap">
             <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
-              {renderOverallRanking(overallRanking, false, activeRefereeTeamIds)}
+              {renderOverallRanking(overallRanking, false, activeInProgressTeamIds)}
             </Section>
             <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
               <div className="cards-grid two-up">
@@ -2459,10 +2476,19 @@ export default function App() {
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : match.refereeInProgress
+                            : match.refereeInProgress || match.matchInProgress
                               ? 'badge-danger'
                               : 'badge-neutral';
-                          const canSelect = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress;
+                          const canSelectExistingInProgressMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && Boolean(match.matchInProgress);
+                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && !match.matchInProgress && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
+                          const canSelect = canSelectExistingInProgressMatch || canSelectNewMatch;
+                          const disabledReason = !group.isUnlocked
+                            ? group.lockReason
+                            : match.refereeInProgress
+                              ? 'Match déjà en cours de saisie par un arbitre.'
+                              : !match.matchInProgress && activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
+                                ? 'Les 3 terrains sont déjà occupés par des matchs en cours.'
+                                : '';
                           return (
                             <button
                               key={match.id}
@@ -2470,13 +2496,13 @@ export default function App() {
                               onClick={() => {
                                 if (!canSelect) return;
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
-                                  item.id === match.id ? { ...item, refereeInProgress: true, submittedAt: item.submittedAt || new Date().toISOString() } : item
+                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: new Date().toISOString() } : item
                                 )));
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
                                 queueBackgroundCloudSave(50);
                               }}
                               disabled={!canSelect}
-                              title={!group.isUnlocked ? group.lockReason : match.refereeInProgress ? 'Match déjà en cours de saisie par un arbitre.' : ''}
+                              title={disabledReason}
                             >
                               <div>
                                 <div className="referee-selector-teams"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /><span className="muted tiny">vs</span><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></div>
