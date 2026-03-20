@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v17A';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v17B';
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v17A';
+const APP_VERSION = 'v17B';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -654,19 +654,33 @@ function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
   const displayScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
   const displayScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
+  const phaseAndGroup = [match.phase, match.group].filter(Boolean).join(' - ');
+  const statusLabel = isInProgress ? 'Match en cours' : title;
+  const endLabel = isInProgress ? 'Fin de match prévue à' : 'Fin prévue à';
+  const startText = match.scheduledStartText || match.time;
+  const endText = match.scheduledEndText || '-';
   return (
-    <div className="public-match-card">
-      <div className="public-label">{title}</div>
-      <div className="public-match-grid">
-        <div>
-          <div className="muted small">{match.time} • Terrain {match.court}</div>
-          <div className="public-team"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} className="team-badge-public" /></div>
-          <div className="muted small">vs</div>
-          <div className="public-team"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} className="team-badge-public" /></div>
+    <div className="public-match-card public-match-card-featured">
+      <div className="public-match-topline">
+        <div className="public-label">{statusLabel}</div>
+        <div className="public-phase-label">{phaseAndGroup}</div>
+      </div>
+      <div className="muted small public-match-meta">{startText} • Terrain {match.court}</div>
+      <div className="public-match-grid public-match-grid-featured">
+        <div className="public-match-main">
+          <div className="public-match-team-row">
+            <div className="public-team"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} className="team-badge-public" /></div>
+            <div className="public-score public-score-inline">{displayScoreA === '' ? '-' : displayScoreA}</div>
+          </div>
+          <div className="muted small public-versus">vs</div>
+          <div className="public-match-team-row">
+            <div className="public-team"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} className="team-badge-public" /></div>
+            <div className="public-score public-score-inline">{displayScoreB === '' ? '-' : displayScoreB}</div>
+          </div>
         </div>
-        <div className="align-right">
-          <div className="muted small">{match.group}</div>
-          <div className="public-score">{displayScoreA === '' ? '-' : displayScoreA} : {displayScoreB === '' ? '-' : displayScoreB}</div>
+        <div className="public-match-side-note">
+          <div className="public-end-label">{endLabel}</div>
+          <div className="public-end-time">{endText}</div>
         </div>
       </div>
     </div>
@@ -1235,7 +1249,12 @@ export default function App() {
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
-      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }))
+      .map((match) => ({
+        ...match,
+        time: scheduleData.scheduleMap[match.id]?.startText || match.time,
+        scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
+        scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
+      }))
   ), [allCompetitionMatches, phaseRules, scheduleData]);
 
   const upcomingMatches = useMemo(() => (
@@ -1246,7 +1265,12 @@ export default function App() {
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
-      .map((match) => ({ ...match, time: scheduleData.scheduleMap[match.id]?.startText || match.time }))
+      .map((match) => ({
+        ...match,
+        time: scheduleData.scheduleMap[match.id]?.startText || match.time,
+        scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
+        scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
+      }))
   ), [allCompetitionMatches, phaseRules, scheduleData]);
 
   const featuredPublicMatches = useMemo(() => {
