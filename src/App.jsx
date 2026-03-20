@@ -1472,8 +1472,71 @@ export default function App() {
     setLoginError('Mot de passe incorrect.');
   }
 
-  function lockOrganizerMode() {
-    enterPublicMode();
+  function buildFreshTournamentState(options = {}) {
+    const preserveSharedId = options.preserveSharedId !== false;
+    const preservePassword = options.preservePassword !== false;
+    const nextSharedTournamentId = preserveSharedId ? (String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId('Tournoi de volley')) : buildDefaultSharedTournamentId('Tournoi de volley');
+    const nextOrganizerPassword = preservePassword ? organizerPassword : 'Chuly0ne';
+    return {
+      teams: defaultTeams(),
+      settings: {
+        startTime: '09:00',
+        slotDuration: 20,
+        phaseRules: safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES),
+        organizerPassword: nextOrganizerPassword,
+        tournamentName: 'Tournoi de volley',
+        sharedTournamentId: nextSharedTournamentId,
+      },
+      meta: { lastSavedAt: '', remoteSavedAt: '' },
+      brassage1: { pools: [], matches: [] },
+      brassage2: { pools: [], matches: [] },
+      mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
+      knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] },
+      championshipLeg1: { pools: [], matches: [] },
+      championshipLeg2: { pools: [], matches: [] },
+      singleKnockout: { quarters: [], semis: [], finals: [] },
+    };
+  }
+
+  async function startNewTournament() {
+    const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
+    if (!confirmed) return;
+    const freshState = buildFreshTournamentState({ preserveSharedId: true, preservePassword: true });
+    applyPersistedState(freshState);
+    setRemoteStateInitialized(mode !== 'referee');
+    setRemoteSyncMessage('');
+    setIsRemoteSyncing(false);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(freshState));
+    }
+    if (String(freshState.settings?.sharedTournamentId || '').trim()) {
+      const savedAt = new Date().toISOString();
+      const cloudPayload = {
+        ...freshState,
+        meta: { ...(freshState.meta || {}), remoteSavedAt: savedAt },
+      };
+      try {
+        const response = await fetch(buildFirebaseTournamentUrl(freshState.settings.sharedTournamentId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cloudPayload),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(body?.error || 'Impossible de réinitialiser le tournoi sur Firebase.');
+        }
+        setRemoteSavedAt(savedAt);
+        setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudPayload));
+        }
+      } catch (error) {
+        setRemoteSyncMessage(error.message || 'Échec de la réinitialisation Firebase.');
+        window.alert(error.message || 'Échec de la réinitialisation Firebase.');
+        return;
+      }
+    }
+    window.alert('Nouveau tournoi prêt. Toutes les données du tournoi précédent ont été réinitialisées.');
   }
 
   function updateOrganizerPassword() {
@@ -1517,21 +1580,11 @@ export default function App() {
   }
 
   function resetTournament() {
-    setTeams(defaultTeams());
-    setStartTime('09:00');
-    setSlotDuration(20);
-    setPhaseRules(safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES));
-    setOrganizerPassword('Chuly0ne');
-    setPasswordDraft('Chuly0ne');
-    setTournamentName('Tournoi de volley');
-    setLastSavedAt('');
-    setBrassage1({ pools: [], matches: [] });
-    setBrassage2({ pools: [], matches: [] });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-    setChampionshipLeg1({ pools: [], matches: [] });
-    setChampionshipLeg2({ pools: [], matches: [] });
-    setSingleKnockout({ quarters: [], semis: [], finals: [] });
+    const freshState = buildFreshTournamentState({ preserveSharedId: true, preservePassword: false });
+    applyPersistedState(freshState);
+    setRemoteStateInitialized(mode !== 'referee');
+    setRemoteSyncMessage('');
+    setIsRemoteSyncing(false);
   }
 
   function generateBrassage1() {
@@ -2487,7 +2540,7 @@ export default function App() {
               <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
               <Button variant="secondary" onClick={enterRefereeMode}>Mode arbitres</Button>
               <Button variant="secondary" onClick={enterPublicMode}>Affichage public</Button>
-              <Button variant="danger" onClick={lockOrganizerMode}>Verrouiller</Button>
+              <Button variant="danger" onClick={startNewTournament}>Nouveau tournoi</Button>
             </div>
             <div className="muted small banner-meta">Identifiant partagé Firebase : <strong>{sharedTournamentId}</strong></div>
             {lastSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
