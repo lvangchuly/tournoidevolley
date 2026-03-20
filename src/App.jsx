@@ -921,6 +921,13 @@ export default function App() {
       const remoteValidatedAt = toTimestamp(remote.validatedAt);
       const remoteIsValid = isMatchResultValid(remote, phaseRules);
       const localIsValid = isMatchResultValid(match, phaseRules);
+      const pendingScoresDiffer =
+        String(match.submittedScoreA ?? '') !== String(remote.submittedScoreA ?? '') ||
+        String(match.submittedScoreB ?? '') !== String(remote.submittedScoreB ?? '');
+      const shouldAdoptRemotePendingWithoutTimestamp =
+        mode !== 'referee' &&
+        pendingScoresDiffer &&
+        (remoteInProgress || Boolean(remote.submittedAt));
 
       let nextMatch = match;
 
@@ -935,7 +942,7 @@ export default function App() {
           submittedAt: null,
           refereeInProgress: false,
         };
-      } else if (remoteSubmittedAt >= localSubmittedAt) {
+      } else if (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remote.submittedScoreA ?? '',
@@ -1136,7 +1143,8 @@ export default function App() {
     };
 
     pollRemoteRefereeState();
-    const intervalId = window.setInterval(pollRemoteRefereeState, 1000);
+    const remotePollIntervalMs = mode === 'organizer' ? 300 : mode === 'public' ? 400 : 800;
+    const intervalId = window.setInterval(pollRemoteRefereeState, remotePollIntervalMs);
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
@@ -1916,7 +1924,7 @@ export default function App() {
         refereeInProgress: true,
       };
     }));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(0);
   }
 
   function approveRefereeScore(scope, matchId) {
