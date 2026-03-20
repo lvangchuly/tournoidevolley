@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v16N';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V16O';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v16N';
+const APP_VERSION = 'V16O';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -796,6 +796,48 @@ export default function App() {
     ...knockout.consolanteSemis,
     ...knockout.consolanteFinals,
   ] , teamMap, phaseRules), [allTeamIds, isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
+
+  const activeRefereeTeamIds = useMemo(() => {
+    const ids = new Set();
+    [
+      brassage1.matches,
+      brassage2.matches,
+      mainStage.principaleMatches,
+      mainStage.consolanteMatches,
+      knockout.principalQuarters,
+      knockout.principalSemis,
+      knockout.principalFinals,
+      knockout.consolanteSemis,
+      knockout.consolanteFinals,
+      championshipLeg1.matches,
+      championshipLeg2.matches,
+      singleKnockout.quarters,
+      singleKnockout.semis,
+      singleKnockout.finals,
+    ].forEach((matches) => {
+      matches.forEach((match) => {
+        if (!match?.refereeInProgress) return;
+        if (match.teamAId) ids.add(match.teamAId);
+        if (match.teamBId) ids.add(match.teamBId);
+      });
+    });
+    return ids;
+  }, [
+    brassage1.matches,
+    brassage2.matches,
+    mainStage.principaleMatches,
+    mainStage.consolanteMatches,
+    knockout.principalQuarters,
+    knockout.principalSemis,
+    knockout.principalFinals,
+    knockout.consolanteSemis,
+    knockout.consolanteFinals,
+    championshipLeg1.matches,
+    championshipLeg2.matches,
+    singleKnockout.quarters,
+    singleKnockout.semis,
+    singleKnockout.finals,
+  ]);
 
   function getPersistedState(savedAt = lastSavedAt) {
     return {
@@ -2161,7 +2203,7 @@ export default function App() {
     );
   }
 
-  function renderOverallRanking(rows, withStatus = false) {
+  function renderOverallRanking(rows, withStatus = false, activeTeamIds = null) {
     return (
       <div className="table-wrap">
         <table>
@@ -2178,18 +2220,26 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.teamId}>
-                <td>{index + 1}</td>
-                <td><TeamBadge name={row.teamName} level={row.level} /></td>
-                <td>{row.level}</td>
-                <td>{row.played}</td>
-                <td>{row.wins}</td>
-                <td>{row.tournamentPoints}</td>
-                <td>{row.pointDiff}</td>
-                {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
-              </tr>
-            ))}
+            {rows.map((row, index) => {
+              const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
+              return (
+                <tr key={row.teamId}>
+                  <td>{index + 1}</td>
+                  <td>
+                    <div className="inline-cluster">
+                      <TeamBadge name={row.teamName} level={row.level} />
+                      {isInRefereeGame ? <span className="muted small">(En jeu)</span> : null}
+                    </div>
+                  </td>
+                  <td>{row.level}</td>
+                  <td>{row.played}</td>
+                  <td>{row.wins}</td>
+                  <td>{row.tournamentPoints}</td>
+                  <td>{row.pointDiff}</td>
+                  {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -2281,7 +2331,7 @@ export default function App() {
 
           <div className="stack-gap">
             <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
-              {renderOverallRanking(overallRanking)}
+              {renderOverallRanking(overallRanking, false, activeRefereeTeamIds)}
             </Section>
             <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
               <div className="cards-grid two-up">
