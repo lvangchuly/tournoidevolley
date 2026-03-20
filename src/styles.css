@@ -32,6 +32,27 @@ button, input, select { font: inherit; }
 
 .public-hero { background: linear-gradient(135deg, #1d4ed8, #0f172a); }
 .hero h1 { margin: 14px 0 10px; font-size: clamp(28px, 4vw, 42px); }
+.hero-title-input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: white;
+  text-align: center;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  line-height: 1.15;
+  padding: 4px 8px;
+  margin: 6px 0 2px;
+}
+
+.hero-title-input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hero-title-input:focus {
+  box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.35);
+}
 .hero p { margin: 0; max-width: 900px; color: rgba(255, 255, 255, 0.78); }
 .hero-tag {
   display: inline-flex;
@@ -602,6 +623,28 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .team-badge-input {
   margin-bottom: 8px;
+}
+.team-badge-inline {
+  width: auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.team-badge-status {
+  font-size: 0.78em;
+  font-weight: 600;
+  white-space: nowrap;
+  color: rgba(15, 23, 42, 0.68);
+}
+
+.inline-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 .team-level-n { background: #fecaca; }
 .team-level-np { background: #fed7aa; }

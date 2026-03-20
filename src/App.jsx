@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V16O';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V16P';
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V16O';
+const APP_VERSION = 'V16P';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -581,8 +581,8 @@ function getLevelClass(level) {
   return LEVEL_CLASS[level] || 'team-level-default';
 }
 
-function TeamBadge({ name, level, className = '' }) {
-  return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}</span>;
+function TeamBadge({ name, level, className = '', children = null }) {
+  return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}{children}</span>;
 }
 
 function Button({ children, variant = 'primary', ...props }) {
@@ -2227,8 +2227,9 @@ export default function App() {
                   <td>{index + 1}</td>
                   <td>
                     <div className="inline-cluster">
-                      <TeamBadge name={row.teamName} level={row.level} />
-                      {isInRefereeGame ? <span className="muted small">(En jeu)</span> : null}
+                      <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
+                        {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                      </TeamBadge>
                     </div>
                   </td>
                   <td>{row.level}</td>
@@ -2453,11 +2454,19 @@ export default function App() {
               <div className="hero-tag">tournoidevolley.fr</div>
               <div className="hero-version">Version {APP_VERSION}</div>
             </div>
-            <h1>{tournamentName}</h1>
-            <label>
-              <span>Nom du tournoi</span>
-              <input type="text" value={tournamentName} onChange={(e) => setTournamentName(e.target.value)} placeholder="Nom du tournoi" />
-            </label>
+            <input
+              className="hero-title-input"
+              type="text"
+              value={tournamentName}
+              onChange={(e) => setTournamentName(e.target.value)}
+              onBlur={() => {
+                const trimmedName = String(tournamentName || '').trim();
+                if (!trimmedName) setTournamentName('Tournoi de volley');
+                else if (trimmedName !== tournamentName) setTournamentName(trimmedName);
+              }}
+              placeholder="Nom du tournoi"
+              aria-label="Nom du tournoi"
+            />
             <label>
               <span>Début</span>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
