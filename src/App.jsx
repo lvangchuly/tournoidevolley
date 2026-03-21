@@ -900,10 +900,11 @@ export default function App() {
     if (!tournamentLogo) return undefined;
     return {
       backgroundColor: '#0f172a',
-      backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.42)), url(${tournamentLogo})`,
+      backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.26)), url(${tournamentLogo})`,
       backgroundRepeat: 'no-repeat, repeat',
       backgroundPosition: 'center, center',
       backgroundSize: `100% 100%, ${ORGANIZER_BANNER_LOGO_TILE_SIZE}px ${ORGANIZER_BANNER_LOGO_TILE_SIZE}px`,
+      filter: 'saturate(1.08) brightness(1.1)',
     };
   }, [tournamentLogo]);
 
