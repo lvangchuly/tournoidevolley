@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v17D';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v18';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v17D';
+const APP_VERSION = 'v18';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -149,7 +150,8 @@ function countMatchesInPersistedState(payload) {
 function loadState() {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+    const raw = storageKeys.map((key) => window.localStorage.getItem(key)).find(Boolean);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.teams)) parsed.teams = normalizeTeamsList(parsed.teams);
@@ -810,6 +812,9 @@ function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt }) {
 
 export default function App() {
   const initial = loadState();
+  const initialOrganizerPassword = Object.prototype.hasOwnProperty.call(initial?.settings || {}, 'organizerPassword')
+    ? String(initial?.settings?.organizerPassword ?? '')
+    : 'Chuly0ne';
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mode, setMode] = useState(() => {
     if (typeof window === 'undefined') return 'public';
@@ -824,8 +829,8 @@ export default function App() {
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
-  const [organizerPassword, setOrganizerPassword] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
-  const [passwordDraft, setPasswordDraft] = useState(initial?.settings?.organizerPassword || 'Chuly0ne');
+  const [organizerPassword, setOrganizerPassword] = useState(initialOrganizerPassword);
+  const [passwordDraft, setPasswordDraft] = useState(initialOrganizerPassword);
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
   const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley'));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
@@ -939,7 +944,7 @@ export default function App() {
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'slotDuration')) setSlotDuration(parsed.settings?.slotDuration || 20);
     if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'organizerPassword')) {
-      const nextPassword = parsed.settings?.organizerPassword || 'Chuly0ne';
+      const nextPassword = String(parsed.settings?.organizerPassword ?? '');
       setOrganizerPassword(nextPassword);
       setPasswordDraft(nextPassword);
     }
@@ -1590,6 +1595,15 @@ export default function App() {
   }
 
   function requestOrganizerMode() {
+    if (organizerPassword === '') {
+      setIsOrganizerAuthenticated(true);
+      setMode('organizer');
+      setActiveTab('dashboard');
+      setShowOrganizerLogin(false);
+      setOrganizerAttempt('');
+      setLoginError('');
+      return;
+    }
     setShowOrganizerLogin(true);
     setOrganizerAttempt('');
     setLoginError('');
@@ -1687,13 +1701,10 @@ export default function App() {
   }
 
   function updateOrganizerPassword() {
-    const cleanPassword = passwordDraft.trim();
-    if (!cleanPassword) {
-      window.alert('Le mot de passe organisateur ne peut pas être vide.');
-      return;
-    }
-    setOrganizerPassword(cleanPassword);
-    window.alert('Mot de passe organisateur mis à jour.');
+    const nextPassword = String(passwordDraft ?? '');
+    setOrganizerPassword(nextPassword);
+    setPasswordDraft(nextPassword);
+    window.alert(nextPassword === '' ? 'Mot de passe organisateur retiré. L’accès organisateur est maintenant direct.' : 'Mot de passe organisateur mis à jour.');
   }
 
   function updateTeam(teamId, field, value) {
@@ -2850,6 +2861,22 @@ export default function App() {
                   </>
                 )}
               </div>
+
+              <Section title="Accès organisateur" subtitle="Modifie le mot de passe organisateur. Tu peux aussi laisser le champ vide pour autoriser un accès direct sans mot de passe.">
+                <div className="login-grid organizer-password-grid">
+                  <input
+                    type="password"
+                    value={passwordDraft}
+                    onChange={(e) => setPasswordDraft(e.target.value)}
+                    placeholder="Laisser vide pour un accès direct"
+                    aria-label="Mot de passe organisateur"
+                  />
+                  <Button type="button" variant="secondary" onClick={updateOrganizerPassword}>Enregistrer le mot de passe</Button>
+                </div>
+                <p className="muted small organizer-password-help">
+                  Mot de passe actuel : {organizerPassword === '' ? 'aucun mot de passe' : 'défini'}
+                </p>
+              </Section>
 
               <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation.">
                 <div className="cards-grid two-up">

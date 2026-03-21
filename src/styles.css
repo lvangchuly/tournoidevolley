@@ -883,3 +883,16 @@ tbody tr:last-child td { border-bottom: none; }
 .team-name-cell .team-name-color-input {
   margin: 0;
 }
+
+
+.organizer-password-grid {
+  align-items: center;
+}
+
+.organizer-password-grid input {
+  min-width: min(100%, 320px);
+}
+
+.organizer-password-help {
+  margin: 12px 0 0;
+}
