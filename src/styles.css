@@ -88,10 +88,20 @@ button, input, select { font: inherit; }
   text-align: center;
 }
 
+.referee-qr-top-image,
 .referee-qr-image {
   width: 180px;
   height: 180px;
   border-radius: 18px;
+}
+
+.referee-qr-top-image {
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px;
+}
+
+.referee-qr-image {
   background: white;
   padding: 10px;
 }
@@ -134,10 +144,7 @@ button, input, select { font: inherit; }
   overflow: hidden;
   grid-template-columns: 240px minmax(320px, 1fr) 240px;
   align-items: stretch;
-  background-image: url('/organizer-banner-bg.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: min(720px, 94%) auto;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
 }
 
 .hero-organizer-banner::after {
@@ -497,7 +504,7 @@ tbody tr:last-child td { border-bottom: none; }
   .public-phase-label, .public-match-side-note, .align-right { text-align: left; }
   .public-match-side-note { justify-items: start; min-width: 0; }
   .container { width: min(1400px, calc(100% - 20px)); }
-  .hero-organizer-banner { background-size: auto, min(420px, 62%); }
+  .hero-organizer-banner { background: linear-gradient(135deg, #0f172a, #1e293b); }
   .organizer-banner-email { position: static; margin-top: 10px; text-align: center; }
 }
 

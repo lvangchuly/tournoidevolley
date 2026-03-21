@@ -796,11 +796,12 @@ function formatRemoteTimestamp(value) {
   return date.toLocaleString('fr-FR');
 }
 
-function AccessQrCode({ url, title, caption, alt }) {
+function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt }) {
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
   return (
     <div className="referee-qr-card">
       <div className="referee-qr-title">{title}</div>
+      {topImageSrc ? <img className="referee-qr-top-image" src={topImageSrc} alt={topImageAlt || ''} /> : null}
       <img className="referee-qr-image" src={qrSrc} alt={alt} />
       <div className="referee-qr-caption">{caption}</div>
     </div>
@@ -2756,6 +2757,8 @@ export default function App() {
               title="Accès arbitres"
               alt="QR code d’accès au mode arbitres"
               caption="Scanne ce QR code pour ouvrir directement le mode Arbitres."
+              topImageSrc="/organizer-banner-bg.png"
+              topImageAlt="Logo NEO DEV ChulyOne"
             />
           </div>
           <div className="hero-controls hero-controls-centered">
