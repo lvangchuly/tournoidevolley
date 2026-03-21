@@ -2803,6 +2803,7 @@ export default function App() {
               caption="Scanne ce QR code pour ouvrir directement l’affichage public du tournoi."
             />
           </div>
+          <div className="organizer-banner-email">Lvangchuly@gmail.com</div>
         </header>
 
         <nav className="tabs">
