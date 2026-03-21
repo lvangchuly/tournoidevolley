@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v17D';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v17F';
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v17D';
+const APP_VERSION = 'v17F';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -25,6 +25,7 @@ const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', '
 const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
+const SMALL_POOL_STAGE_NAME = 'Poules de qualification';
 const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
 
 function uid(prefix = 'id') {
@@ -218,6 +219,36 @@ function createPools(teamIds, names) {
 
 function createNumberedNames(prefix, count) {
   return Array.from({ length: count }, (_, index) => `${prefix} ${index + 1}`);
+}
+
+function createLetteredNames(prefix, count) {
+  return Array.from({ length: count }, (_, index) => `${prefix} ${String.fromCharCode(65 + index)}`);
+}
+
+function createSmallPoolsOfThree(teamIds) {
+  const poolCount = Math.max(1, Math.ceil(teamIds.length / 3));
+  return createPools(teamIds, createLetteredNames('Poule', poolCount));
+}
+
+function scheduleSmallPoolsOfThree(pools, phase, startSlot = 0) {
+  const scheduled = [];
+  pools.forEach((pool, poolIndex) => {
+    const matches = createThreeTeamPoolMatches(pool, phase);
+    matches.forEach((match, offset) => {
+      const zeroBasedSlot = startSlot + offset;
+      scheduled.push({
+        ...match,
+        court: (poolIndex % 3) + 1,
+        slot: zeroBasedSlot + 1,
+        time: '',
+        validatedAt: match.validatedAt || null,
+      });
+    });
+  });
+  return scheduled.sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
 }
 
 function createChampionshipPool(teamIds, poolName) {
@@ -441,7 +472,7 @@ function getRuleKeyFromPhaseLabel(phaseLabel) {
   if (phaseLabel === 'Brassage 2') return 'brassage2';
   if (phaseLabel === 'Principale' || phaseLabel === 'Tableau principal') return 'principale';
   if (phaseLabel === 'Consolante' || phaseLabel === 'Tableau consolante') return 'consolante';
-  if (phaseLabel === 'Championnat Aller') return 'championnatAller';
+  if (phaseLabel === 'Championnat Aller' || phaseLabel === SMALL_POOL_STAGE_NAME) return 'championnatAller';
   if (phaseLabel === 'Championnat Retour') return 'championnatRetour';
   if (phaseLabel === 'Quart de finale') return 'quart';
   if (phaseLabel === 'Demi-finale') return 'demi';
@@ -854,9 +885,19 @@ export default function App() {
   const teamsSortedByLevel = useMemo(() => sortTeamsForSeeding(teams), [teams]);
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
-  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
-
-  const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
+  const isSmallTournamentMode = activeTeams.length <= TEAM_TARGET;
+  const smallTournamentUsesPools = useMemo(() => isSmallTournamentMode && activeTeams.length >= 3 && activeTeams.length % 3 === 0, [isSmallTournamentMode, activeTeams.length]);
+  const smallOpeningStageTitle = smallTournamentUsesPools ? 'Poules de qualification' : 'Championnat Aller';
+  const smallOpeningStageActionLabel = smallTournamentUsesPools ? 'Générer les poules de 3' : 'Générer le Championnat Aller';
+  const smallOpeningStageSubtitle = smallTournamentUsesPools
+    ? `${Math.max(1, Math.ceil(activeTeams.length / 3))} poule(s) de 3 équipes générées automatiquement pour ${activeTeams.length} équipe(s).`
+    : `Le nombre de ${activeTeams.length} équipe(s) ne permet pas des poules de 3 : passage en Championnat Aller / Retour.`;
+  const smallRankingTitle = smallTournamentUsesPools ? 'Classement général après les poules' : 'Classement général Aller + Retour';
+  const smallFlowSubtitle = smallTournamentUsesPools
+    ? `Gestion dynamique de 3 à 18 équipes : ${activeTeams.length} équipe(s) -> poules de 3 puis tableau final.`
+    : `Gestion dynamique de 3 à 18 équipes : ${activeTeams.length} équipe(s) -> Championnat Aller / Retour puis tableau final.`;
+  const smallModeStatSubtitle = smallTournamentUsesPools ? 'Mode poules de 3 + tableau final' : 'Mode Championnat Aller / Retour';
+    const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
   const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
   const principaleStandings = useMemo(() => computeGroupStandings(mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules), [mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules]);
   const consolanteStandings = useMemo(() => computeGroupStandings(mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules), [mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules]);
@@ -1407,7 +1448,7 @@ export default function App() {
 
   const stageValidation = useMemo(() => isSmallTournamentMode ? ({
     championnatAllerComplete: championshipLeg1.matches.length > 0 && championshipLeg1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-    championnatRetourComplete: championshipLeg2.matches.length > 0 && championshipLeg2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    championnatRetourComplete: smallTournamentUsesPools ? true : championshipLeg2.matches.length > 0 && championshipLeg2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     quarterComplete: singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     semiComplete: singleKnockout.semis.length === 0 || singleKnockout.semis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }) : ({
@@ -1424,13 +1465,18 @@ export default function App() {
     matches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide')
   ), [phaseRules]);
 
-  const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
+  const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? (smallTournamentUsesPools ? [
+    { title: smallOpeningStageTitle, scope: 'championshipLeg1', matches: filterRefereeVisibleMatches(championshipLeg1.matches), isUnlocked: true, lockReason: '' },
+    { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(singleKnockout.quarters), isUnlocked: stageValidation.championnatAllerComplete, lockReason: 'Tous les scores des poules de qualification doivent être valides.' },
+    { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores des poules de qualification doivent être valides.' },
+    { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete, lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores des poules de qualification doivent être valides.' },
+  ] : [
     { title: 'Championnat Aller', scope: 'championshipLeg1', matches: filterRefereeVisibleMatches(championshipLeg1.matches), isUnlocked: true, lockReason: '' },
     { title: 'Championnat Retour', scope: 'championshipLeg2', matches: filterRefereeVisibleMatches(championshipLeg2.matches), isUnlocked: stageValidation.championnatAllerComplete, lockReason: 'Tous les scores du Championnat Aller doivent être valides.' },
     { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(singleKnockout.quarters), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete, lockReason: 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
     { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
     { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
-  ] : [
+  ]) : [
     { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(brassage1.matches), isUnlocked: true, lockReason: '' },
     { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(brassage2.matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
     { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(mainStage.principaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
@@ -1440,7 +1486,7 @@ export default function App() {
     { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(knockout.principalFinals), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
     { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(knockout.consolanteSemis), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
     { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(knockout.consolanteFinals), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
+  ]), [isSmallTournamentMode, smallTournamentUsesPools, smallOpeningStageTitle, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -1702,12 +1748,12 @@ export default function App() {
   function addTeam() {
     const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
     if (firstPhaseGenerated) {
-      window.alert(isSmallTournamentMode ? 'Impossible d’ajouter une équipe après la génération du Championnat Aller.' : 'Impossible d’ajouter une équipe après la génération du Brassage 1.');
+      window.alert(isSmallTournamentMode ? (smallTournamentUsesPools ? 'Impossible d’ajouter une équipe après la génération des poules de qualification.' : 'Impossible d’ajouter une équipe après la génération du Championnat Aller.') : 'Impossible d’ajouter une équipe après la génération du Brassage 1.');
       return;
     }
     setTeams((current) => {
       if (current.length >= TEAM_TARGET) {
-        window.alert(`Le tournoi standard est limité à ${TEAM_TARGET} équipes.`);
+        window.alert(`Le tournoi est limité à ${TEAM_TARGET} équipes.`);
         return current;
       }
       return [...current, { id: uid('team'), name: `Équipe ${current.length + 1}`, level: 'D', club: '', contact: '' }];
@@ -1756,40 +1802,30 @@ export default function App() {
       ...singleKnockout.finals,
     ], 'le tournoi en cours')) return;
     const readyTeams = activeTeams;
-    if (readyTeams.length < 2) {
-      window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
+    if (readyTeams.length < 3) {
+      window.alert('Ajoute au moins 3 équipes pour générer un tournoi dynamique.');
       return;
     }
-    if (readyTeams.length < 10) {
-      const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
-      const pools = createChampionshipPool(seededIds, CHAMPIONSHIP_ALLER_POOL_NAME);
-      const matches = createChampionshipMatches(seededIds, 'Championnat Aller', CHAMPIONSHIP_ALLER_POOL_NAME, false);
-      setChampionshipLeg1({ pools, matches });
-      setChampionshipLeg2({ pools: [], matches: [] });
-      setSingleKnockout({ quarters: [], semis: [], finals: [] });
-      setBrassage1({ pools: [], matches: [] });
-      setBrassage2({ pools: [], matches: [] });
-      setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-      setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-      setActiveTab('championship');
-      queueBackgroundCloudSave(250);
-      return;
-    }
-    if (readyTeams.length !== TEAM_TARGET) {
-      window.alert(`Cette application attend ${TEAM_TARGET} équipes pour le mode standard. Actuellement : ${readyTeams.length}. Pour moins de 10 équipes, un mode Championnat Aller / Retour est utilisé automatiquement.`);
+    if (readyTeams.length > TEAM_TARGET) {
+      window.alert(`Le tournoi est limité à ${TEAM_TARGET} équipes.`);
       return;
     }
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
-    const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
-    const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
-    setBrassage1({ pools, matches });
+    const usePoolsOfThree = readyTeams.length % 3 === 0;
+    const pools = usePoolsOfThree
+      ? createSmallPoolsOfThree(seededIds)
+      : createChampionshipPool(seededIds, CHAMPIONSHIP_ALLER_POOL_NAME);
+    const matches = usePoolsOfThree
+      ? scheduleSmallPoolsOfThree(pools, SMALL_POOL_STAGE_NAME, 0)
+      : createChampionshipMatches(seededIds, 'Championnat Aller', CHAMPIONSHIP_ALLER_POOL_NAME, false);
+    setChampionshipLeg1({ pools, matches });
+    setChampionshipLeg2({ pools: [], matches: [] });
+    setSingleKnockout({ quarters: [], semis: [], finals: [] });
+    setBrassage1({ pools: [], matches: [] });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-    setChampionshipLeg1({ pools: [], matches: [] });
-    setChampionshipLeg2({ pools: [], matches: [] });
-    setSingleKnockout({ quarters: [], semis: [], finals: [] });
-    setActiveTab('brassage1');
+    setActiveTab('championship');
     queueBackgroundCloudSave(250);
   }
 
@@ -1805,6 +1841,10 @@ export default function App() {
       ...knockout.consolanteFinals,
     ], 'le brassage 2 et les phases suivantes')) return;
     if (isSmallTournamentMode) {
+      if (smallTournamentUsesPools) {
+        window.alert('Avec ce nombre d’équipes, le tournoi utilise directement des poules de 3 puis le tableau final. Aucun Championnat Retour n’est nécessaire.');
+        return;
+      }
       if (championshipLeg1.matches.length === 0) {
         window.alert('Génère d’abord le Championnat Aller.');
         return;
@@ -1853,12 +1893,12 @@ export default function App() {
       ...singleKnockout.semis,
       ...singleKnockout.finals,
     ], 'le tableau final du Championnat')) return;
-    if (championshipLeg1.matches.length === 0 || championshipLeg2.matches.length === 0) {
-      window.alert('Génère d’abord le Championnat Aller et le Championnat Retour.');
+    if (championshipLeg1.matches.length === 0 || (!smallTournamentUsesPools && championshipLeg2.matches.length === 0)) {
+      window.alert(smallTournamentUsesPools ? 'Génère d’abord les poules de qualification.' : 'Génère d’abord le Championnat Aller et le Championnat Retour.');
       return;
     }
     if (!stageValidation.championnatAllerComplete || !stageValidation.championnatRetourComplete) {
-      window.alert('Tous les scores du Championnat Aller et Retour doivent être valides.');
+      window.alert(smallTournamentUsesPools ? 'Tous les scores des poules de qualification doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.');
       return;
     }
     const rankedIds = championshipRanking.map((row) => row.teamId);
@@ -2582,7 +2622,7 @@ export default function App() {
   const tabs = isSmallTournamentMode ? [
     { id: 'dashboard', label: 'Vue d’ensemble' },
     { id: 'equipes', label: 'Équipes' },
-    { id: 'championship', label: 'Championnat' },
+    { id: 'championship', label: smallTournamentUsesPools ? 'Poules / classement' : 'Championnat' },
     { id: 'finales', label: 'Phases finales' },
     { id: 'public', label: 'Affichage public' },
     { id: 'export', label: 'Sauvegarde' },
@@ -2636,8 +2676,10 @@ export default function App() {
             </Section>
             <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
               <div className="cards-grid two-up">
-                {renderPodium('Tableau principal', knockout.principalFinals)}
-                {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                {isSmallTournamentMode ? renderPodium('Tournoi', singleKnockout.finals) : <>
+                  {renderPodium('Tableau principal', knockout.principalFinals)}
+                  {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                </>}
               </div>
             </Section>
           </div>
@@ -2657,7 +2699,7 @@ export default function App() {
                 <div className="hero-version">Version {APP_VERSION}</div>
               </div>
               <h1>{tournamentName} — mode arbitres</h1>
-              <p>{isSmallTournamentMode ? 'Sélectionne un match du Championnat ou du tableau final unique pour saisir les scores.' : 'Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.'}</p>
+              <p>{isSmallTournamentMode ? (smallTournamentUsesPools ? 'Sélectionne un match des poules de qualification ou du tableau final pour saisir les scores.' : 'Sélectionne un match du Championnat Aller / Retour ou du tableau final pour saisir les scores.') : 'Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.'}</p>
             </div>
             <div className="hero-controls">
               <div className="hero-pill">
@@ -2827,12 +2869,12 @@ export default function App() {
           {activeTab === 'dashboard' && (
             <>
               <div className="cards-grid six-up">
-                <StatCard label="Équipes" value={teams.length} subvalue={isSmallTournamentMode ? 'Mode Championnat Aller / Retour' : 'Cible : 18'} />
+                <StatCard label="Équipes" value={teams.length} subvalue={isSmallTournamentMode ? smallModeStatSubtitle : 'Cible : 18'} />
                 {isSmallTournamentMode ? (
                   <>
-                    <StatCard label="Championnat Aller" value={`${completedMatchCounts.championnatAller}/${championshipLeg1.matches.length || 0}`} subvalue="Toutes les équipes" />
-                    <StatCard label="Championnat Retour" value={`${completedMatchCounts.championnatRetour}/${championshipLeg2.matches.length || 0}`} subvalue="Matchs retour" />
-                    <StatCard label="Quarts" value={`${completedMatchCounts.quart}/${singleKnockout.quarters.length || 0}`} subvalue="Si 5 à 8 équipes" />
+                    <StatCard label={smallOpeningStageTitle} value={`${completedMatchCounts.championnatAller}/${championshipLeg1.matches.length || 0}`} subvalue={smallTournamentUsesPools ? `${championshipLeg1.pools.length || 0} poule(s) de 3` : 'Toutes les équipes'} />
+                    {smallTournamentUsesPools ? <StatCard label="Finales" value={`${completedMatchCounts.finale}/${singleKnockout.finals.length || 0}`} subvalue="Finale et petite finale" /> : <StatCard label="Championnat Retour" value={`${completedMatchCounts.championnatRetour}/${championshipLeg2.matches.length || 0}`} subvalue="Matchs retour" />}
+                    <StatCard label="Quarts" value={`${completedMatchCounts.quart}/${singleKnockout.quarters.length || 0}`} subvalue={smallTournamentUsesPools ? 'Selon le classement des poules' : 'Si 5 à 8 équipes'} />
                     <StatCard label="Demies" value={`${completedMatchCounts.demi}/${singleKnockout.semis.length || 0}`} subvalue="Tableau final" />
                     <StatCard label="Leader" value={championshipRanking[0]?.teamName || '-'} subvalue={`${championshipRanking[0]?.tournamentPoints ?? 0} pts`} />
                   </>
@@ -2851,8 +2893,8 @@ export default function App() {
                 <div className="cards-grid two-up">
                   {isSmallTournamentMode ? (
                     <>
-                      <PhaseRuleEditor title="Championnat Aller" value={phaseRules.championnatAller} disabled={phaseRuleLocks.championnatAller.locked} disabledReason={phaseRuleLocks.championnatAller.reason} onScoreChange={(value) => updatePhaseRule('championnatAller', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatAller', 'mode', value)} />
-                      <PhaseRuleEditor title="Championnat Retour" value={phaseRules.championnatRetour} disabled={phaseRuleLocks.championnatRetour.locked} disabledReason={phaseRuleLocks.championnatRetour.reason} onScoreChange={(value) => updatePhaseRule('championnatRetour', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatRetour', 'mode', value)} />
+                      <PhaseRuleEditor title={smallOpeningStageTitle} value={phaseRules.championnatAller} disabled={phaseRuleLocks.championnatAller.locked} disabledReason={phaseRuleLocks.championnatAller.reason} onScoreChange={(value) => updatePhaseRule('championnatAller', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatAller', 'mode', value)} />
+                      {smallTournamentUsesPools ? null : <PhaseRuleEditor title="Championnat Retour" value={phaseRules.championnatRetour} disabled={phaseRuleLocks.championnatRetour.locked} disabledReason={phaseRuleLocks.championnatRetour.reason} onScoreChange={(value) => updatePhaseRule('championnatRetour', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatRetour', 'mode', value)} />}
                       <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} disabled={phaseRuleLocks.quart.locked} disabledReason={phaseRuleLocks.quart.reason} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} />
                       <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} disabled={phaseRuleLocks.demi.locked} disabledReason={phaseRuleLocks.demi.reason} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} />
                       <PhaseRuleEditor title="Finale" value={phaseRules.finale} disabled={phaseRuleLocks.finale.locked} disabledReason={phaseRuleLocks.finale.reason} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} />
@@ -2869,7 +2911,7 @@ export default function App() {
                 </div>
               </Section>
 
-              <Section title="Flux du tournoi" subtitle={isSmallTournamentMode ? 'Pour moins de 10 équipes : Championnat Aller, Championnat Retour puis tableau final sans huitièmes.' : 'Mode standard à 18 équipes avec brassages, principale, consolante et phases finales.'} right={isSmallTournamentMode ? <><Button onClick={generateBrassage1}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
+              <Section title="Flux du tournoi" subtitle={isSmallTournamentMode ? smallFlowSubtitle : 'Mode standard à 18 équipes avec brassages, principale, consolante et phases finales.'} right={isSmallTournamentMode ? (smallTournamentUsesPools ? <><Button onClick={generateBrassage1}>1. Générer poules de 3</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>2. Générer tableau final</Button></> : <><Button onClick={generateBrassage1}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></>) : <><Button onClick={generateBrassage1}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
                 <div className="cards-grid two-up">
                   <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p></div>
                   <div className="mini-card"><div className="mini-card-head">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
@@ -2879,7 +2921,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. De 3 à 18 équipes, la première phase est choisie automatiquement : poules de 3 si possible, sinon Championnat Aller / Retour." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1}>{isSmallTournamentMode ? smallOpeningStageActionLabel : 'Générer brassage 1'}</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -2911,26 +2953,38 @@ export default function App() {
                 </table>
               </div>
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
-              <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
+              <p className="muted small helper-text">Gestion dynamique de 3 à {TEAM_TARGET} équipes. Si le nombre d’équipes est divisible par 3, l’application génère des poules de 3. Sinon, elle génère un Championnat Aller / Retour. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
               {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est officiellement validé.</p> : null}
             </Section>
           )}
 
 
           {activeTab === 'championship' && isSmallTournamentMode && (
-            <>
-              <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
-                {renderStandings(championshipLeg1Standings)}
-              </Section>
-              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
-              <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
-                {renderStandings(championshipLeg2Standings)}
-              </Section>
-              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
-              <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
-                {renderOverallRanking(championshipRanking)}
-              </Section>
-            </>
+            smallTournamentUsesPools ? (
+              <>
+                <Section title={smallOpeningStageTitle} subtitle={smallOpeningStageSubtitle} right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
+                  {renderStandings(championshipLeg1Standings)}
+                </Section>
+                <Section title={`Matchs - ${smallOpeningStageTitle}`}>{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+                <Section title={smallRankingTitle} subtitle="Utilisé pour construire directement le tableau final à partir des résultats des poules.">
+                  {renderOverallRanking(championshipRanking)}
+                </Section>
+              </>
+            ) : (
+              <>
+                <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
+                  {renderStandings(championshipLeg1Standings)}
+                </Section>
+                <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+                <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
+                  {renderStandings(championshipLeg2Standings)}
+                </Section>
+                <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
+                <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
+                  {renderOverallRanking(championshipRanking)}
+                </Section>
+              </>
+            )
           )}
 
           {activeTab === 'brassage1' && !isSmallTournamentMode && (
@@ -2974,7 +3028,7 @@ export default function App() {
             <>
               {isSmallTournamentMode ? (
                 <>
-                  <Section title="Quarts de finale" subtitle="Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
+                  <Section title="Quarts de finale" subtitle={smallTournamentUsesPools ? 'Générés si le classement des poules envoie au moins 5 équipes dans le tableau final.' : 'Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8.'} right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
                     {renderOrganizerMatches(singleKnockout.quarters, 'quarters')}
                   </Section>
 
