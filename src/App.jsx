@@ -845,6 +845,7 @@ export default function App() {
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
+  const pendingFreshTournamentTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -933,17 +934,18 @@ export default function App() {
   function applyPersistedState(parsed, options = {}) {
     if (!parsed) return;
     if (Array.isArray(parsed.teams)) setTeams(normalizeTeamsList(parsed.teams));
-    if (parsed.settings?.startTime) setStartTime(parsed.settings.startTime);
-    if (parsed.settings?.slotDuration) setSlotDuration(parsed.settings.slotDuration);
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'startTime')) setStartTime(parsed.settings?.startTime || '09:00');
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'slotDuration')) setSlotDuration(parsed.settings?.slotDuration || 20);
     if (parsed.settings?.phaseRules) setPhaseRules({ ...DEFAULT_PHASE_RULES, ...parsed.settings.phaseRules });
-    if (parsed.settings?.organizerPassword) {
-      setOrganizerPassword(parsed.settings.organizerPassword);
-      setPasswordDraft(parsed.settings.organizerPassword);
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'organizerPassword')) {
+      const nextPassword = parsed.settings?.organizerPassword || 'Chuly0ne';
+      setOrganizerPassword(nextPassword);
+      setPasswordDraft(nextPassword);
     }
-    if (parsed.settings?.tournamentName) setTournamentName(parsed.settings.tournamentName);
-    if (parsed.settings?.sharedTournamentId) setSharedTournamentId(parsed.settings.sharedTournamentId);
-    if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
-    if (parsed.meta?.remoteSavedAt) setRemoteSavedAt(parsed.meta.remoteSavedAt);
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentName')) setTournamentName(parsed.settings?.tournamentName || 'Tournoi de volley');
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
+    if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
+    if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
     if (parsed.brassage1) setBrassage1(normalizeLeagueState(parsed.brassage1));
     if (parsed.brassage2) setBrassage2(normalizeLeagueState(parsed.brassage2));
     if (parsed.mainStage) setMainStage(normalizeMainStageState(parsed.mainStage));
@@ -1075,6 +1077,16 @@ export default function App() {
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
 
+    const pendingFreshTournamentTimestamp = pendingFreshTournamentTimestampRef.current;
+    if (pendingFreshTournamentTimestamp) {
+      const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
+      const pendingResetTimestamp = toTimestamp(pendingFreshTournamentTimestamp);
+      if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingResetTimestamp) {
+        return;
+      }
+      pendingFreshTournamentTimestampRef.current = null;
+    }
+
     const remoteMatchCount = countMatchesInPersistedState(payload);
     const localMatchCount = allCompetitionMatches.length;
     const remoteTeamCount = Array.isArray(payload?.teams) ? payload.teams.length : 0;
@@ -1134,6 +1146,7 @@ export default function App() {
     setRemoteSyncMessage('Chargement Firebase en cours...');
     try {
       const payload = await fetchTournamentFromCloudRaw(effectiveId);
+      pendingFreshTournamentTimestampRef.current = null;
       applyPersistedState(payload);
       setRemoteStateInitialized(true);
       setSharedTournamentId(effectiveId);
@@ -1627,7 +1640,12 @@ export default function App() {
   async function startNewTournament() {
     const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
     if (!confirmed) return;
-    const freshState = buildFreshTournamentState({ preserveSharedId: true, preservePassword: true });
+    const resetStartedAt = new Date().toISOString();
+    pendingFreshTournamentTimestampRef.current = resetStartedAt;
+    const freshState = {
+      ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: true }),
+      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
+    };
     applyPersistedState(freshState);
     setRemoteStateInitialized(mode !== 'referee');
     setRemoteSyncMessage('');
@@ -1651,6 +1669,8 @@ export default function App() {
         if (!response.ok) {
           throw new Error(body?.error || 'Impossible de réinitialiser le tournoi sur Firebase.');
         }
+        pendingFreshTournamentTimestampRef.current = savedAt;
+        applyPersistedState(cloudPayload);
         setRemoteSavedAt(savedAt);
         setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
         if (typeof window !== 'undefined') {
@@ -1706,7 +1726,12 @@ export default function App() {
   }
 
   function resetTournament() {
-    const freshState = buildFreshTournamentState({ preserveSharedId: true, preservePassword: false });
+    const resetStartedAt = new Date().toISOString();
+    pendingFreshTournamentTimestampRef.current = resetStartedAt;
+    const freshState = {
+      ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: false }),
+      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
+    };
     applyPersistedState(freshState);
     setRemoteStateInitialized(mode !== 'referee');
     setRemoteSyncMessage('');
