@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v17B';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v17C';
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v17B';
+const APP_VERSION = 'v17C';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -1657,6 +1657,7 @@ export default function App() {
       setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
       setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
       setActiveTab('championship');
+      queueBackgroundCloudSave(250);
       return;
     }
     if (readyTeams.length !== TEAM_TARGET) {
@@ -1674,6 +1675,7 @@ export default function App() {
     setChampionshipLeg2({ pools: [], matches: [] });
     setSingleKnockout({ quarters: [], semis: [], finals: [] });
     setActiveTab('brassage1');
+    queueBackgroundCloudSave(250);
   }
 
   function generateBrassage2() {
@@ -1708,6 +1710,7 @@ export default function App() {
       setChampionshipLeg2({ pools, matches });
       setSingleKnockout({ quarters: [], semis: [], finals: [] });
       setActiveTab('championship');
+      queueBackgroundCloudSave(250);
       return;
     }
     if (brassage1.matches.length === 0) {
@@ -1725,6 +1728,7 @@ export default function App() {
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
     setActiveTab('brassage2');
+    queueBackgroundCloudSave(250);
   }
 
 
@@ -1757,6 +1761,7 @@ export default function App() {
       return;
     }
     setActiveTab('finales');
+    queueBackgroundCloudSave(250);
   }
 
   function generateSmallKnockoutStage2() {
@@ -1778,6 +1783,7 @@ export default function App() {
       stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length) + stageSlotCount(singleKnockout.quarters.length)
     );
     setSingleKnockout((current) => ({ ...current, semis, finals: [] }));
+    queueBackgroundCloudSave(250);
   }
 
   function generateSmallKnockoutStage3() {
@@ -1809,6 +1815,7 @@ export default function App() {
     }
     const finals = assignSchedule(finalsRaw, stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length) + stageSlotCount(singleKnockout.quarters.length) + stageSlotCount(singleKnockout.semis.length));
     setSingleKnockout((current) => ({ ...current, finals }));
+    queueBackgroundCloudSave(250);
   }
 
   function generateMainStage() {
@@ -1847,6 +1854,7 @@ export default function App() {
     });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
     setActiveTab('principale');
+    queueBackgroundCloudSave(250);
   }
 
   function generateKnockoutStage1() {
@@ -1887,6 +1895,7 @@ export default function App() {
       consolanteFinals: [],
     }));
     setActiveTab('finales');
+    queueBackgroundCloudSave(250);
   }
 
   function generateKnockoutStage2() {
