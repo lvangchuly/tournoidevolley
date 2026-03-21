@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v18';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-v18A';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v18';
+const APP_VERSION = 'v18A';
+const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
+const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -798,6 +800,43 @@ function formatRemoteTimestamp(value) {
   return date.toLocaleString('fr-FR');
 }
 
+function normalizeImageFileToSquareDataUrl(file, targetSize = NORMALIZED_LOGO_SOURCE_SIZE) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const context = canvas.getContext('2d');
+          if (!context) {
+            reject(new Error('Impossible de préparer le logo.'));
+            return;
+          }
+          context.clearRect(0, 0, targetSize, targetSize);
+          const ratio = Math.min(targetSize / image.width, targetSize / image.height);
+          const drawWidth = Math.max(1, Math.round(image.width * ratio));
+          const drawHeight = Math.max(1, Math.round(image.height * ratio));
+          const offsetX = Math.round((targetSize - drawWidth) / 2);
+          const offsetY = Math.round((targetSize - drawHeight) / 2);
+          context.imageSmoothingEnabled = true;
+          context.imageSmoothingQuality = 'high';
+          context.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (error) {
+          reject(error);
+        }
+      };
+      image.onerror = () => reject(new Error('Le fichier sélectionné n\'est pas une image valide.'));
+      image.src = typeof reader.result === 'string' ? reader.result : '';
+    };
+    reader.onerror = () => reject(new Error('Impossible de lire le fichier sélectionné.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt }) {
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
   return (
@@ -832,6 +871,7 @@ export default function App() {
   const [organizerPassword, setOrganizerPassword] = useState(initialOrganizerPassword);
   const [passwordDraft, setPasswordDraft] = useState(initialOrganizerPassword);
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
+  const [tournamentLogo, setTournamentLogo] = useState(initial?.settings?.tournamentLogo || '');
   const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley'));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
@@ -847,6 +887,7 @@ export default function App() {
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
+  const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
@@ -855,6 +896,16 @@ export default function App() {
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
+  const organizerBannerStyle = useMemo(() => {
+    if (!tournamentLogo) return undefined;
+    return {
+      backgroundColor: '#0f172a',
+      backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.42)), url(${tournamentLogo})`,
+      backgroundRepeat: 'no-repeat, repeat',
+      backgroundPosition: 'center, center',
+      backgroundSize: `100% 100%, ${ORGANIZER_BANNER_LOGO_TILE_SIZE}px ${ORGANIZER_BANNER_LOGO_TILE_SIZE}px`,
+    };
+  }, [tournamentLogo]);
 
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const teamsSortedByLevel = useMemo(() => sortTeamsForSeeding(teams), [teams]);
@@ -925,7 +976,7 @@ export default function App() {
   function getPersistedState(savedAt = lastSavedAt) {
     return {
       teams,
-      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId },
+      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId },
       meta: { lastSavedAt: savedAt, remoteSavedAt },
       brassage1,
       brassage2,
@@ -949,6 +1000,7 @@ export default function App() {
       setPasswordDraft(nextPassword);
     }
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentName')) setTournamentName(parsed.settings?.tournamentName || 'Tournoi de volley');
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
@@ -1639,6 +1691,7 @@ export default function App() {
         phaseRules: safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES),
         organizerPassword: nextOrganizerPassword,
         tournamentName: 'Tournoi de volley',
+        tournamentLogo: '',
         sharedTournamentId: nextSharedTournamentId,
       },
       meta: { lastSavedAt: '', remoteSavedAt: '' },
@@ -1705,6 +1758,24 @@ export default function App() {
     setOrganizerPassword(nextPassword);
     setPasswordDraft(nextPassword);
     window.alert(nextPassword === '' ? 'Mot de passe organisateur retiré. L’accès organisateur est maintenant direct.' : 'Mot de passe organisateur mis à jour.');
+  }
+
+  async function handleTournamentLogoChange(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const normalizedLogo = await normalizeImageFileToSquareDataUrl(file);
+      setTournamentLogo(normalizedLogo);
+      window.alert('Logo du tournoi mis à jour.');
+    } catch (error) {
+      window.alert(error.message || 'Impossible de charger ce logo.');
+    } finally {
+      if (event.target) event.target.value = '';
+    }
+  }
+
+  function clearTournamentLogo() {
+    setTournamentLogo('');
   }
 
   function updateTeam(teamId, field, value) {
@@ -2761,7 +2832,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="container">
-        <header className="hero hero-organizer-banner">
+        <header className={`hero hero-organizer-banner ${tournamentLogo ? 'hero-organizer-banner-with-logo' : ''}`.trim()} style={organizerBannerStyle}>
           <div className="banner-side banner-left">
             <AccessQrCode
               url={refereeAccessUrl}
@@ -2876,6 +2947,34 @@ export default function App() {
                 <p className="muted small organizer-password-help">
                   Mot de passe actuel : {organizerPassword === '' ? 'aucun mot de passe' : 'défini'}
                 </p>
+              </Section>
+
+              <Section title="Logo du tournoi" subtitle="Télécharge un logo qui sera répété en mosaïque sur toute la banderole Organisateur. Chaque logo est affiché à environ un quart du QR code Arbitres pour rester bien visible.">
+                <div className="tournament-logo-grid">
+                  <div className="tournament-logo-preview-card">
+                    <div className="muted small">Aperçu du logo</div>
+                    <div className={`tournament-logo-preview ${tournamentLogo ? 'has-logo' : ''}`}>
+                      {tournamentLogo ? <img src={tournamentLogo} alt="Logo du tournoi" /> : <span>Aucun logo téléchargé</span>}
+                    </div>
+                    <p className="muted small tournament-logo-help">
+                      La banderole répète le logo en mosaïque avec des tuiles d’environ {ORGANIZER_BANNER_LOGO_TILE_SIZE}px.
+                    </p>
+                  </div>
+                  <div className="tournament-logo-actions">
+                    <input
+                      ref={tournamentLogoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="visually-hidden"
+                      onChange={handleTournamentLogoChange}
+                    />
+                    <Button type="button" variant="secondary" onClick={() => tournamentLogoInputRef.current?.click()}>Télécharger un logo</Button>
+                    <Button type="button" variant="secondary" onClick={clearTournamentLogo} disabled={!tournamentLogo}>Retirer le logo</Button>
+                    <p className="muted small tournament-logo-help">
+                      Formats image acceptés. Le logo est automatiquement recentré dans un carré pour un rendu régulier sur la banderole.
+                    </p>
+                  </div>
+                </div>
               </Section>
 
               <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation.">
