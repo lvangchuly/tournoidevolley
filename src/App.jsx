@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v17C';
+const STORAGE_KEY = 'tournoidevolley-react-vite-v17D';
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v17C';
+const APP_VERSION = 'v17D';
 
 const DEFAULT_PHASE_RULES = {
   brassage1: { winningScore: 21, mode: 'sec' },
@@ -91,6 +91,61 @@ function normalizeTeamsList(inputTeams) {
     }));
 }
 
+function normalizeLeagueState(input) {
+  return {
+    pools: Array.isArray(input?.pools) ? input.pools : [],
+    matches: Array.isArray(input?.matches) ? input.matches : [],
+  };
+}
+
+function normalizeMainStageState(input) {
+  return {
+    principalePools: Array.isArray(input?.principalePools) ? input.principalePools : [],
+    principaleMatches: Array.isArray(input?.principaleMatches) ? input.principaleMatches : [],
+    consolantePools: Array.isArray(input?.consolantePools) ? input.consolantePools : [],
+    consolanteMatches: Array.isArray(input?.consolanteMatches) ? input.consolanteMatches : [],
+  };
+}
+
+function normalizeKnockoutState(input) {
+  return {
+    principalQuarters: Array.isArray(input?.principalQuarters) ? input.principalQuarters : [],
+    principalSemis: Array.isArray(input?.principalSemis) ? input.principalSemis : [],
+    principalFinals: Array.isArray(input?.principalFinals) ? input.principalFinals : [],
+    consolanteSemis: Array.isArray(input?.consolanteSemis) ? input.consolanteSemis : [],
+    consolanteFinals: Array.isArray(input?.consolanteFinals) ? input.consolanteFinals : [],
+  };
+}
+
+function normalizeSingleKnockoutState(input) {
+  return {
+    quarters: Array.isArray(input?.quarters) ? input.quarters : [],
+    semis: Array.isArray(input?.semis) ? input.semis : [],
+    finals: Array.isArray(input?.finals) ? input.finals : [],
+  };
+}
+
+function countMatchesInPersistedState(payload) {
+  if (!payload) return 0;
+  const arrays = [
+    payload?.brassage1?.matches,
+    payload?.brassage2?.matches,
+    payload?.mainStage?.principaleMatches,
+    payload?.mainStage?.consolanteMatches,
+    payload?.knockout?.principalQuarters,
+    payload?.knockout?.principalSemis,
+    payload?.knockout?.principalFinals,
+    payload?.knockout?.consolanteSemis,
+    payload?.knockout?.consolanteFinals,
+    payload?.championshipLeg1?.matches,
+    payload?.championshipLeg2?.matches,
+    payload?.singleKnockout?.quarters,
+    payload?.singleKnockout?.semis,
+    payload?.singleKnockout?.finals,
+  ];
+  return arrays.reduce((total, matches) => total + (Array.isArray(matches) ? matches.length : 0), 0);
+}
+
 function loadState() {
   if (typeof window === 'undefined') return null;
   try {
@@ -98,6 +153,13 @@ function loadState() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.teams)) parsed.teams = normalizeTeamsList(parsed.teams);
+    parsed.brassage1 = normalizeLeagueState(parsed?.brassage1);
+    parsed.brassage2 = normalizeLeagueState(parsed?.brassage2);
+    parsed.mainStage = normalizeMainStageState(parsed?.mainStage);
+    parsed.knockout = normalizeKnockoutState(parsed?.knockout);
+    parsed.championshipLeg1 = normalizeLeagueState(parsed?.championshipLeg1);
+    parsed.championshipLeg2 = normalizeLeagueState(parsed?.championshipLeg2);
+    parsed.singleKnockout = normalizeSingleKnockoutState(parsed?.singleKnockout);
     return parsed;
   } catch {
     return null;
@@ -770,13 +832,13 @@ export default function App() {
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
   const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
-  const [brassage1, setBrassage1] = useState(safeClone(initial?.brassage1, { pools: [], matches: [] }));
-  const [brassage2, setBrassage2] = useState(safeClone(initial?.brassage2, { pools: [], matches: [] }));
-  const [mainStage, setMainStage] = useState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }));
-  const [knockout, setKnockout] = useState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }));
-  const [championshipLeg1, setChampionshipLeg1] = useState(safeClone(initial?.championshipLeg1, { pools: [], matches: [] }));
-  const [championshipLeg2, setChampionshipLeg2] = useState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] }));
-  const [singleKnockout, setSingleKnockout] = useState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] }));
+  const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
+  const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
+  const [mainStage, setMainStage] = useState(normalizeMainStageState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] })));
+  const [knockout, setKnockout] = useState(normalizeKnockoutState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] })));
+  const [championshipLeg1, setChampionshipLeg1] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg1, { pools: [], matches: [] })));
+  const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
+  const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
   const importRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
@@ -882,13 +944,13 @@ export default function App() {
     if (parsed.settings?.sharedTournamentId) setSharedTournamentId(parsed.settings.sharedTournamentId);
     if (parsed.meta?.lastSavedAt) setLastSavedAt(parsed.meta.lastSavedAt);
     if (parsed.meta?.remoteSavedAt) setRemoteSavedAt(parsed.meta.remoteSavedAt);
-    if (parsed.brassage1) setBrassage1(parsed.brassage1);
-    if (parsed.brassage2) setBrassage2(parsed.brassage2);
-    if (parsed.mainStage) setMainStage(parsed.mainStage);
-    if (parsed.knockout) setKnockout(parsed.knockout);
-    if (parsed.championshipLeg1) setChampionshipLeg1(parsed.championshipLeg1);
-    if (parsed.championshipLeg2) setChampionshipLeg2(parsed.championshipLeg2);
-    if (parsed.singleKnockout) setSingleKnockout(parsed.singleKnockout);
+    if (parsed.brassage1) setBrassage1(normalizeLeagueState(parsed.brassage1));
+    if (parsed.brassage2) setBrassage2(normalizeLeagueState(parsed.brassage2));
+    if (parsed.mainStage) setMainStage(normalizeMainStageState(parsed.mainStage));
+    if (parsed.knockout) setKnockout(normalizeKnockoutState(parsed.knockout));
+    if (parsed.championshipLeg1) setChampionshipLeg1(normalizeLeagueState(parsed.championshipLeg1));
+    if (parsed.championshipLeg2) setChampionshipLeg2(normalizeLeagueState(parsed.championshipLeg2));
+    if (parsed.singleKnockout) setSingleKnockout(normalizeSingleKnockoutState(parsed.singleKnockout));
     if (!options.preserveSelection) setRefereeSelectedMatch(null);
 
   }
@@ -919,10 +981,16 @@ export default function App() {
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
+    const safeLocalMatches = Array.isArray(localMatches) ? localMatches : [];
+    const safeRemoteMatches = Array.isArray(remoteMatches) ? remoteMatches : [];
+    if (!safeLocalMatches.length && safeRemoteMatches.length) {
+      return safeClone(safeRemoteMatches, []);
+    }
+
     let changed = false;
-    const remoteById = new Map((remoteMatches || []).map((match) => [match.id, match]));
+    const remoteById = new Map(safeRemoteMatches.map((match) => [match.id, match]));
     const now = Date.now();
-    const merged = localMatches.map((match) => {
+    const merged = safeLocalMatches.map((match) => {
       const remote = remoteById.get(match.id);
       if (!remote) return match;
 
@@ -993,11 +1061,33 @@ export default function App() {
       changed = true;
       return nextMatch;
     });
-    return changed ? merged : localMatches;
+
+    const localIds = new Set(safeLocalMatches.map((match) => match.id));
+    const remoteOnlyMatches = safeRemoteMatches.filter((match) => !localIds.has(match.id));
+    if (remoteOnlyMatches.length) {
+      changed = true;
+      merged.push(...safeClone(remoteOnlyMatches, []));
+    }
+
+    return changed ? merged : safeLocalMatches;
   }
 
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
+
+    const remoteMatchCount = countMatchesInPersistedState(payload);
+    const localMatchCount = allCompetitionMatches.length;
+    const remoteTeamCount = Array.isArray(payload?.teams) ? payload.teams.length : 0;
+    const shouldHydrateStructure = mode !== 'organizer' && (
+      (remoteMatchCount > 0 && localMatchCount === 0)
+      || remoteMatchCount > localMatchCount
+      || (remoteTeamCount > 0 && teams.length < remoteTeamCount)
+    );
+
+    if (shouldHydrateStructure) {
+      applyPersistedState(payload, { preserveSelection: true });
+    }
+
     setRemoteStateInitialized(true);
     if (payload?.meta?.remoteSavedAt) setRemoteSavedAt(payload.meta.remoteSavedAt);
     if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
