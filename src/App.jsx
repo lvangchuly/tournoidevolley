@@ -94,37 +94,98 @@ function normalizeTeamsList(inputTeams) {
     }));
 }
 
+function matchIdentityKey(match) {
+  if (!match) return '';
+  return match.id || [
+    match.phase || '',
+    match.group || '',
+    match.round || '',
+    match.teamAId || '',
+    match.teamBId || '',
+    match.court || '',
+    match.slot || '',
+  ].join('|');
+}
+
+function pickPreferredMatch(existingMatch, incomingMatch) {
+  if (!existingMatch) return incomingMatch;
+  if (!incomingMatch) return existingMatch;
+
+  const existingWeight =
+    (existingMatch.validatedAt ? 1000000 : 0) +
+    (existingMatch.scoreA !== '' && existingMatch.scoreA !== null && existingMatch.scoreA !== undefined ? 10000 : 0) +
+    (existingMatch.scoreB !== '' && existingMatch.scoreB !== null && existingMatch.scoreB !== undefined ? 10000 : 0) +
+    (existingMatch.submittedAt ? 1000 : 0) +
+    (existingMatch.submittedScoreA !== '' && existingMatch.submittedScoreA !== null && existingMatch.submittedScoreA !== undefined ? 100 : 0) +
+    (existingMatch.submittedScoreB !== '' && existingMatch.submittedScoreB !== null && existingMatch.submittedScoreB !== undefined ? 100 : 0) +
+    (existingMatch.matchInProgress ? 10 : 0) +
+    (existingMatch.refereeInProgress ? 1 : 0);
+  const incomingWeight =
+    (incomingMatch.validatedAt ? 1000000 : 0) +
+    (incomingMatch.scoreA !== '' && incomingMatch.scoreA !== null && incomingMatch.scoreA !== undefined ? 10000 : 0) +
+    (incomingMatch.scoreB !== '' && incomingMatch.scoreB !== null && incomingMatch.scoreB !== undefined ? 10000 : 0) +
+    (incomingMatch.submittedAt ? 1000 : 0) +
+    (incomingMatch.submittedScoreA !== '' && incomingMatch.submittedScoreA !== null && incomingMatch.submittedScoreA !== undefined ? 100 : 0) +
+    (incomingMatch.submittedScoreB !== '' && incomingMatch.submittedScoreB !== null && incomingMatch.submittedScoreB !== undefined ? 100 : 0) +
+    (incomingMatch.matchInProgress ? 10 : 0) +
+    (incomingMatch.refereeInProgress ? 1 : 0);
+
+  if (incomingWeight !== existingWeight) {
+    return incomingWeight > existingWeight ? incomingMatch : existingMatch;
+  }
+
+  const existingTimestamp = Math.max(toTimestamp(existingMatch.validatedAt), toTimestamp(existingMatch.submittedAt));
+  const incomingTimestamp = Math.max(toTimestamp(incomingMatch.validatedAt), toTimestamp(incomingMatch.submittedAt));
+  if (incomingTimestamp !== existingTimestamp) {
+    return incomingTimestamp > existingTimestamp ? incomingMatch : existingMatch;
+  }
+
+  return incomingMatch;
+}
+
+function dedupeMatches(matches) {
+  if (!Array.isArray(matches) || matches.length <= 1) return Array.isArray(matches) ? matches.filter(Boolean) : [];
+  const byKey = new Map();
+  matches.forEach((match) => {
+    if (!match) return;
+    const key = matchIdentityKey(match);
+    if (!key) return;
+    byKey.set(key, pickPreferredMatch(byKey.get(key), match));
+  });
+  return Array.from(byKey.values());
+}
+
 function normalizeLeagueState(input) {
   return {
     pools: Array.isArray(input?.pools) ? input.pools : [],
-    matches: Array.isArray(input?.matches) ? input.matches : [],
+    matches: dedupeMatches(Array.isArray(input?.matches) ? input.matches : []),
   };
 }
 
 function normalizeMainStageState(input) {
   return {
     principalePools: Array.isArray(input?.principalePools) ? input.principalePools : [],
-    principaleMatches: Array.isArray(input?.principaleMatches) ? input.principaleMatches : [],
+    principaleMatches: dedupeMatches(Array.isArray(input?.principaleMatches) ? input.principaleMatches : []),
     consolantePools: Array.isArray(input?.consolantePools) ? input.consolantePools : [],
-    consolanteMatches: Array.isArray(input?.consolanteMatches) ? input.consolanteMatches : [],
+    consolanteMatches: dedupeMatches(Array.isArray(input?.consolanteMatches) ? input.consolanteMatches : []),
   };
 }
 
 function normalizeKnockoutState(input) {
   return {
-    principalQuarters: Array.isArray(input?.principalQuarters) ? input.principalQuarters : [],
-    principalSemis: Array.isArray(input?.principalSemis) ? input.principalSemis : [],
-    principalFinals: Array.isArray(input?.principalFinals) ? input.principalFinals : [],
-    consolanteSemis: Array.isArray(input?.consolanteSemis) ? input.consolanteSemis : [],
-    consolanteFinals: Array.isArray(input?.consolanteFinals) ? input.consolanteFinals : [],
+    principalQuarters: dedupeMatches(Array.isArray(input?.principalQuarters) ? input.principalQuarters : []),
+    principalSemis: dedupeMatches(Array.isArray(input?.principalSemis) ? input.principalSemis : []),
+    principalFinals: dedupeMatches(Array.isArray(input?.principalFinals) ? input.principalFinals : []),
+    consolanteSemis: dedupeMatches(Array.isArray(input?.consolanteSemis) ? input.consolanteSemis : []),
+    consolanteFinals: dedupeMatches(Array.isArray(input?.consolanteFinals) ? input.consolanteFinals : []),
   };
 }
 
 function normalizeSingleKnockoutState(input) {
   return {
-    quarters: Array.isArray(input?.quarters) ? input.quarters : [],
-    semis: Array.isArray(input?.semis) ? input.semis : [],
-    finals: Array.isArray(input?.finals) ? input.finals : [],
+    quarters: dedupeMatches(Array.isArray(input?.quarters) ? input.quarters : []),
+    semis: dedupeMatches(Array.isArray(input?.semis) ? input.semis : []),
+    finals: dedupeMatches(Array.isArray(input?.finals) ? input.finals : []),
   };
 }
 
@@ -715,6 +776,12 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled =
   );
 }
 
+
+function formatRemainingMatchesLabel(matches, phaseRules) {
+  const remainingCount = (matches || []).filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
+  return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
+}
+
 function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   if (!match) return null;
   const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
@@ -1042,8 +1109,8 @@ export default function App() {
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
-    const safeLocalMatches = Array.isArray(localMatches) ? localMatches : [];
-    const safeRemoteMatches = Array.isArray(remoteMatches) ? remoteMatches : [];
+    const safeLocalMatches = dedupeMatches(Array.isArray(localMatches) ? localMatches : []);
+    const safeRemoteMatches = dedupeMatches(Array.isArray(remoteMatches) ? remoteMatches : []);
     if (!safeLocalMatches.length && safeRemoteMatches.length) {
       return safeClone(safeRemoteMatches, []);
     }
@@ -1130,7 +1197,7 @@ export default function App() {
       merged.push(...safeClone(remoteOnlyMatches, []));
     }
 
-    return changed ? merged : safeLocalMatches;
+    return changed ? dedupeMatches(merged) : safeLocalMatches;
   }
 
   function mergeRemoteRefereeState(payload) {
@@ -3053,11 +3120,11 @@ export default function App() {
               <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
                 {renderStandings(championshipLeg1Standings)}
               </Section>
-              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+              <Section title={`Matchs du Championnat Aller : ${formatRemainingMatchesLabel(championshipLeg1.matches, phaseRules)}`}>{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
               <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
                 {renderStandings(championshipLeg2Standings)}
               </Section>
-              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
+              <Section title={`Matchs du Championnat Retour : ${formatRemainingMatchesLabel(championshipLeg2.matches, phaseRules)}`}>{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
               <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
                 {renderOverallRanking(championshipRanking)}
               </Section>
@@ -3069,7 +3136,7 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(brassage1.matches, phaseRules)}`}>{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
               <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
@@ -3081,7 +3148,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(brassage2.matches, phaseRules)}`}>{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -3093,11 +3160,11 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
+              <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(mainStage.principaleMatches, phaseRules)}`}>{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
               <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(mainStage.consolanteMatches, phaseRules)}`}>{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
             </>
           )}
 
@@ -3105,15 +3172,15 @@ export default function App() {
             <>
               {isSmallTournamentMode ? (
                 <>
-                  <Section title="Quarts de finale" subtitle="Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
+                  <Section title={`Quarts de finale : ${formatRemainingMatchesLabel(singleKnockout.quarters, phaseRules)}`} subtitle="Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
                     {renderOrganizerMatches(singleKnockout.quarters, 'quarters')}
                   </Section>
 
-                  <Section title="Demi-finales" subtitle="Créées directement pour 3 ou 4 équipes, ou après les quarts pour 5 à 8 équipes." right={<Button variant="success" onClick={generateSmallKnockoutStage3}>Générer la finale et la petite finale</Button>}>
+                  <Section title={`Demi-finales : ${formatRemainingMatchesLabel(singleKnockout.semis, phaseRules)}`} subtitle="Créées directement pour 3 ou 4 équipes, ou après les quarts pour 5 à 8 équipes." right={<Button variant="success" onClick={generateSmallKnockoutStage3}>Générer la finale et la petite finale</Button>}>
                     {renderOrganizerMatches(singleKnockout.semis, 'semis')}
                   </Section>
 
-                  <Section title="Finale et petite finale" subtitle="Dernière étape du tournoi.">
+                  <Section title={`Finale et petite finale : ${formatRemainingMatchesLabel(singleKnockout.finals, phaseRules)}`} subtitle="Dernière étape du tournoi.">
                     {renderOrganizerMatches(singleKnockout.finals, 'finals')}
                   </Section>
 
@@ -3128,11 +3195,11 @@ export default function App() {
                   <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
                     <div className="cards-grid two-up">
                       <div>
-                        <h3>Quarts de finale principale</h3>
+                        <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
                       </div>
                       <div>
-                        <h3>Demi-finales consolante</h3>
+                        <h3>{`Demi-finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
                       </div>
                     </div>
@@ -3141,17 +3208,17 @@ export default function App() {
                   <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
                     <div className="cards-grid two-up">
                       <div>
-                        <h3>Demi-finales principale</h3>
+                        <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
                       </div>
                       <div>
-                        <h3>Finales consolante</h3>
+                        <h3>{`Finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteFinals, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
                       </div>
                     </div>
                   </Section>
 
-                  <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
+                  <Section title={`Étape 3 du tableau principal : ${formatRemainingMatchesLabel(knockout.principalFinals, phaseRules)}`} subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
                     {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
                   </Section>
 
