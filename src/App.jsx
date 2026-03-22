@@ -2743,18 +2743,27 @@ export default function App() {
     return (
       <div className="mini-card">
         <div className="mini-card-head">{title}</div>
-        <div className="podium-steps">
-          <div className="podium-step podium-step-second">
-            <div className="podium-step-rank">2e</div>
-            <div className="podium-step-team">{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} /> : <span>À venir</span>}</div>
+        <div className="podium-steps podium-steps-model">
+          <div className="podium-lane podium-lane-second">
+            <div className="podium-team-label">{finalResult.loser ? resolveTeam(finalResult.loser).name : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-second">
+              <div className="podium-step-rank">2e</div>
+            </div>
           </div>
-          <div className="podium-step podium-step-first">
-            <div className="podium-step-rank">1er</div>
-            <div className="podium-step-team">{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} /> : <span>À venir</span>}</div>
+          <div className="podium-lane podium-lane-first">
+            <div className="podium-team-label">{finalResult.winner ? resolveTeam(finalResult.winner).name : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-first">
+              <div className="podium-step-rank">1er</div>
+            </div>
           </div>
-          <div className="podium-step podium-step-third">
-            <div className="podium-step-rank">3e</div>
-            <div className="podium-step-team">{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} /> : <span>À venir</span>}</div>
+          <div className="podium-lane podium-lane-third">
+            <div className="podium-team-label">{smallResult.winner ? resolveTeam(smallResult.winner).name : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-third">
+              <div className="podium-step-rank">3e</div>
+            </div>
           </div>
         </div>
       </div>
