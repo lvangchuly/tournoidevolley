@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V18G';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-v18H';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V18G';
+const APP_VERSION = 'v18H';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -733,6 +733,15 @@ function getLevelClass(level) {
 
 function TeamBadge({ name, level, className = '', children = null }) {
   return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}{children}</span>;
+}
+
+function formatPoolLabel(group = '') {
+  return String(group || '')
+    .replace(/^Brassage [12] - /, '')
+    .replace(/^Championnat (Aller|Retour) - /, '')
+    .replace(/^Principale\s+/, '')
+    .replace(/^Consolante\s+/, '')
+    .trim();
 }
 
 function Button({ children, variant = 'primary', ...props }) {
@@ -2503,9 +2512,7 @@ export default function App() {
         <table className="matches-table">
           <thead>
             <tr>
-              <th className="column-time">Heure</th>
-              <th className="column-court">Terrain</th>
-              <th>Poule</th>
+              <th className="column-match">Match</th>
               <th>Équipe A</th>
               <th>Score officiel</th>
               <th>Équipe B</th>
@@ -2523,9 +2530,13 @@ export default function App() {
               const schedule = scheduleData.scheduleMap[match.id];
               return (
                 <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
-                  <td className="cell-time">{schedule?.startText || match.time}</td>
-                  <td className="cell-court">Terrain {match.court}</td>
-                  <td>{match.group.replace(/^Brassage [12] - /, '').replace(/^Championnat (Aller|Retour) - /, '')}</td>
+                  <td className="match-meta-cell">
+                    <div className="match-meta-stack">
+                      <span className="match-meta-time">{schedule?.startText || match.time}</span>
+                      <span className="match-meta-line">Terrain {match.court}</span>
+                      <span className="match-meta-line">{formatPoolLabel(match.group)}</span>
+                    </div>
+                  </td>
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
                   <td>
                     <div className="score-inputs">
@@ -2753,21 +2764,21 @@ export default function App() {
         <div className="mini-card-head">{title}</div>
         <div className="podium-steps podium-steps-model">
           <div className="podium-lane podium-lane-second">
-            <div className="podium-team-label">{finalResult.loser ? resolveTeam(finalResult.loser).name : 'À venir'}</div>
+            <div className="podium-team-label">{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-second">
               <div className="podium-step-rank">2e</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-first">
-            <div className="podium-team-label">{finalResult.winner ? resolveTeam(finalResult.winner).name : 'À venir'}</div>
+            <div className="podium-team-label">{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-first">
               <div className="podium-step-rank">1er</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-third">
-            <div className="podium-team-label">{smallResult.winner ? resolveTeam(smallResult.winner).name : 'À venir'}</div>
+            <div className="podium-team-label">{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-third">
               <div className="podium-step-rank">3e</div>
@@ -2942,7 +2953,7 @@ export default function App() {
                             >
                               <div>
                                 <div className="referee-selector-teams"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /><span className="muted tiny">vs</span><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></div>
-                                <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
+                                <div className="muted tiny">{formatPoolLabel(match.group)} • Terrain {match.court} • {schedule?.startText || match.time}</div>
                               </div>
                               <span className={`badge ${group.isUnlocked ? badgeClass : 'badge-neutral'}`}>{group.isUnlocked ? statusText : 'Verrouillé'}</span>
                             </button>
