@@ -1239,7 +1239,7 @@ tbody tr:last-child td { border-bottom: none; }
 .matches-table td:nth-child(4),
 .matches-table th:nth-child(6),
 .matches-table td:nth-child(6) {
-  width: calc((100% - 64px - 72px - 88px - 132px - 112px) / 2);
+  width: calc((100% - 64px - 72px - 88px - 124px - 168px) / 2);
 }
 
 .matches-table th:nth-child(4),
@@ -1254,12 +1254,18 @@ tbody tr:last-child td { border-bottom: none; }
 
 .matches-table th:nth-child(5),
 .matches-table td:nth-child(5) {
-  width: 132px;
+  width: 124px;
 }
 
 .matches-table th:nth-child(7),
 .matches-table td:nth-child(7) {
-  width: 112px;
+  width: 168px;
+}
+
+.matches-table th:nth-child(7),
+.matches-table td:nth-child(7),
+.matches-table td:nth-child(7) .badge {
+  white-space: normal;
 }
 
 .knockout-step-grid .table-wrap {
@@ -1290,7 +1296,7 @@ tbody tr:last-child td { border-bottom: none; }
   .matches-table td:nth-child(4),
   .matches-table th:nth-child(6),
   .matches-table td:nth-child(6) {
-    width: calc((100% - 64px - 72px - 74px - 124px - 118px) / 2);
+    width: calc((100% - 64px - 72px - 74px - 118px - 164px) / 2);
   }
 
   .matches-table th:nth-child(4),
@@ -1305,11 +1311,11 @@ tbody tr:last-child td { border-bottom: none; }
 
   .matches-table th:nth-child(5),
   .matches-table td:nth-child(5) {
-    width: 124px;
+    width: 118px;
   }
 
   .matches-table th:nth-child(7),
   .matches-table td:nth-child(7) {
-    width: 118px;
+    width: 164px;
   }
 }
