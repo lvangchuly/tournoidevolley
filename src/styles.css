@@ -1249,7 +1249,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 .matches-table th:nth-child(6),
 .matches-table td:nth-child(6) {
-  padding-left: 14px;
+  padding-left: 20px;
 }
 
 .matches-table th:nth-child(5),
@@ -1306,7 +1306,7 @@ tbody tr:last-child td { border-bottom: none; }
 
   .matches-table th:nth-child(6),
   .matches-table td:nth-child(6) {
-    padding-left: 12px;
+    padding-left: 18px;
   }
 
   .matches-table th:nth-child(5),
