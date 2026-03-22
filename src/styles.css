@@ -1235,9 +1235,26 @@ tbody tr:last-child td { border-bottom: none; }
   width: 88px;
 }
 
+.matches-table th:nth-child(4),
+.matches-table td:nth-child(4),
+.matches-table th:nth-child(6),
+.matches-table td:nth-child(6) {
+  width: calc((100% - 64px - 72px - 88px - 132px - 112px) / 2);
+}
+
+.matches-table th:nth-child(4),
+.matches-table td:nth-child(4) {
+  padding-right: 14px;
+}
+
+.matches-table th:nth-child(6),
+.matches-table td:nth-child(6) {
+  padding-left: 14px;
+}
+
 .matches-table th:nth-child(5),
 .matches-table td:nth-child(5) {
-  width: 118px;
+  width: 132px;
 }
 
 .matches-table th:nth-child(7),
@@ -1269,14 +1286,26 @@ tbody tr:last-child td { border-bottom: none; }
     width: 74px;
   }
 
-  .matches-table th:nth-child(5),
-  .matches-table td:nth-child(5) {
-    width: 108px;
+  .matches-table th:nth-child(4),
+  .matches-table td:nth-child(4),
+  .matches-table th:nth-child(6),
+  .matches-table td:nth-child(6) {
+    width: calc((100% - 64px - 72px - 74px - 124px - 118px) / 2);
   }
 
-  .matches-table th:nth-child(7),
-  .matches-table td:nth-child(7) {
-    width: 102px;
+  .matches-table th:nth-child(4),
+  .matches-table td:nth-child(4) {
+    padding-right: 12px;
+  }
+
+  .matches-table th:nth-child(6),
+  .matches-table td:nth-child(6) {
+    padding-left: 12px;
+  }
+
+  .matches-table th:nth-child(5),
+  .matches-table td:nth-child(5) {
+    width: 124px;
   }
 
   .matches-table th:nth-child(7),
