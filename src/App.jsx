@@ -536,13 +536,32 @@ function getRuleForPhaseLabel(phaseLabel, phaseRules) {
   return phaseRules?.[key] || DEFAULT_PHASE_RULES[key];
 }
 
+function getRuleKeyFromMatch(match) {
+  if (!match) return 'brassage1';
+  const phaseLabel = match.phase;
+  const groupLabel = String(match.group || '').trim();
+  if (phaseLabel === 'Tableau principal' || phaseLabel === 'Tableau consolante') {
+    if (/^Quart/i.test(groupLabel)) return 'quart';
+    if (/^Demi/i.test(groupLabel)) return 'demi';
+    if (/^Finale$/i.test(groupLabel)) return 'finale';
+    if (/^Petite finale/i.test(groupLabel)) return 'petiteFinale';
+    return phaseLabel === 'Tableau principal' ? 'principale' : 'consolante';
+  }
+  return getRuleKeyFromPhaseLabel(phaseLabel);
+}
+
+function getRuleForMatch(match, phaseRules) {
+  const key = getRuleKeyFromMatch(match);
+  return phaseRules?.[key] || DEFAULT_PHASE_RULES[key];
+}
+
 function isMatchResultValid(match, phaseRules) {
   const scoreA = toNumber(match.scoreA);
   const scoreB = toNumber(match.scoreB);
   if (scoreA === null || scoreB === null) return false;
   if (scoreA === scoreB) return false;
 
-  const rule = getRuleForPhaseLabel(match.phase, phaseRules);
+  const rule = getRuleForMatch(match, phaseRules);
   const target = Number(rule?.winningScore) || 21;
   const mode = rule?.mode || 'sec';
 
@@ -583,7 +602,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
     const court = match.court || 1;
     const plannedStart = courtAvailability.get(court) ?? stageStartMinutes;
     const actualEnd = isMatchResultValid(match, phaseRules) ? stampToMinutes(match.validatedAt) : null;
-    const estimatedEnd = plannedStart + estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules));
+    const estimatedEnd = plannedStart + estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules));
     const endMinutes = actualEnd !== null ? Math.max(plannedStart, actualEnd) : estimatedEnd;
 
     scheduleMap[match.id] = {
@@ -591,7 +610,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
       startText: minutesToTime(plannedStart),
       endMinutes,
       endText: minutesToTime(endMinutes),
-      estimatedDuration: estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules)),
+      estimatedDuration: estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules)),
     };
 
     courtAvailability.set(court, endMinutes);
@@ -1679,19 +1698,27 @@ export default function App() {
       reason: 'Paramètre verrouillé dès qu’un match valide existe au Championnat Retour ou dans une phase finale.'
     },
     quart: {
-      locked: hasAnyValidMatch([...singleKnockout.quarters, ...singleKnockout.semis, ...singleKnockout.finals]),
-      reason: 'Paramètre verrouillé dès qu’un match valide existe en quart de finale ou après.'
+      locked: hasAnyValidMatch([...singleKnockout.quarters, ...singleKnockout.semis, ...singleKnockout.finals, ...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals]),
+      reason: 'Paramètre verrouillé dès qu’un quart de finale valide existe ou qu’une phase finale dépendante a commencé.'
     },
     demi: {
-      locked: hasAnyValidMatch([...singleKnockout.semis, ...singleKnockout.finals]),
-      reason: 'Paramètre verrouillé dès qu’un match valide existe en demi-finale ou après.'
+      locked: hasAnyValidMatch([...singleKnockout.semis, ...singleKnockout.finals, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals]),
+      reason: 'Paramètre verrouillé dès qu’une demi-finale valide existe ou qu’une finale dépendante a commencé.'
     },
     finale: {
-      locked: hasAnyValidMatch(singleKnockout.finals.filter((match) => match.group === 'Finale')),
+      locked: hasAnyValidMatch([
+        ...singleKnockout.finals.filter((match) => match.group === 'Finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Finale')
+      ]),
       reason: 'Paramètre verrouillé dès qu’une finale valide existe.'
     },
     petiteFinale: {
-      locked: hasAnyValidMatch(singleKnockout.finals.filter((match) => match.group === 'Petite finale')),
+      locked: hasAnyValidMatch([
+        ...singleKnockout.finals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Petite finale')
+      ]),
       reason: 'Paramètre verrouillé dès qu’une petite finale valide existe.'
     },
   }), [phaseRules, brassage1.matches, brassage2.matches, mainStage, knockout, championshipLeg1.matches, championshipLeg2.matches, singleKnockout]);
@@ -2607,7 +2634,7 @@ export default function App() {
       : match.refereeInProgress
         ? 'badge-danger'
         : 'badge-neutral';
-    const phaseRule = getRuleForPhaseLabel(match.phase, phaseRules);
+    const phaseRule = getRuleForMatch(match, phaseRules);
     const winningScore = Number(phaseRule?.winningScore) || 21;
     const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
     const contextText = `${match.group} • Terrain ${match.court} • Début prévu : ${schedule?.startText || match.time}`;
@@ -3136,6 +3163,10 @@ export default function App() {
                       <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} disabled={phaseRuleLocks.brassage2.locked} disabledReason={phaseRuleLocks.brassage2.reason} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
                       <PhaseRuleEditor title="Principale" value={phaseRules.principale} disabled={phaseRuleLocks.principale.locked} disabledReason={phaseRuleLocks.principale.reason} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
                       <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} disabled={phaseRuleLocks.consolante.locked} disabledReason={phaseRuleLocks.consolante.reason} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                      <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} disabled={phaseRuleLocks.quart.locked} disabledReason={phaseRuleLocks.quart.reason} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} />
+                      <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} disabled={phaseRuleLocks.demi.locked} disabledReason={phaseRuleLocks.demi.reason} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} />
+                      <PhaseRuleEditor title="Finale" value={phaseRules.finale} disabled={phaseRuleLocks.finale.locked} disabledReason={phaseRuleLocks.finale.reason} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} />
+                      <PhaseRuleEditor title="Petite finale" value={phaseRules.petiteFinale} disabled={phaseRuleLocks.petiteFinale.locked} disabledReason={phaseRuleLocks.petiteFinale.reason} onScoreChange={(value) => updatePhaseRule('petiteFinale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('petiteFinale', 'mode', value)} />
                     </>
                   )}
                 </div>
