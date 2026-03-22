@@ -1244,12 +1244,22 @@ tbody tr:last-child td { border-bottom: none; }
 
 .matches-table th:nth-child(4),
 .matches-table td:nth-child(4) {
-  padding-right: 14px;
+  padding-right: 18px;
 }
 
 .matches-table th:nth-child(6),
 .matches-table td:nth-child(6) {
-  padding-left: 20px;
+  padding-left: 18px;
+}
+
+.matches-table td:nth-child(4) .team-badge {
+  width: calc(100% - 8px);
+  margin-right: 8px;
+}
+
+.matches-table td:nth-child(6) .team-badge {
+  width: calc(100% - 18px);
+  margin-left: 18px;
 }
 
 .matches-table th:nth-child(5),
@@ -1301,12 +1311,22 @@ tbody tr:last-child td { border-bottom: none; }
 
   .matches-table th:nth-child(4),
   .matches-table td:nth-child(4) {
-    padding-right: 12px;
+    padding-right: 16px;
   }
 
   .matches-table th:nth-child(6),
   .matches-table td:nth-child(6) {
-    padding-left: 18px;
+    padding-left: 16px;
+  }
+
+  .matches-table td:nth-child(4) .team-badge {
+    width: calc(100% - 6px);
+    margin-right: 6px;
+  }
+
+  .matches-table td:nth-child(6) .team-badge {
+    width: calc(100% - 16px);
+    margin-left: 16px;
   }
 
   .matches-table th:nth-child(5),
