@@ -2443,7 +2443,7 @@ export default function App() {
   function renderStandings(cards) {
     if (!cards.length) return <div className="empty-state">Aucun classement disponible pour le moment.</div>;
     return (
-      <div className="cards-grid three-up">
+      <div className="cards-grid one-up standings-full-width-grid">
         {cards.map(({ pool, rows }) => (
           <div key={pool.id} className="mini-card">
             <div className="mini-card-head">{pool.name}</div>
@@ -3222,7 +3222,7 @@ export default function App() {
               ) : (
                 <>
                   <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
-                    <div className="cards-grid two-up knockout-step-grid">
+                    <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
                         <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
@@ -3235,7 +3235,7 @@ export default function App() {
                   </Section>
 
                   <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
-                    <div className="cards-grid two-up knockout-step-grid">
+                    <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
                         <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
