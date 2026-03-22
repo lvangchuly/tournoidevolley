@@ -2529,7 +2529,6 @@ export default function App() {
                   <td>
                     <div className="status-cell">
                       <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                      {isValid ? <span className="muted tiny">Le score officiel reste modifiable par l’organisateur.</span> : null}
                       {!isValid && pendingStatus === 'Match en cours' ? (
                         <>
                           <span className="badge badge-neutral">Match en cours</span>
