@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V18D';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V18E';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V18D';
+const APP_VERSION = 'V18E';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2449,6 +2449,14 @@ export default function App() {
             <div className="mini-card-head">{pool.name}</div>
             <div className="table-wrap">
               <table className="standings-table">
+                <colgroup>
+                  <col className="col-rank" />
+                  <col className="col-team" />
+                  <col className="col-j" />
+                  <col className="col-v" />
+                  <col className="col-pts" />
+                  <col className="col-diff" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>#</th>
@@ -2735,10 +2743,19 @@ export default function App() {
     return (
       <div className="mini-card">
         <div className="mini-card-head">{title}</div>
-        <div className="podium-grid">
-          <div className="podium-item"><strong>1er</strong>{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} /> : <span>À venir</span>}</div>
-          <div className="podium-item"><strong>2e</strong>{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} /> : <span>À venir</span>}</div>
-          <div className="podium-item"><strong>3e</strong>{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} /> : <span>À venir</span>}</div>
+        <div className="podium-steps">
+          <div className="podium-step podium-step-second">
+            <div className="podium-step-rank">2e</div>
+            <div className="podium-step-team">{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} /> : <span>À venir</span>}</div>
+          </div>
+          <div className="podium-step podium-step-first">
+            <div className="podium-step-rank">1er</div>
+            <div className="podium-step-team">{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} /> : <span>À venir</span>}</div>
+          </div>
+          <div className="podium-step podium-step-third">
+            <div className="podium-step-rank">3e</div>
+            <div className="podium-step-team">{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} /> : <span>À venir</span>}</div>
+          </div>
         </div>
       </div>
     );
