@@ -119,7 +119,8 @@ function pickPreferredMatch(existingMatch, incomingMatch) {
     (existingMatch.submittedScoreA !== '' && existingMatch.submittedScoreA !== null && existingMatch.submittedScoreA !== undefined ? 100 : 0) +
     (existingMatch.submittedScoreB !== '' && existingMatch.submittedScoreB !== null && existingMatch.submittedScoreB !== undefined ? 100 : 0) +
     (existingMatch.matchInProgress ? 10 : 0) +
-    (existingMatch.refereeInProgress ? 1 : 0);
+    (existingMatch.refereeInProgress ? 1 : 0) +
+    (existingMatch.manualOverrideAt ? 5000 : 0);
   const incomingWeight =
     (incomingMatch.validatedAt ? 1000000 : 0) +
     (incomingMatch.scoreA !== '' && incomingMatch.scoreA !== null && incomingMatch.scoreA !== undefined ? 10000 : 0) +
@@ -128,14 +129,15 @@ function pickPreferredMatch(existingMatch, incomingMatch) {
     (incomingMatch.submittedScoreA !== '' && incomingMatch.submittedScoreA !== null && incomingMatch.submittedScoreA !== undefined ? 100 : 0) +
     (incomingMatch.submittedScoreB !== '' && incomingMatch.submittedScoreB !== null && incomingMatch.submittedScoreB !== undefined ? 100 : 0) +
     (incomingMatch.matchInProgress ? 10 : 0) +
-    (incomingMatch.refereeInProgress ? 1 : 0);
+    (incomingMatch.refereeInProgress ? 1 : 0) +
+    (incomingMatch.manualOverrideAt ? 5000 : 0);
 
   if (incomingWeight !== existingWeight) {
     return incomingWeight > existingWeight ? incomingMatch : existingMatch;
   }
 
-  const existingTimestamp = Math.max(toTimestamp(existingMatch.validatedAt), toTimestamp(existingMatch.submittedAt));
-  const incomingTimestamp = Math.max(toTimestamp(incomingMatch.validatedAt), toTimestamp(incomingMatch.submittedAt));
+  const existingTimestamp = Math.max(toTimestamp(existingMatch.validatedAt), toTimestamp(existingMatch.submittedAt), toTimestamp(existingMatch.manualOverrideAt));
+  const incomingTimestamp = Math.max(toTimestamp(incomingMatch.validatedAt), toTimestamp(incomingMatch.submittedAt), toTimestamp(incomingMatch.manualOverrideAt));
   if (incomingTimestamp !== existingTimestamp) {
     return incomingTimestamp > existingTimestamp ? incomingMatch : existingMatch;
   }
@@ -1131,6 +1133,17 @@ export default function App() {
       const remoteSubmittedAt = toTimestamp(remote.submittedAt);
       const localValidatedAt = toTimestamp(match.validatedAt);
       const remoteValidatedAt = toTimestamp(remote.validatedAt);
+      const localManualOverrideAt = toTimestamp(match.manualOverrideAt);
+      const remoteManualOverrideAt = toTimestamp(remote.manualOverrideAt);
+      const localOfficialAt = Math.max(localValidatedAt, localManualOverrideAt);
+      const remoteOfficialAt = Math.max(remoteValidatedAt, remoteManualOverrideAt);
+      const localOfficialScoresDiffer =
+        String(match.scoreA ?? '') !== String(remote.scoreA ?? '') ||
+        String(match.scoreB ?? '') !== String(remote.scoreB ?? '');
+      const shouldKeepLocalOfficialEdit =
+        localOfficialScoresDiffer &&
+        localOfficialAt > remoteOfficialAt &&
+        localOfficialAt >= remoteSubmittedAt;
       const remoteIsValid = isMatchResultValid(remote, phaseRules);
       const localIsValid = isMatchResultValid(match, phaseRules);
       const pendingScoresDiffer =
@@ -1143,19 +1156,20 @@ export default function App() {
 
       let nextMatch = match;
 
-      if (remoteIsValid && (!localIsValid || remoteValidatedAt >= localValidatedAt)) {
+      if (!shouldKeepLocalOfficialEdit && remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
         nextMatch = {
           ...nextMatch,
           scoreA: remote.scoreA ?? '',
           scoreB: remote.scoreB ?? '',
           validatedAt: remote.validatedAt ?? null,
+          manualOverrideAt: remote.manualOverrideAt ?? null,
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp) {
+      } else if (!shouldKeepLocalOfficialEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remote.submittedScoreA ?? '',
@@ -1180,6 +1194,7 @@ export default function App() {
         (match.scoreA ?? '') !== (nextMatch.scoreA ?? '') ||
         (match.scoreB ?? '') !== (nextMatch.scoreB ?? '') ||
         (match.validatedAt ?? null) !== (nextMatch.validatedAt ?? null) ||
+        (match.manualOverrideAt ?? null) !== (nextMatch.manualOverrideAt ?? null) ||
         (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
         (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
         (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
@@ -2261,6 +2276,7 @@ export default function App() {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
+      const officialEditTimestamp = new Date().toISOString();
       const updated = {
         ...match,
         [field]: normalized,
@@ -2269,8 +2285,9 @@ export default function App() {
         submittedAt: null,
         refereeInProgress: false,
         matchInProgress: false,
+        manualOverrideAt: officialEditTimestamp,
       };
-      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
+      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? officialEditTimestamp : null;
       return updated;
     }));
     queueBackgroundCloudSave();
@@ -2324,6 +2341,7 @@ export default function App() {
         refereeInProgress: false,
         matchInProgress: false,
       };
+      approved.manualOverrideAt = null;
       approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
       return approved;
     }));
@@ -2484,9 +2502,9 @@ export default function App() {
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
                   <td>
                     <div className="score-inputs">
-                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                      <input type="number" min="0" inputMode="numeric" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                       <span>-</span>
-                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      <input type="number" min="0" inputMode="numeric" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                     </div>
                   </td>
                   <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
