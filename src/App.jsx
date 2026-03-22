@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v18H';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-v18I';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v18H';
+const APP_VERSION = 'v18I';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1022,6 +1022,21 @@ export default function App() {
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const teamsSortedByLevel = useMemo(() => sortTeamsForSeeding(teams), [teams]);
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
+  const duplicateTeamNameMap = useMemo(() => {
+    const counts = new Map();
+    teams.forEach((team) => {
+      const normalizedName = team.name.trim().toLocaleLowerCase('fr-FR');
+      if (!normalizedName) return;
+      counts.set(normalizedName, (counts.get(normalizedName) || 0) + 1);
+    });
+    return counts;
+  }, [teams]);
+  const duplicatedTeamNames = useMemo(() => [...duplicateTeamNameMap.entries()].filter(([, count]) => count > 1).map(([name]) => name), [duplicateTeamNameMap]);
+  const hasDuplicateTeamNames = duplicatedTeamNames.length > 0;
+  const isDuplicateTeamName = useCallback((name) => {
+    const normalizedName = String(name || '').trim().toLocaleLowerCase('fr-FR');
+    return !!normalizedName && (duplicateTeamNameMap.get(normalizedName) || 0) > 1;
+  }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
 
@@ -1671,6 +1686,7 @@ export default function App() {
     const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
     return teams.length >= TEAM_TARGET || firstPhaseGenerated;
   }, [isSmallTournamentMode, championshipLeg1.matches.length, brassage1.matches.length, teams.length]);
+  const generateBrassage1Locked = hasDuplicateTeamNames;
 
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
@@ -1973,6 +1989,10 @@ export default function App() {
       ...singleKnockout.finals,
     ], 'le tournoi en cours')) return;
     const readyTeams = activeTeams;
+    if (hasDuplicateTeamNames) {
+      window.alert('Impossible de générer le brassage 1 tant que des doublons de nom d’équipe sont présents.');
+      return;
+    }
     if (readyTeams.length < 2) {
       window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
       return;
@@ -3172,17 +3192,23 @@ export default function App() {
                 </div>
               </Section>
 
-              <Section title="Flux du tournoi" subtitle={isSmallTournamentMode ? 'Pour moins de 10 équipes : Championnat Aller, Championnat Retour puis tableau final sans huitièmes.' : 'Mode standard à 18 équipes avec brassages, principale, consolante et phases finales.'} right={isSmallTournamentMode ? <><Button onClick={generateBrassage1}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
-                <div className="cards-grid two-up">
-                  <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p></div>
-                  <div className="mini-card"><div className="mini-card-head">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
+              <Section title="Informations" subtitle="Explication du calcul des points et rappel du déroulé du tournoi." right={isSmallTournamentMode ? <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
+                <div className="cards-grid two-up info-grid">
+                  <div className="mini-card info-card">
+                    <div className="mini-card-head">Calcul des points</div>
+                    <p className="muted small">L’équipe gagnante marque le score gagnant multiplié par 2, puis on ajoute l’écart de points. L’équipe perdante conserve ses points marqués puis on retire cet écart.</p>
+                    <p className="muted small"><strong>Exemple :</strong> sur un match en 21, une victoire 21 à 17 donne <strong>46 points</strong> au vainqueur (2 × 21 + 4) et <strong>13 points</strong> au perdant (17 − 4).</p>
+                    <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
+                    {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
+                  </div>
+                  <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
             </>
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -3197,9 +3223,9 @@ export default function App() {
                   </thead>
                   <tbody>
                     {teamsSortedByLevel.map((team, index) => (
-                      <tr key={team.id}>
-                        <td>{index + 1}</td>
-                        <td className="team-name-cell"><input className={`team-name-color-input ${getLevelClass(team.level)}`} value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} placeholder="Nom de l'équipe" /></td>
+                      <tr key={team.id} className={isDuplicateTeamName(team.name) ? "duplicate-team-row" : ""}>
+                        <td><span className={isDuplicateTeamName(team.name) ? "duplicate-team-index" : ""}>{index + 1}</span></td>
+                        <td className="team-name-cell"><input className={`team-name-color-input ${getLevelClass(team.level)} ${isDuplicateTeamName(team.name) ? "duplicate-team-name-input" : ""}`} value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} placeholder="Nom de l'équipe" /></td>
                         <td>
                           <select value={team.level} disabled={teamLevelLocked} onChange={(e) => updateTeam(team.id, 'level', e.target.value)}>
                             {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
@@ -3215,6 +3241,7 @@ export default function App() {
               </div>
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
               <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
+              {hasDuplicateTeamNames ? <p className="helper-text danger-text">Les numéros en couleur signalent des doublons de nom d’équipe. Corrigez-les avant de générer le brassage 1.</p> : null}
               {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est officiellement validé.</p> : null}
             </Section>
           )}
