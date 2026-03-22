@@ -969,3 +969,105 @@ tbody tr:last-child td { border-bottom: none; }
   white-space: nowrap;
   border: 0;
 }
+
+
+.standings-table {
+  min-width: 0;
+  table-layout: fixed;
+  font-size: 13px;
+}
+
+.standings-table th,
+.standings-table td {
+  padding: 8px 10px;
+}
+
+.standings-table .team-badge {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.matches-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.matches-table th,
+.matches-table td {
+  padding: 8px 10px;
+}
+
+.matches-table .column-time,
+.matches-table .column-court,
+.matches-table .cell-time,
+.matches-table .cell-court {
+  white-space: nowrap;
+}
+
+.matches-table .match-team-cell {
+  min-width: 0;
+}
+
+.matches-table .team-badge {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: 13px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.matches-table .score-inputs {
+  display: grid;
+  grid-template-columns: minmax(56px, 1fr) auto minmax(56px, 1fr);
+  gap: 6px;
+  align-items: center;
+}
+
+.matches-table .score-inputs input {
+  width: 100%;
+  min-width: 0;
+}
+
+.knockout-step-grid {
+  align-items: start;
+}
+
+.knockout-panel {
+  min-width: 0;
+}
+
+.knockout-panel > h3 {
+  margin-bottom: 10px;
+}
+
+@media (max-width: 1200px) {
+  .three-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .standings-table,
+  .matches-table {
+    font-size: 12px;
+  }
+
+  .standings-table th,
+  .standings-table td,
+  .matches-table th,
+  .matches-table td {
+    padding: 7px 8px;
+  }
+
+  .standings-table .team-badge,
+  .matches-table .team-badge {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .two-up,
+  .three-up {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V18B';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-v18C';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V18B';
+const APP_VERSION = 'v18C';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -96,6 +96,16 @@ function normalizeTeamsList(inputTeams) {
 
 function matchIdentityKey(match) {
   if (!match) return '';
+  const teamIds = [match.teamAId || '', match.teamBId || ''].filter(Boolean).sort();
+  const canonicalKey = [
+    match.phase || '',
+    match.group || '',
+    match.round || '',
+    ...teamIds,
+  ].join('|');
+  if (canonicalKey.replace(/\|/g, '')) {
+    return canonicalKey;
+  }
   return match.id || [
     match.phase || '',
     match.group || '',
@@ -2438,7 +2448,7 @@ export default function App() {
           <div key={pool.id} className="mini-card">
             <div className="mini-card-head">{pool.name}</div>
             <div className="table-wrap">
-              <table>
+              <table className="standings-table">
                 <thead>
                   <tr>
                     <th>#</th>
@@ -2473,7 +2483,7 @@ export default function App() {
     if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <div className="table-wrap">
-        <table>
+        <table className="matches-table">
           <thead>
             <tr>
               <th className="column-time">Heure</th>
@@ -3212,12 +3222,12 @@ export default function App() {
               ) : (
                 <>
                   <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
-                    <div className="cards-grid two-up">
-                      <div>
+                    <div className="cards-grid two-up knockout-step-grid">
+                      <div className="knockout-panel">
                         <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
                       </div>
-                      <div>
+                      <div className="knockout-panel">
                         <h3>{`Demi-finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
                       </div>
@@ -3225,12 +3235,12 @@ export default function App() {
                   </Section>
 
                   <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
-                    <div className="cards-grid two-up">
-                      <div>
+                    <div className="cards-grid two-up knockout-step-grid">
+                      <div className="knockout-panel">
                         <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
                       </div>
-                      <div>
+                      <div className="knockout-panel">
                         <h3>{`Finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteFinals, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
                       </div>
