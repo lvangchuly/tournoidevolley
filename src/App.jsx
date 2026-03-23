@@ -1378,7 +1378,12 @@ export default function App() {
     });
 
     const localIds = new Set(safeLocalMatches.map((match) => match.id));
-    const remoteOnlyMatches = safeRemoteMatches.filter((match) => !localIds.has(match.id));
+    const localIdentityKeys = new Set(safeLocalMatches.map((match) => matchIdentityKey(match)).filter(Boolean));
+    const remoteOnlyMatches = safeRemoteMatches.filter((match) => {
+      if (localIds.has(match.id)) return false;
+      const remoteIdentityKey = matchIdentityKey(match);
+      return !remoteIdentityKey || !localIdentityKeys.has(remoteIdentityKey);
+    });
     if (remoteOnlyMatches.length) {
       changed = true;
       merged.push(...safeClone(remoteOnlyMatches, []));
