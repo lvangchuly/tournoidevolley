@@ -808,6 +808,26 @@ function formatPoolLabel(group = '') {
     .trim();
 }
 
+function getPoolLetter(poolName = '') {
+  const match = String(poolName || '').trim().match(/([A-Z])$/i);
+  return match ? match[1].toUpperCase() : String(poolName || '').trim().toUpperCase();
+}
+
+function getStandingsRowsForPool(standings, pools, targetPoolLetter) {
+  const target = String(targetPoolLetter || '').trim().toUpperCase();
+  const standingEntry = (Array.isArray(standings) ? standings : []).find((entry) => getPoolLetter(entry?.pool?.name) === target);
+  if (Array.isArray(standingEntry?.rows) && standingEntry.rows.length) {
+    return standingEntry.rows;
+  }
+  const pool = (Array.isArray(pools) ? pools : []).find((entry) => getPoolLetter(entry?.name) === target);
+  if (!Array.isArray(pool?.teamIds)) return [];
+  return pool.teamIds.filter(Boolean).map((teamId) => ({ teamId }));
+}
+
+function sanitizeKnockoutMatches(matches) {
+  return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match?.teamAId && match?.teamBId);
+}
+
 function Button({ children, variant = 'primary', ...props }) {
   return (
     <button className={`btn btn-${variant}`} {...props}>
@@ -2347,26 +2367,30 @@ export default function App() {
       window.alert('Valide au moins tous les matchs de la principale ou tous les matchs de la consolante avant de générer cette étape.');
       return;
     }
-    const pMap = new Map(principaleStandings.map((entry) => [entry.pool.name, entry.rows]));
-    const cMap = new Map(consolanteStandings.map((entry) => [entry.pool.name, entry.rows]));
-    const principalQuartersRaw = canGeneratePrincipalQuarters ? [
-      makeKnockoutMatch('Tableau principal', 'Quart 1', pMap.get('Principale A')?.[0]?.teamId || null, pMap.get('Principale D')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 2', pMap.get('Principale B')?.[0]?.teamId || null, pMap.get('Principale C')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 3', pMap.get('Principale C')?.[0]?.teamId || null, pMap.get('Principale B')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 4', pMap.get('Principale D')?.[0]?.teamId || null, pMap.get('Principale A')?.[1]?.teamId || null),
-    ].filter((match) => match.teamAId && match.teamBId) : [];
-    const consolanteSemisRaw = canGenerateConsolanteSemis ? [
-      makeKnockoutMatch('Tableau consolante', 'Demi 1', cMap.get('Consolante A')?.[0]?.teamId || null, cMap.get('Consolante B')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau consolante', 'Demi 2', cMap.get('Consolante B')?.[0]?.teamId || null, cMap.get('Consolante A')?.[1]?.teamId || null),
-    ].filter((match) => match.teamAId && match.teamBId) : [];
+    const pA = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'A');
+    const pB = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'B');
+    const pC = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'C');
+    const pD = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'D');
+    const cA = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'A');
+    const cB = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'B');
+    const principalQuartersRaw = canGeneratePrincipalQuarters ? sanitizeKnockoutMatches([
+      makeKnockoutMatch('Tableau principal', 'Quart 1', pA[0]?.teamId || null, pD[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 2', pB[0]?.teamId || null, pC[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pA[1]?.teamId || null),
+    ]) : [];
+    const consolanteSemisRaw = canGenerateConsolanteSemis ? sanitizeKnockoutMatches([
+      makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
+      makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
+    ]) : [];
     const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length));
     setKnockout((current) => ({
       ...current,
-      principalQuarters: canGeneratePrincipalQuarters ? combined.filter((match) => match.phase === 'Tableau principal') : current.principalQuarters,
-      consolanteSemis: canGenerateConsolanteSemis ? combined.filter((match) => match.phase === 'Tableau consolante') : current.consolanteSemis,
-      principalSemis: canGeneratePrincipalQuarters ? [] : current.principalSemis,
-      principalFinals: canGeneratePrincipalQuarters ? [] : current.principalFinals,
-      consolanteFinals: canGenerateConsolanteSemis ? [] : current.consolanteFinals,
+      principalQuarters: canGeneratePrincipalQuarters ? sanitizeKnockoutMatches(combined.filter((match) => match.phase === 'Tableau principal')) : sanitizeKnockoutMatches(current.principalQuarters),
+      consolanteSemis: canGenerateConsolanteSemis ? sanitizeKnockoutMatches(combined.filter((match) => match.phase === 'Tableau consolante')) : sanitizeKnockoutMatches(current.consolanteSemis),
+      principalSemis: canGeneratePrincipalQuarters ? [] : sanitizeKnockoutMatches(current.principalSemis),
+      principalFinals: canGeneratePrincipalQuarters ? [] : sanitizeKnockoutMatches(current.principalFinals),
+      consolanteFinals: canGenerateConsolanteSemis ? [] : sanitizeKnockoutMatches(current.consolanteFinals),
     }));
     setActiveTab('finales');
     queueBackgroundCloudSave(250);
