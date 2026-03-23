@@ -2664,8 +2664,9 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {filteredMatches.map((match, index) => {
+              {filteredMatches.map((match) => {
                 const status = getMatchStatusLabel(match, phaseRules);
+                const originalMatchNumber = uniqueMatches.findIndex((item) => item.id === match.id) + 1;
                 const pendingStatus = getPendingStatus(match);
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
@@ -2677,7 +2678,7 @@ export default function App() {
                     <td className="match-meta-cell">
                       <div className="match-meta-stack">
                         <span className="match-meta-time">{schedule?.startText || match.time}</span>
-                        <span className="match-meta-line"><strong>Match {index + 1}</strong></span>
+                        <span className="match-meta-line"><strong>Match {originalMatchNumber}</strong></span>
                         <span className="match-meta-line">Terrain {match.court}</span>
                         <span className="match-meta-line">{formatPoolLabel(match.group)}</span>
                       </div>
