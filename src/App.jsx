@@ -459,6 +459,30 @@ function createThreeTeamPoolMatches(pool, phase) {
   ];
 }
 
+function scheduleAlternatingPoolsOnCourt(pools, phase, court, startSlot) {
+  const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
+  if (!safePools.length) return [];
+
+  const poolMatches = safePools.map((pool) => createThreeTeamPoolMatches(pool, phase));
+  const maxRounds = Math.max(...poolMatches.map((matches) => matches.length), 0);
+  const orderedMatches = [];
+
+  for (let roundIndex = 0; roundIndex < maxRounds; roundIndex += 1) {
+    poolMatches.forEach((matches) => {
+      const match = matches[roundIndex];
+      if (match) orderedMatches.push(match);
+    });
+  }
+
+  return orderedMatches.map((match, offset) => ({
+    ...match,
+    court,
+    slot: startSlot + offset + 1,
+    time: '',
+    validatedAt: match.validatedAt || null,
+  }));
+}
+
 function scheduleBrassageMatches(pools, phase, startSlot) {
   const poolPairs = [
     [0, 1],
@@ -469,33 +493,27 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
   const scheduled = [];
 
   poolPairs.forEach(([firstPoolIndex, secondPoolIndex], courtIndex) => {
-    const firstPool = pools[firstPoolIndex];
-    const secondPool = pools[secondPoolIndex];
-    if (!firstPool || !secondPool) return;
-
-    const firstPoolMatches = createThreeTeamPoolMatches(firstPool, phase);
-    const secondPoolMatches = createThreeTeamPoolMatches(secondPool, phase);
-
-    const orderedMatches = [
-      firstPoolMatches[0],
-      secondPoolMatches[0],
-      firstPoolMatches[1],
-      secondPoolMatches[1],
-      firstPoolMatches[2],
-      secondPoolMatches[2],
-    ];
-
-    orderedMatches.forEach((match, offset) => {
-      const zeroBasedSlot = startSlot + offset;
-      scheduled.push({
-        ...match,
-        court: courtIndex + 1,
-        slot: zeroBasedSlot + 1,
-        time: '',
-        validatedAt: match.validatedAt || null,
-      });
-    });
+    const courtMatches = scheduleAlternatingPoolsOnCourt(
+      [pools[firstPoolIndex], pools[secondPoolIndex]].filter(Boolean),
+      phase,
+      courtIndex + 1,
+      startSlot,
+    );
+    scheduled.push(...courtMatches);
   });
+
+  return scheduled.sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
+}
+
+function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
+  const scheduled = [
+    ...scheduleAlternatingPoolsOnCourt([principalePools[0], principalePools[1]].filter(Boolean), 'Principale', 1, startSlot),
+    ...scheduleAlternatingPoolsOnCourt([principalePools[2], principalePools[3]].filter(Boolean), 'Principale', 2, startSlot),
+    ...scheduleAlternatingPoolsOnCourt(consolantePools, 'Consolante', 3, startSlot),
+  ];
 
   return scheduled.sort((a, b) => {
     if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
@@ -768,8 +786,8 @@ function formatPoolLabel(group = '') {
   return String(group || '')
     .replace(/^Brassage [12] - /, '')
     .replace(/^Championnat (Aller|Retour) - /, '')
-    .replace(/^Principale\s+/, '')
-    .replace(/^Consolante\s+/, '')
+    .replace(/^Principale\s+/, 'Poule ')
+    .replace(/^Consolante\s+/, 'Poule ')
     .trim();
 }
 
@@ -2277,10 +2295,11 @@ export default function App() {
     const consolanteIds = rankedIds.slice(12, 18);
     const principalePools = createPools(principaleIds, PRINCIPALE_POOL_NAMES);
     const consolantePools = createPools(consolanteIds, CONSOLANTE_POOL_NAMES);
-    const scheduled = assignSchedule([
-      ...principalePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Principale', pool.name)),
-      ...consolantePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Consolante', pool.name)),
-    ], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length));
+    const scheduled = scheduleMainStageMatches(
+      principalePools,
+      consolantePools,
+      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length),
+    );
 
     setMainStage({
       principalePools,
