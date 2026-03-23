@@ -1928,8 +1928,28 @@ export default function App() {
     setTournamentLogo('');
   }
 
+  function regenerateBrassage1FromTeams(nextTeams) {
+    const readyTeams = normalizeTeamsList(nextTeams).filter((team) => (team.name || '').trim() !== '');
+    const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
+    const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
+    const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
+    setBrassage1({ pools, matches });
+    setBrassage2({ pools: [], matches: [] });
+    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
+    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setActiveTab('brassage1');
+    queueBackgroundCloudSave(250);
+  }
+
   function updateTeam(teamId, field, value) {
-    setTeams((current) => current.map((team) => (team.id === teamId ? { ...team, [field]: value } : team)));
+    setTeams((current) => {
+      const nextTeams = current.map((team) => (team.id === teamId ? { ...team, [field]: value } : team));
+      const shouldRegenerateBrassage1 = field === 'level' && !isSmallTournamentMode && brassage1.matches.length > 0;
+      if (shouldRegenerateBrassage1) {
+        regenerateBrassage1FromTeams(nextTeams);
+      }
+      return nextTeams;
+    });
   }
 
   function addTeam() {
