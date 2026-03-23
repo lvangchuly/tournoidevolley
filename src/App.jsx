@@ -94,9 +94,19 @@ function normalizeTeamsList(inputTeams) {
     }));
 }
 
+function getSortedTeamIds(match) {
+  return [match?.teamAId || '', match?.teamBId || ''].filter(Boolean).sort();
+}
+
+function teamPairKey(match, phaseOverride = '') {
+  const teamIds = getSortedTeamIds(match);
+  if (teamIds.length < 2) return '';
+  return [phaseOverride || match?.phase || '', ...teamIds].join('|');
+}
+
 function matchIdentityKey(match) {
   if (!match) return '';
-  const teamIds = [match.teamAId || '', match.teamBId || ''].filter(Boolean).sort();
+  const teamIds = getSortedTeamIds(match);
   const canonicalKey = [
     match.phase || '',
     match.group || '',
@@ -826,32 +836,41 @@ function filterMatchesToPools(matches, pools, phaseLabel) {
   const safePools = Array.isArray(pools) ? pools : [];
   if (!safePools.length) return safeMatches;
 
-  const allowedKeys = new Set();
+  const allowedPairs = new Map();
   safePools.forEach((pool) => {
     const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
     if (teamIds.length < 2) return;
     for (let i = 0; i < teamIds.length - 1; i += 1) {
       for (let j = i + 1; j < teamIds.length; j += 1) {
-        allowedKeys.add(matchIdentityKey({
-          phase: phaseLabel,
-          group: pool.name,
-          teamAId: teamIds[i],
-          teamBId: teamIds[j],
-        }));
+        allowedPairs.set(teamPairKey({ phase: phaseLabel, teamAId: teamIds[i], teamBId: teamIds[j] }, phaseLabel), pool.name || '');
       }
     }
   });
 
-  return safeMatches.filter((match) => {
-    if (!match) return false;
-    if (phaseLabel && match.phase !== phaseLabel) return false;
-    return allowedKeys.has(matchIdentityKey({
-      phase: phaseLabel || match.phase,
-      group: match.group,
-      teamAId: match.teamAId,
-      teamBId: match.teamBId,
-    }));
+  const selectedMatches = new Map();
+  safeMatches.forEach((match) => {
+    if (!match) return;
+    if (phaseLabel && match.phase !== phaseLabel) return;
+    const pairKey = teamPairKey(match, phaseLabel);
+    if (!pairKey || !allowedPairs.has(pairKey)) return;
+    const expectedGroup = allowedPairs.get(pairKey);
+    const current = selectedMatches.get(pairKey);
+    if (!current) {
+      selectedMatches.set(pairKey, match);
+      return;
+    }
+    const currentGroupScore = current.group === expectedGroup ? 1 : 0;
+    const incomingGroupScore = match.group === expectedGroup ? 1 : 0;
+    if (incomingGroupScore !== currentGroupScore) {
+      if (incomingGroupScore > currentGroupScore) {
+        selectedMatches.set(pairKey, match);
+      }
+      return;
+    }
+    selectedMatches.set(pairKey, pickPreferredMatch(current, match));
   });
+
+  return Array.from(selectedMatches.values());
 }
 
 function filterMatchesBySelectedTeam(matches, selectedTeamId) {
@@ -2658,8 +2677,9 @@ export default function App() {
                     <td className="match-meta-cell">
                       <div className="match-meta-stack">
                         <span className="match-meta-time">{schedule?.startText || match.time}</span>
+                        <span className="match-meta-line"><strong>Match {index + 1}</strong></span>
                         <span className="match-meta-line">Terrain {match.court}</span>
-                        <span className="match-meta-line"><strong>Match {index + 1}</strong> • {formatPoolLabel(match.group)}</span>
+                        <span className="match-meta-line">{formatPoolLabel(match.group)}</span>
                       </div>
                     </td>
                     <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
