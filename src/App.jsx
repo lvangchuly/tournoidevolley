@@ -822,7 +822,8 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled =
 
 
 function formatRemainingMatchesLabel(matches, phaseRules) {
-  const remainingCount = (matches || []).filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
+  const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+  const remainingCount = uniqueMatches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
   return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
 }
 
@@ -2332,20 +2333,21 @@ export default function App() {
   }
 
   function updateMatchesInScope(scope, updater) {
-    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: updater(current.quarters) }));
-    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: updater(current.semis) }));
-    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: updater(current.finals) }));
-    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: updater(current.principaleMatches) }));
-    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: updater(current.consolanteMatches) }));
-    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: updater(current.principalQuarters) }));
-    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: updater(current.principalSemis) }));
-    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: updater(current.principalFinals) }));
-    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: updater(current.consolanteSemis) }));
-    return setKnockout((current) => ({ ...current, consolanteFinals: updater(current.consolanteFinals) }));
+    const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
+    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: applyUpdater(current.quarters) }));
+    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: applyUpdater(current.semis) }));
+    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: applyUpdater(current.finals) }));
+    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: applyUpdater(current.principaleMatches) }));
+    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: applyUpdater(current.consolanteMatches) }));
+    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: applyUpdater(current.principalQuarters) }));
+    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: applyUpdater(current.principalSemis) }));
+    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: applyUpdater(current.principalFinals) }));
+    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: applyUpdater(current.consolanteSemis) }));
+    return setKnockout((current) => ({ ...current, consolanteFinals: applyUpdater(current.consolanteFinals) }));
   }
 
   function getPendingMatchSnapshot(match) {
@@ -2572,7 +2574,8 @@ export default function App() {
   }
 
   function renderOrganizerMatches(matches, scope) {
-    if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
+    const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+    if (!uniqueMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <div className="table-wrap">
         <table className="matches-table">
@@ -2586,7 +2589,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {matches.map((match) => {
+            {uniqueMatches.map((match) => {
               const status = getMatchStatusLabel(match, phaseRules);
               const pendingStatus = getPendingStatus(match);
               const pendingA = toNumber(match.submittedScoreA);
