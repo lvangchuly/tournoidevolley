@@ -821,6 +821,45 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled =
 }
 
 
+function filterMatchesToPools(matches, pools, phaseLabel) {
+  const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+  const safePools = Array.isArray(pools) ? pools : [];
+  if (!safePools.length) return safeMatches;
+
+  const allowedKeys = new Set();
+  safePools.forEach((pool) => {
+    const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
+    if (teamIds.length < 2) return;
+    for (let i = 0; i < teamIds.length - 1; i += 1) {
+      for (let j = i + 1; j < teamIds.length; j += 1) {
+        allowedKeys.add(matchIdentityKey({
+          phase: phaseLabel,
+          group: pool.name,
+          teamAId: teamIds[i],
+          teamBId: teamIds[j],
+        }));
+      }
+    }
+  });
+
+  return safeMatches.filter((match) => {
+    if (!match) return false;
+    if (phaseLabel && match.phase !== phaseLabel) return false;
+    return allowedKeys.has(matchIdentityKey({
+      phase: phaseLabel || match.phase,
+      group: match.group,
+      teamAId: match.teamAId,
+      teamBId: match.teamBId,
+    }));
+  });
+}
+
+function filterMatchesBySelectedTeam(matches, selectedTeamId) {
+  const safeMatches = Array.isArray(matches) ? matches : [];
+  if (!selectedTeamId) return safeMatches;
+  return safeMatches.filter((match) => match?.teamAId === selectedTeamId || match?.teamBId === selectedTeamId);
+}
+
 function formatRemainingMatchesLabel(matches, phaseRules) {
   const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
   const remainingCount = uniqueMatches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
@@ -998,6 +1037,7 @@ export default function App() {
   const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
+  const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
@@ -1590,6 +1630,11 @@ export default function App() {
     return items;
   }, [currentMatches, upcomingMatches]);
 
+  const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
+  const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
+  const visiblePrincipaleMatches = useMemo(() => filterMatchesToPools(mainStage.principaleMatches, mainStage.principalePools, 'Principale'), [mainStage.principaleMatches, mainStage.principalePools]);
+  const visibleConsolanteMatches = useMemo(() => filterMatchesToPools(mainStage.consolanteMatches, mainStage.consolantePools, 'Consolante'), [mainStage.consolanteMatches, mainStage.consolantePools]);
+
   const completedMatchCounts = isSmallTournamentMode ? {
     championnatAller: championshipLeg1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
     championnatRetour: championshipLeg2.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
@@ -1597,10 +1642,10 @@ export default function App() {
     demi: singleKnockout.semis.filter((m) => isMatchResultValid(m, phaseRules)).length,
     finale: singleKnockout.finals.filter((m) => isMatchResultValid(m, phaseRules)).length,
   } : {
-    b1: brassage1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    b2: brassage2.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    principale: mainStage.principaleMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    consolante: mainStage.consolanteMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    b1: visibleBrassage1Matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    b2: visibleBrassage2Matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    principale: visiblePrincipaleMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    consolante: visibleConsolanteMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
     ko: [...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals].filter((m) => isMatchResultValid(m, phaseRules)).length,
   };
 
@@ -1610,8 +1655,8 @@ export default function App() {
     quarterComplete: singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     semiComplete: singleKnockout.semis.length === 0 || singleKnockout.semis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }) : ({
-    brassage1Complete: brassage1.matches.length > 0 && brassage1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-    brassage2Complete: brassage2.matches.length > 0 && brassage2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage1Complete: visibleBrassage1Matches.length > 0 && visibleBrassage1Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage2Complete: visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolantePoolsComplete: mainStage.consolanteMatches.length > 0 && mainStage.consolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalQuartersComplete: knockout.principalQuarters.length > 0 && knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -2575,81 +2620,94 @@ export default function App() {
 
   function renderOrganizerMatches(matches, scope) {
     const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+    const filteredMatches = filterMatchesBySelectedTeam(uniqueMatches, organizerMatchTeamFilter);
     if (!uniqueMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
-      <div className="table-wrap">
-        <table className="matches-table">
-          <thead>
-            <tr>
-              <th className="column-match">Match</th>
-              <th>Équipe A</th>
-              <th>Score officiel</th>
-              <th>Équipe B</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {uniqueMatches.map((match) => {
-              const status = getMatchStatusLabel(match, phaseRules);
-              const pendingStatus = getPendingStatus(match);
-              const pendingA = toNumber(match.submittedScoreA);
-              const pendingB = toNumber(match.submittedScoreB);
-              const isValid = status === 'Valide';
-              const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
-              const schedule = scheduleData.scheduleMap[match.id];
-              return (
-                <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
-                  <td className="match-meta-cell">
-                    <div className="match-meta-stack">
-                      <span className="match-meta-time">{schedule?.startText || match.time}</span>
-                      <span className="match-meta-line">Terrain {match.court}</span>
-                      <span className="match-meta-line">{formatPoolLabel(match.group)}</span>
-                    </div>
-                  </td>
-                  <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
-                  <td>
-                    <div className="score-inputs">
-                      <input type="number" min="0" inputMode="numeric" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
-                      <span>-</span>
-                      <input type="number" min="0" inputMode="numeric" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
-                    </div>
-                  </td>
-                  <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
-                  <td>
-                    <div className="status-cell">
-                      <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                      {!isValid && pendingStatus === 'Match en cours' ? (
-                        <>
-                          <span className="badge badge-neutral">Match en cours</span>
-                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                          {canApprovePending ? (
-                            <div className="actions-row compact-actions">
-                              <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
-                              <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
-                            </div>
-                          ) : null}
-                        </>
-                      ) : null}
-                      {!isValid ? (
-                        <div className="actions-row compact-actions">
-                          <Button
-                            variant={match.refereeInProgress ? 'info' : 'secondary'}
-                            onClick={() => reassignRefereeWithoutReset(scope, match.id)}
-                            disabled={!match.refereeInProgress}
-                          >
-                            Changer l’arbitre
-                          </Button>
-                        </div>
-                      ) : null}
-                      {!isValid && schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <>
+        <div className="match-filter-row">
+          <label htmlFor={`match-team-filter-${scope}`}>Filtrer par équipe</label>
+          <select id={`match-team-filter-${scope}`} value={organizerMatchTeamFilter} onChange={(e) => setOrganizerMatchTeamFilter(e.target.value)}>
+            <option value="">Toutes les équipes</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="table-wrap">
+          <table className="matches-table">
+            <thead>
+              <tr>
+                <th className="column-match">Match</th>
+                <th>Équipe A</th>
+                <th>Score officiel</th>
+                <th>Équipe B</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMatches.map((match, index) => {
+                const status = getMatchStatusLabel(match, phaseRules);
+                const pendingStatus = getPendingStatus(match);
+                const pendingA = toNumber(match.submittedScoreA);
+                const pendingB = toNumber(match.submittedScoreB);
+                const isValid = status === 'Valide';
+                const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const schedule = scheduleData.scheduleMap[match.id];
+                return (
+                  <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
+                    <td className="match-meta-cell">
+                      <div className="match-meta-stack">
+                        <span className="match-meta-time">{schedule?.startText || match.time}</span>
+                        <span className="match-meta-line">Terrain {match.court}</span>
+                        <span className="match-meta-line"><strong>Match {index + 1}</strong> • {formatPoolLabel(match.group)}</span>
+                      </div>
+                    </td>
+                    <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
+                    <td>
+                      <div className="score-inputs">
+                        <input type="number" min="0" inputMode="numeric" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                        <span>-</span>
+                        <input type="number" min="0" inputMode="numeric" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      </div>
+                    </td>
+                    <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
+                    <td>
+                      <div className="status-cell">
+                        <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                        {!isValid && pendingStatus === 'Match en cours' ? (
+                          <>
+                            <span className="badge badge-neutral">Match en cours</span>
+                            <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                            {canApprovePending ? (
+                              <div className="actions-row compact-actions">
+                                <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                                <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                              </div>
+                            ) : null}
+                          </>
+                        ) : null}
+                        {!isValid ? (
+                          <div className="actions-row compact-actions">
+                            <Button
+                              variant={match.refereeInProgress ? 'info' : 'secondary'}
+                              onClick={() => reassignRefereeWithoutReset(scope, match.id)}
+                              disabled={!match.refereeInProgress}
+                            >
+                              Changer l’arbitre
+                            </Button>
+                          </div>
+                        ) : null}
+                        {!isValid && schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {!filteredMatches.length ? <div className="empty-state">Aucun match pour cette équipe dans cette phase.</div> : null}
+        </div>
+      </>
     );
   }
 
@@ -3135,10 +3193,10 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${brassage1.matches.length || 0}`} subvalue="6 poules de 3" />
-                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${brassage2.matches.length || 0}`} subvalue="6 poules de 3" />
-                    <StatCard label="Principale" value={`${completedMatchCounts.principale}/${mainStage.principaleMatches.length || 0}`} subvalue="4 poules de 3" />
-                    <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${mainStage.consolanteMatches.length || 0}`} subvalue="2 poules de 3" />
+                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${visibleBrassage1Matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${visibleBrassage2Matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Principale" value={`${completedMatchCounts.principale}/${visiblePrincipaleMatches.length || 0}`} subvalue="4 poules de 3" />
+                    <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${visibleConsolanteMatches.length || 0}`} subvalue="2 poules de 3" />
                     <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
                   </>
                 )}
@@ -3290,7 +3348,7 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(brassage1.matches, phaseRules)}`}>{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage1Matches, 'brassage1')}</Section>
               <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
@@ -3302,7 +3360,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(brassage2.matches, phaseRules)}`}>{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage2Matches, 'brassage2')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -3314,11 +3372,11 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(mainStage.principaleMatches, phaseRules)}`}>{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
+              <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
               <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(mainStage.consolanteMatches, phaseRules)}`}>{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(visibleConsolanteMatches, phaseRules)}`}>{renderOrganizerMatches(visibleConsolanteMatches, 'consolante')}</Section>
             </>
           )}
 
