@@ -104,22 +104,35 @@ function teamPairKey(match, phaseOverride = '') {
   return [phaseOverride || match?.phase || '', ...teamIds].join('|');
 }
 
+function isKnockoutMatchSlot(match) {
+  const phase = String(match?.phase || '');
+  const group = String(match?.group || '');
+  return /quart de finale|demi-finale|tableau principal|tableau consolante|finale/i.test(phase)
+    || /quart|demi|finale|petite finale/i.test(group);
+}
+
 function matchIdentityKey(match) {
   if (!match) return '';
+  const phase = match.phase || '';
+  const group = match.group || '';
+  const round = match.round || '';
+  if (isKnockoutMatchSlot(match) && (phase || group)) {
+    return [phase, group || '', round || ''].join('|');
+  }
   const teamIds = getSortedTeamIds(match);
   const canonicalKey = [
-    match.phase || '',
-    match.group || '',
-    match.round || '',
+    phase,
+    group,
+    round,
     ...teamIds,
   ].join('|');
   if (canonicalKey.replace(/\|/g, '')) {
     return canonicalKey;
   }
   return match.id || [
-    match.phase || '',
-    match.group || '',
-    match.round || '',
+    phase,
+    group,
+    round,
     match.teamAId || '',
     match.teamBId || '',
     match.court || '',
@@ -174,7 +187,11 @@ function dedupeMatches(matches) {
     if (!key) return;
     byKey.set(key, pickPreferredMatch(byKey.get(key), match));
   });
-  return Array.from(byKey.values());
+  return Array.from(byKey.values()).filter((match) => {
+    if (!match) return false;
+    if (!isKnockoutMatchSlot(match)) return true;
+    return Boolean(match.teamAId && match.teamBId);
+  });
 }
 
 function normalizeLeagueState(input) {
@@ -2337,11 +2354,11 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Quart 2', pMap.get('Principale B')?.[0]?.teamId || null, pMap.get('Principale C')?.[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 3', pMap.get('Principale C')?.[0]?.teamId || null, pMap.get('Principale B')?.[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pMap.get('Principale D')?.[0]?.teamId || null, pMap.get('Principale A')?.[1]?.teamId || null),
-    ] : [];
+    ].filter((match) => match.teamAId && match.teamBId) : [];
     const consolanteSemisRaw = canGenerateConsolanteSemis ? [
       makeKnockoutMatch('Tableau consolante', 'Demi 1', cMap.get('Consolante A')?.[0]?.teamId || null, cMap.get('Consolante B')?.[1]?.teamId || null),
       makeKnockoutMatch('Tableau consolante', 'Demi 2', cMap.get('Consolante B')?.[0]?.teamId || null, cMap.get('Consolante A')?.[1]?.teamId || null),
-    ] : [];
+    ].filter((match) => match.teamAId && match.teamBId) : [];
     const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length));
     setKnockout((current) => ({
       ...current,
