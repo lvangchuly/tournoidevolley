@@ -2639,15 +2639,24 @@ export default function App() {
 
   function renderOrganizerMatches(matches, scope) {
     const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
-    const filteredMatches = filterMatchesBySelectedTeam(uniqueMatches, organizerMatchTeamFilter);
+    const availableTeamIds = new Set();
+    uniqueMatches.forEach((match) => {
+      if (match?.teamAId) availableTeamIds.add(match.teamAId);
+      if (match?.teamBId) availableTeamIds.add(match.teamBId);
+    });
+    const availableTeams = teams
+      .filter((team) => availableTeamIds.has(team.id))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+    const effectiveTeamFilter = availableTeamIds.has(organizerMatchTeamFilter) ? organizerMatchTeamFilter : '';
+    const filteredMatches = filterMatchesBySelectedTeam(uniqueMatches, effectiveTeamFilter);
     if (!uniqueMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
       <>
         <div className="match-filter-row">
           <label htmlFor={`match-team-filter-${scope}`}>Filtrer par équipe</label>
-          <select id={`match-team-filter-${scope}`} value={organizerMatchTeamFilter} onChange={(e) => setOrganizerMatchTeamFilter(e.target.value)}>
+          <select id={`match-team-filter-${scope}`} value={effectiveTeamFilter} onChange={(e) => setOrganizerMatchTeamFilter(e.target.value)}>
             <option value="">Toutes les équipes</option>
-            {teams.map((team) => (
+            {availableTeams.map((team) => (
               <option key={team.id} value={team.id}>{team.name}</option>
             ))}
           </select>
