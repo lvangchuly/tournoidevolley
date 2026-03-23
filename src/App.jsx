@@ -2349,91 +2349,130 @@ export default function App() {
     queueBackgroundCloudSave(250);
   }
 
-  function generateKnockoutStage1() {
+  function generatePrincipalQuarters() {
     if (!confirmOverwritePlayedMatches([
       ...knockout.principalQuarters,
       ...knockout.principalSemis,
       ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'les phases finales')) return;
-    if (!mainStage.principalePools.length && !mainStage.consolantePools.length) {
-      window.alert('Génère d’abord la principale ou la consolante.');
+    ], 'les quarts et la suite du tableau principal')) return;
+    if (!mainStage.principalePools.length) {
+      window.alert('Génère d’abord la principale.');
       return;
     }
-    const canGeneratePrincipalQuarters = mainStage.principalePools.length > 0 && stageValidation.principalePoolsComplete;
-    const canGenerateConsolanteSemis = mainStage.consolantePools.length > 0 && stageValidation.consolantePoolsComplete;
-    if (!canGeneratePrincipalQuarters && !canGenerateConsolanteSemis) {
-      window.alert('Valide au moins tous les matchs de la principale ou tous les matchs de la consolante avant de générer cette étape.');
+    if (!stageValidation.principalePoolsComplete) {
+      window.alert('Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
       return;
     }
     const pA = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'A');
     const pB = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'B');
     const pC = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'C');
     const pD = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'D');
-    const cA = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'A');
-    const cB = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'B');
-    const principalQuartersRaw = canGeneratePrincipalQuarters ? sanitizeKnockoutMatches([
+    const principalQuartersRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau principal', 'Quart 1', pA[0]?.teamId || null, pD[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 2', pB[0]?.teamId || null, pC[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pA[1]?.teamId || null),
-    ]) : [];
-    const consolanteSemisRaw = canGenerateConsolanteSemis ? sanitizeKnockoutMatches([
-      makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
-      makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
-    ]) : [];
-    const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length));
+    ]);
+    const principalQuarters = assignSchedule(
+      principalQuartersRaw,
+      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length),
+    );
     setKnockout((current) => ({
       ...current,
-      principalQuarters: canGeneratePrincipalQuarters ? sanitizeKnockoutMatches(combined.filter((match) => match.phase === 'Tableau principal')) : sanitizeKnockoutMatches(current.principalQuarters),
-      consolanteSemis: canGenerateConsolanteSemis ? sanitizeKnockoutMatches(combined.filter((match) => match.phase === 'Tableau consolante')) : sanitizeKnockoutMatches(current.consolanteSemis),
-      principalSemis: canGeneratePrincipalQuarters ? [] : sanitizeKnockoutMatches(current.principalSemis),
-      principalFinals: canGeneratePrincipalQuarters ? [] : sanitizeKnockoutMatches(current.principalFinals),
-      consolanteFinals: canGenerateConsolanteSemis ? [] : sanitizeKnockoutMatches(current.consolanteFinals),
+      principalQuarters: sanitizeKnockoutMatches(principalQuarters),
+      principalSemis: [],
+      principalFinals: [],
     }));
     setActiveTab('finales');
     queueBackgroundCloudSave(250);
   }
 
-  function generateKnockoutStage2() {
+  function generateConsolanteSemis() {
+    if (!confirmOverwritePlayedMatches([
+      ...knockout.consolanteSemis,
+      ...knockout.consolanteFinals,
+    ], 'les demi-finales et finales de consolante')) return;
+    if (!mainStage.consolantePools.length) {
+      window.alert('Génère d’abord la consolante.');
+      return;
+    }
+    if (!stageValidation.consolantePoolsComplete) {
+      window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les demi-finales consolante.');
+      return;
+    }
+    const cA = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'A');
+    const cB = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'B');
+    const consolanteSemisRaw = sanitizeKnockoutMatches([
+      makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
+      makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
+    ]);
+    const consolanteSemis = assignSchedule(
+      consolanteSemisRaw,
+      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length),
+    );
+    setKnockout((current) => ({
+      ...current,
+      consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
+      consolanteFinals: [],
+    }));
+    setActiveTab('finales');
+    queueBackgroundCloudSave(250);
+  }
+
+  function generatePrincipalSemis() {
     if (!confirmOverwritePlayedMatches([
       ...knockout.principalSemis,
       ...knockout.principalFinals,
-      ...knockout.consolanteFinals,
-    ], 'la suite des phases finales')) return;
+    ], 'les demi-finales et finales principale')) return;
     const canGeneratePrincipalSemis = knockout.principalQuarters.length > 0 && stageValidation.principalQuartersComplete;
-    const canGenerateConsolanteFinals = knockout.consolanteSemis.length > 0 && stageValidation.consolanteSemisComplete;
-    if (!canGeneratePrincipalSemis && !canGenerateConsolanteFinals) {
-      window.alert('Valide au moins tous les quarts principaux ou toutes les demi-finales de consolante avant de générer cette étape.');
+    if (!canGeneratePrincipalSemis) {
+      window.alert('Tous les quarts de finale principaux doivent être valides avant de générer les demi-finales principale.');
       return;
     }
-    const q1 = canGeneratePrincipalSemis ? getWinnerLoser(knockout.principalQuarters[0], phaseRules) : { winner: null, loser: null };
-    const q2 = canGeneratePrincipalSemis ? getWinnerLoser(knockout.principalQuarters[1], phaseRules) : { winner: null, loser: null };
-    const q3 = canGeneratePrincipalSemis ? getWinnerLoser(knockout.principalQuarters[2], phaseRules) : { winner: null, loser: null };
-    const q4 = canGeneratePrincipalSemis ? getWinnerLoser(knockout.principalQuarters[3], phaseRules) : { winner: null, loser: null };
-    const c1 = canGenerateConsolanteFinals ? getWinnerLoser(knockout.consolanteSemis[0], phaseRules) : { winner: null, loser: null };
-    const c2 = canGenerateConsolanteFinals ? getWinnerLoser(knockout.consolanteSemis[1], phaseRules) : { winner: null, loser: null };
-    if ((canGeneratePrincipalSemis && (!q1.winner || !q2.winner || !q3.winner || !q4.winner)) || (canGenerateConsolanteFinals && (!c1.winner || !c2.winner))) {
-      window.alert('Renseigne d’abord des scores valides pour les tableaux que tu veux générer.');
+    const q1 = getWinnerLoser(knockout.principalQuarters[0], phaseRules);
+    const q2 = getWinnerLoser(knockout.principalQuarters[1], phaseRules);
+    const q3 = getWinnerLoser(knockout.principalQuarters[2], phaseRules);
+    const q4 = getWinnerLoser(knockout.principalQuarters[3], phaseRules);
+    if (!q1.winner || !q2.winner || !q3.winner || !q4.winner) {
+      window.alert('Renseigne d’abord des scores valides pour les quarts principale.');
       return;
     }
-    const principalSemisRaw = canGeneratePrincipalSemis ? [
+    const principalSemisRaw = [
       makeKnockoutMatch('Tableau principal', 'Demi 1', q1.winner, q2.winner),
       makeKnockoutMatch('Tableau principal', 'Demi 2', q3.winner, q4.winner),
-    ] : [];
-    const consolanteFinalsRaw = canGenerateConsolanteFinals ? [
-      makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
-      makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
-    ] : [];
+    ];
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
-    const combined = assignSchedule([...principalSemisRaw, ...consolanteFinalsRaw], startSlot);
     setKnockout((current) => ({
       ...current,
-      principalSemis: canGeneratePrincipalSemis ? combined.filter((match) => match.phase === 'Tableau principal') : current.principalSemis,
-      consolanteFinals: canGenerateConsolanteFinals ? combined.filter((match) => match.phase === 'Tableau consolante') : current.consolanteFinals,
-      principalFinals: canGeneratePrincipalSemis ? [] : current.principalFinals,
+      principalSemis: sanitizeKnockoutMatches(assignSchedule(principalSemisRaw, startSlot)),
+      principalFinals: [],
     }));
+    queueBackgroundCloudSave(250);
+  }
+
+  function generateConsolanteFinals() {
+    if (!confirmOverwritePlayedMatches(knockout.consolanteFinals, 'les finales de consolante')) return;
+    const canGenerateConsolanteFinals = knockout.consolanteSemis.length > 0 && stageValidation.consolanteSemisComplete;
+    if (!canGenerateConsolanteFinals) {
+      window.alert('Toutes les demi-finales de consolante doivent être valides avant de générer les finales de consolante.');
+      return;
+    }
+    const c1 = getWinnerLoser(knockout.consolanteSemis[0], phaseRules);
+    const c2 = getWinnerLoser(knockout.consolanteSemis[1], phaseRules);
+    if (!c1.winner || !c2.winner) {
+      window.alert('Renseigne d’abord des scores valides pour les demi-finales de consolante.');
+      return;
+    }
+    const consolanteFinalsRaw = [
+      makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
+      makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
+    ];
+    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
+    setKnockout((current) => ({
+      ...current,
+      consolanteFinals: sanitizeKnockoutMatches(assignSchedule(consolanteFinalsRaw, startSlot)),
+    }));
+    queueBackgroundCloudSave(250);
   }
 
   function generatePrincipalFinals() {
@@ -3463,7 +3502,7 @@ export default function App() {
                 {renderStandings(principaleStandings)}
               </Section>
               <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
-              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
+              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<><Button variant="success" onClick={generatePrincipalQuarters}>Générer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button></>}>
                 {renderStandings(consolanteStandings)}
               </Section>
               <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(visibleConsolanteMatches, phaseRules)}`}>{renderOrganizerMatches(visibleConsolanteMatches, 'consolante')}</Section>
@@ -3494,7 +3533,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
+                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generatePrincipalQuarters}>Regénérer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button><Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button><Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
                     <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
                         <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
