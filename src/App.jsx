@@ -1937,7 +1937,6 @@ export default function App() {
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-    setActiveTab('brassage1');
     queueBackgroundCloudSave(250);
   }
 
