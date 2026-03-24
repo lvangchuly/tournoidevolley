@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-v19A';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19';
+const APP_VERSION = 'v19A';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1179,6 +1179,7 @@ export default function App() {
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
+  const recentRefereeLocalEditsRef = useRef(new Map());
   const pendingFreshTournamentTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -1358,6 +1359,7 @@ export default function App() {
       if (!remote) return match;
 
       const recentRelease = recentRefereeReleaseRef.current.get(match.id);
+      const recentLocalEdit = recentRefereeLocalEditsRef.current.get(match.id);
       const remoteInProgress = Boolean(remote.refereeInProgress);
       const remoteMatchInProgress = Boolean(remote.matchInProgress || remote.refereeInProgress);
       const localMatchInProgress = Boolean(match.matchInProgress || match.refereeInProgress);
@@ -1382,6 +1384,16 @@ export default function App() {
       const pendingScoresDiffer =
         String(match.submittedScoreA ?? '') !== String(remote.submittedScoreA ?? '') ||
         String(match.submittedScoreB ?? '') !== String(remote.submittedScoreB ?? '');
+      const hasRecentProtectedLocalEdit = Boolean(
+        recentLocalEdit
+        && recentLocalEdit.until > now
+        && String(match.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(match.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+      );
+      const shouldIgnoreRemotePendingBecauseLocalEdit =
+        hasRecentProtectedLocalEdit
+        && pendingScoresDiffer
+        && remoteSubmittedAt <= localSubmittedAt;
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
         pendingScoresDiffer &&
@@ -1402,7 +1414,7 @@ export default function App() {
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (!shouldKeepLocalOfficialEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
+      } else if (!shouldKeepLocalOfficialEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remote.submittedScoreA ?? '',
@@ -1421,6 +1433,15 @@ export default function App() {
 
       if (!remoteInProgress && !remoteMatchInProgress && recentRelease) {
         recentRefereeReleaseRef.current.delete(match.id);
+      }
+      if (recentLocalEdit) {
+        const remoteCaughtUpToLocalEdit =
+          String(remote.submittedScoreA ?? '') === String(match.submittedScoreA ?? '')
+          && String(remote.submittedScoreB ?? '') === String(match.submittedScoreB ?? '')
+          && remoteSubmittedAt >= localSubmittedAt;
+        if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !match.refereeInProgress) {
+          recentRefereeLocalEditsRef.current.delete(match.id);
+        }
       }
 
       const hasChanged =
@@ -1862,49 +1883,28 @@ export default function App() {
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
-  const hasResolvedRefereeTeams = useCallback((match) => {
-    if (!hasBothTeamsDefined(match)) return false;
-    const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLocaleLowerCase('fr-FR');
-    const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLocaleLowerCase('fr-FR');
-    return !!teamAName && !!teamBName && teamAName !== 'à définir' && teamBName !== 'à définir';
-  }, [teamMap]);
-
-  const filterRefereeVisibleMatches = useCallback((matches) => {
-    const uniqueMatches = [];
-    const seenKeys = new Map();
-    dedupeMatches(Array.isArray(matches) ? matches : []).forEach((match) => {
-      if (!hasResolvedRefereeTeams(match)) return;
-      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return;
-      const pairKey = [match.phase || '', match.group || '', match.round || '', ...getSortedTeamIds(match)].join('|');
-      const dedupeKey = pairKey.replace(/\|/g, '') ? pairKey : matchIdentityKey(match);
-      const existingIndex = seenKeys.get(dedupeKey);
-      if (existingIndex === undefined) {
-        seenKeys.set(dedupeKey, uniqueMatches.length);
-        uniqueMatches.push(match);
-        return;
-      }
-      uniqueMatches[existingIndex] = pickPreferredMatch(uniqueMatches[existingIndex], match);
-    });
-    return uniqueMatches;
-  }, [phaseRules, hasResolvedRefereeTeams]);
+  const filterRefereeVisibleMatches = useCallback((matches) => (
+    dedupeMatches(Array.isArray(matches) ? matches : [])
+      .filter((match) => hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
+  ), [phaseRules]);
 
   const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
     { title: 'Championnat Aller', scope: 'championshipLeg1', matches: filterRefereeVisibleMatches(championshipLeg1.matches), isUnlocked: true, lockReason: '' },
     { title: 'Championnat Retour', scope: 'championshipLeg2', matches: filterRefereeVisibleMatches(championshipLeg2.matches), isUnlocked: stageValidation.championnatAllerComplete, lockReason: 'Tous les scores du Championnat Aller doivent être valides.' },
-    { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.quarters)), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete, lockReason: 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
-    { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.semis)), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
-    { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.finals)), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(singleKnockout.quarters), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete, lockReason: 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
   ] : [
-    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(visibleBrassage1Matches), isUnlocked: true, lockReason: '' },
-    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(visibleBrassage2Matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
-    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(visiblePrincipaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
-    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(visibleConsolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
-    { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalQuarters)), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
-    { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalSemis)), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
-    { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalFinals)), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
-    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.consolanteSemis)), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
-    { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.consolanteFinals)), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
+    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(brassage1.matches), isUnlocked: true, lockReason: '' },
+    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(brassage2.matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
+    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(mainStage.principaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(mainStage.consolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(knockout.principalQuarters), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
+    { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(knockout.principalSemis), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
+    { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(knockout.principalFinals), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
+    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(knockout.consolanteSemis), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
+    { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(knockout.consolanteFinals), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -2700,40 +2700,69 @@ export default function App() {
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
+    const editTimestamp = new Date().toISOString();
+    let localPendingSnapshot = null;
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
-      return {
+      const nextMatch = {
         ...match,
         [field]: match[field],
         [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
-        submittedAt: new Date().toISOString(),
+        submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
+      localPendingSnapshot = {
+        submittedScoreA: nextMatch.submittedScoreA ?? '',
+        submittedScoreB: nextMatch.submittedScoreB ?? '',
+        submittedAt: editTimestamp,
+      };
+      return nextMatch;
     }));
+    if (localPendingSnapshot) {
+      recentRefereeLocalEditsRef.current.set(matchId, {
+        ...localPendingSnapshot,
+        until: Date.now() + 2500,
+      });
+    }
     queueBackgroundCloudSave(0);
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
+    const editTimestamp = new Date().toISOString();
+    let localPendingSnapshot = null;
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
       const currentValue = toNumber(field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB) ?? 0;
       const nextValue = Math.max(0, currentValue + delta);
-      return {
+      const nextMatch = {
         ...match,
         [field]: match[field],
         [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: nextValue,
-        submittedAt: new Date().toISOString(),
+        submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
+      localPendingSnapshot = {
+        submittedScoreA: nextMatch.submittedScoreA ?? '',
+        submittedScoreB: nextMatch.submittedScoreB ?? '',
+        submittedAt: editTimestamp,
+      };
+      return nextMatch;
     }));
+    if (localPendingSnapshot) {
+      recentRefereeLocalEditsRef.current.set(matchId, {
+        ...localPendingSnapshot,
+        until: Date.now() + 2500,
+      });
+    }
     queueBackgroundCloudSave(0);
   }
 
   function approveRefereeScore(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
@@ -2754,6 +2783,7 @@ export default function App() {
   }
 
   function rejectRefereeScore(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
         ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), refereeInProgress: false, matchInProgress: false }
@@ -2763,6 +2793,7 @@ export default function App() {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
