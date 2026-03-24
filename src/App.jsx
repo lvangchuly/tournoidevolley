@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19V';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19W';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19V';
+const APP_VERSION = 'V19W';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3148,50 +3148,64 @@ export default function App() {
   function generateConsolanteFinals() {
     const currentKnockout = knockoutRef.current;
     const currentMainStage = mainStageRef.current;
-    const canGenerateConsolanteFinals = currentKnockout.consolanteSemis.length > 0 && currentKnockout.consolanteSemis.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    const currentConsolanteSemis = sanitizeKnockoutMatches(currentKnockout.consolanteSemis);
+    const canGenerateConsolanteFinals = currentConsolanteSemis.length === 2 && currentConsolanteSemis.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!canGenerateConsolanteFinals) {
       window.alert('Toutes les demi-finales de consolante doivent être valides avant de générer les finales de consolante.');
       return;
     }
-    const c1 = getWinnerLoser(currentKnockout.consolanteSemis[0], phaseRulesRef.current);
-    const c2 = getWinnerLoser(currentKnockout.consolanteSemis[1], phaseRulesRef.current);
-    if (!c1.winner || !c2.winner) {
+    const c1 = getWinnerLoser(currentConsolanteSemis[0], phaseRulesRef.current);
+    const c2 = getWinnerLoser(currentConsolanteSemis[1], phaseRulesRef.current);
+    if (!c1.winner || !c2.winner || !c1.loser || !c2.loser) {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales de consolante.');
       return;
     }
     if (!confirmClearStageScores(currentKnockout.consolanteFinals, 'les finales de consolante')) return;
-    const consolanteFinalsRaw = [
+    const consolanteFinalsRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
       makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
-    ];
-    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length);
+    ]);
+    if (consolanteFinalsRaw.length !== 2) {
+      window.alert('Impossible de générer les finales de consolante tant que les 4 équipes qualifiées ne sont pas déterminées.');
+      return;
+    }
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length)
+      + stageSlotCount(brassage2Ref.current.matches.length)
+      + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length)
+      + stageSlotCount(currentKnockout.principalQuarters.length + currentConsolanteSemis.length + currentKnockout.principalSemis.length);
     const nextKnockout = {
       ...currentKnockout,
       consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(consolanteFinalsRaw, startSlot))),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
+    setActiveTab('finales');
     queueBackgroundCloudSave(250);
   }
 
   function generatePrincipalFinals() {
     const currentKnockout = knockoutRef.current;
     const currentMainStage = mainStageRef.current;
-    if (currentKnockout.principalSemis.length === 0) {
+    const currentPrincipalSemis = sanitizeKnockoutMatches(currentKnockout.principalSemis);
+    if (currentPrincipalSemis.length !== 2) {
       window.alert('Génère d’abord les demi-finales principales.');
       return;
     }
-    const s1 = getWinnerLoser(currentKnockout.principalSemis[0], phaseRulesRef.current);
-    const s2 = getWinnerLoser(currentKnockout.principalSemis[1], phaseRulesRef.current);
-    if (!s1.winner || !s2.winner) {
+    const s1 = getWinnerLoser(currentPrincipalSemis[0], phaseRulesRef.current);
+    const s2 = getWinnerLoser(currentPrincipalSemis[1], phaseRulesRef.current);
+    if (!s1.winner || !s2.winner || !s1.loser || !s2.loser) {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales principales.');
       return;
     }
     if (!confirmClearStageScores(currentKnockout.principalFinals, 'la finale principale')) return;
-    const finalsRaw = [
+    const finalsRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau principal', 'Petite finale', s1.loser, s2.loser),
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
-    ];
+    ]);
+    if (finalsRaw.length !== 2) {
+      window.alert('Impossible de générer la finale principale tant que les 4 équipes qualifiées ne sont pas déterminées.');
+      return;
+    }
     const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length) + stageSlotCount(currentKnockout.principalSemis.length + currentKnockout.consolanteFinals.length);
     const nextKnockout = {
       ...currentKnockout,
@@ -3199,6 +3213,8 @@ export default function App() {
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
+    setActiveTab('finales');
+    queueBackgroundCloudSave(250);
   }
 
   function updateMatchesInScope(scope, updater) {
