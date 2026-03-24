@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19J';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19K';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19J';
+const APP_VERSION = 'V19K';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1005,13 +1005,15 @@ function PublicPodiumHighlightCard({ title, principalTeamId, consolanteTeamId, r
 function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   if (!match) return null;
   const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
-  const displayScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
-  const displayScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
+  const rawScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
+  const rawScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
+  const displayScoreA = isInProgress ? (rawScoreA === '' ? '--' : rawScoreA) : '--';
+  const displayScoreB = isInProgress ? (rawScoreB === '' ? '--' : rawScoreB) : '--';
   const phaseAndGroup = [match.phase, match.group].filter(Boolean).join(' - ');
   const statusLabel = isInProgress ? 'Match en cours' : title;
   const endLabel = isInProgress ? 'Fin de match prévue à' : 'Fin prévue à';
-  const startText = match.scheduledStartText || match.time;
-  const endText = match.scheduledEndText || '-';
+  const startText = match.scheduledStartText || match.time || '--:--';
+  const endText = match.scheduledEndText || '--:--';
   return (
     <div className="public-match-card public-match-card-featured">
       <div className="public-match-topline">
@@ -1023,17 +1025,17 @@ function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
         <div className="public-match-main">
           <div className="public-match-team-row">
             <div className="public-team"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} className="team-badge-public" /></div>
-            <div className="public-score public-score-inline">{displayScoreA === '' ? '-' : displayScoreA}</div>
+            <div className="public-score public-score-inline">{displayScoreA}</div>
           </div>
           <div className="muted small public-versus">vs</div>
           <div className="public-match-team-row">
             <div className="public-team"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} className="team-badge-public" /></div>
-            <div className="public-score public-score-inline">{displayScoreB === '' ? '-' : displayScoreB}</div>
+            <div className="public-score public-score-inline">{displayScoreB}</div>
           </div>
         </div>
         <div className="public-match-side-note">
           <div className="public-start-block">
-            <div className="public-start-label">Début à</div>
+            <div className="public-start-label">Début estimé à</div>
             <div className="public-start-time">{startText}</div>
           </div>
           <div className="public-end-block">
@@ -3761,12 +3763,14 @@ export default function App() {
             <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
               {renderOverallRanking(overallRanking, false, activeInProgressTeamIds)}
             </Section>
-            <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
-              <div className="cards-grid two-up">
-                {renderPodium('Tableau principal', knockout.principalFinals)}
-                {renderPodium('Tableau consolante', knockout.consolanteFinals)}
-              </div>
-            </Section>
+            {publicPodiumLeaders.tournamentFinished ? (
+              <Section title="Podiums" subtitle="Les podiums s’affichent lorsque le tournoi est terminé.">
+                <div className="cards-grid two-up">
+                  {renderPodium('Tableau principal', knockout.principalFinals)}
+                  {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                </div>
+              </Section>
+            ) : null}
           </div>
         </div>
       </div>
