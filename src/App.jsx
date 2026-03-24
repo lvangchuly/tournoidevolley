@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19F';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19H';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19F';
+const APP_VERSION = 'V19H';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -832,6 +832,13 @@ function hasBothTeamsDefined(match) {
   return Boolean(match?.teamAId && match?.teamBId);
 }
 
+function isPublicDisplayableMatch(match, resolveTeam) {
+  if (!hasBothTeamsDefined(match)) return false;
+  const teamAName = String(resolveTeam(match.teamAId)?.name || '').trim().toLowerCase();
+  const teamBName = String(resolveTeam(match.teamBId)?.name || '').trim().toLowerCase();
+  return Boolean(teamAName && teamBName && teamAName !== 'à définir' && teamBName !== 'à définir');
+}
+
 function clearMatchScores(match) {
   return {
     ...match,
@@ -1391,55 +1398,64 @@ export default function App() {
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
+    const remoteArrayProvided = Array.isArray(remoteMatches);
     const safeLocalMatches = dedupeMatches(Array.isArray(localMatches) ? localMatches : []);
-    const safeRemoteMatches = dedupeMatches(Array.isArray(remoteMatches) ? remoteMatches : []);
-    if (!safeLocalMatches.length && safeRemoteMatches.length) {
-      return safeClone(safeRemoteMatches, []);
+    const safeRemoteMatches = dedupeMatches(remoteArrayProvided ? remoteMatches : []);
+    if (!remoteArrayProvided) {
+      return safeLocalMatches;
+    }
+    if (!safeRemoteMatches.length) {
+      return [];
     }
 
-    let changed = false;
-    const remoteById = new Map(safeRemoteMatches.map((match) => [match.id, match]));
+    const localById = new Map(safeLocalMatches.map((match) => [match.id, match]));
+    const localByIdentity = new Map(
+      safeLocalMatches
+        .map((match) => [matchIdentityKey(match), match])
+        .filter(([identityKey]) => Boolean(identityKey))
+    );
     const now = Date.now();
-    const merged = safeLocalMatches.map((match) => {
-      const remote = remoteById.get(match.id);
-      if (!remote) return match;
+    let changed = safeLocalMatches.length !== safeRemoteMatches.length;
 
-      const recentRelease = recentRefereeReleaseRef.current.get(match.id);
-      const recentLocalEdit = recentRefereeLocalEditsRef.current.get(match.id);
-      const remoteInProgress = Boolean(remote.refereeInProgress);
-      const remoteMatchInProgress = Boolean(remote.matchInProgress || remote.refereeInProgress);
-      const localMatchInProgress = Boolean(match.matchInProgress || match.refereeInProgress);
+    const mergeLocalIntoRemote = (localMatch, remoteMatch) => {
+      if (!localMatch) return remoteMatch;
+
+      const recentRelease = recentRefereeReleaseRef.current.get(localMatch.id);
+      const recentLocalEdit = recentRefereeLocalEditsRef.current.get(localMatch.id);
+      const remoteInProgress = Boolean(remoteMatch.refereeInProgress);
+      const remoteMatchInProgress = Boolean(remoteMatch.matchInProgress || remoteMatch.refereeInProgress);
+      const localMatchInProgress = Boolean(localMatch.matchInProgress || localMatch.refereeInProgress);
       const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
-      const localSubmittedAt = toTimestamp(match.submittedAt);
-      const remoteSubmittedAt = toTimestamp(remote.submittedAt);
-      const localValidatedAt = toTimestamp(match.validatedAt);
-      const remoteValidatedAt = toTimestamp(remote.validatedAt);
-      const localManualOverrideAt = toTimestamp(match.manualOverrideAt);
-      const remoteManualOverrideAt = toTimestamp(remote.manualOverrideAt);
+      const localSubmittedAt = toTimestamp(localMatch.submittedAt);
+      const remoteSubmittedAt = toTimestamp(remoteMatch.submittedAt);
+      const localValidatedAt = toTimestamp(localMatch.validatedAt);
+      const remoteValidatedAt = toTimestamp(remoteMatch.validatedAt);
+      const localManualOverrideAt = toTimestamp(localMatch.manualOverrideAt);
+      const remoteManualOverrideAt = toTimestamp(remoteMatch.manualOverrideAt);
       const localOfficialAt = Math.max(localValidatedAt, localManualOverrideAt);
       const remoteOfficialAt = Math.max(remoteValidatedAt, remoteManualOverrideAt);
       const localOfficialScoresDiffer =
-        String(match.scoreA ?? '') !== String(remote.scoreA ?? '') ||
-        String(match.scoreB ?? '') !== String(remote.scoreB ?? '');
+        String(localMatch.scoreA ?? '') !== String(remoteMatch.scoreA ?? '') ||
+        String(localMatch.scoreB ?? '') !== String(remoteMatch.scoreB ?? '');
       const shouldKeepLocalOfficialEdit =
         localOfficialScoresDiffer &&
         localOfficialAt > remoteOfficialAt &&
         localOfficialAt >= remoteSubmittedAt;
-      const remoteIsValid = isMatchResultValid(remote, phaseRules);
-      const localIsValid = isMatchResultValid(match, phaseRules);
+      const remoteIsValid = isMatchResultValid(remoteMatch, phaseRules);
+      const localIsValid = isMatchResultValid(localMatch, phaseRules);
       const pendingScoresDiffer =
-        String(match.submittedScoreA ?? '') !== String(remote.submittedScoreA ?? '') ||
-        String(match.submittedScoreB ?? '') !== String(remote.submittedScoreB ?? '');
+        String(localMatch.submittedScoreA ?? '') !== String(remoteMatch.submittedScoreA ?? '') ||
+        String(localMatch.submittedScoreB ?? '') !== String(remoteMatch.submittedScoreB ?? '');
       const hasRecentProtectedLocalEdit = Boolean(
         recentLocalEdit
         && recentLocalEdit.until > now
-        && String(match.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
-        && String(match.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+        && String(localMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(localMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
       );
       const remotePendingCaughtUpToLocalEdit = Boolean(
         recentLocalEdit
-        && String(remote.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
-        && String(remote.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+        && String(remoteMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(remoteMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
         && remoteSubmittedAt >= localSubmittedAt
       );
       const shouldIgnoreRemotePendingBecauseLocalEdit =
@@ -1450,17 +1466,17 @@ export default function App() {
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
         pendingScoresDiffer &&
-        (remoteMatchInProgress || Boolean(remote.submittedAt));
+        (remoteMatchInProgress || Boolean(remoteMatch.submittedAt));
 
-      let nextMatch = match;
+      let nextMatch = { ...remoteMatch };
 
       if (!shouldKeepLocalOfficialEdit && remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
         nextMatch = {
           ...nextMatch,
-          scoreA: remote.scoreA ?? '',
-          scoreB: remote.scoreB ?? '',
-          validatedAt: remote.validatedAt ?? null,
-          manualOverrideAt: remote.manualOverrideAt ?? null,
+          scoreA: remoteMatch.scoreA ?? '',
+          scoreB: remoteMatch.scoreB ?? '',
+          validatedAt: remoteMatch.validatedAt ?? null,
+          manualOverrideAt: remoteMatch.manualOverrideAt ?? null,
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
@@ -1470,61 +1486,75 @@ export default function App() {
       } else if (!shouldKeepLocalOfficialEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
-          submittedScoreA: remote.submittedScoreA ?? '',
-          submittedScoreB: remote.submittedScoreB ?? '',
-          submittedAt: remote.submittedAt ?? null,
+          submittedScoreA: remoteMatch.submittedScoreA ?? '',
+          submittedScoreB: remoteMatch.submittedScoreB ?? '',
+          submittedAt: remoteMatch.submittedAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : remoteMatchInProgress,
         };
       } else if (shouldIgnoreRemoteLock) {
         nextMatch = {
           ...nextMatch,
+          submittedScoreA: localMatch.submittedScoreA ?? nextMatch.submittedScoreA ?? '',
+          submittedScoreB: localMatch.submittedScoreB ?? nextMatch.submittedScoreB ?? '',
+          submittedAt: localMatch.submittedAt ?? nextMatch.submittedAt ?? null,
           refereeInProgress: false,
           matchInProgress: localMatchInProgress || remoteMatchInProgress,
+        };
+      } else if (shouldIgnoreRemotePendingBecauseLocalEdit) {
+        nextMatch = {
+          ...nextMatch,
+          submittedScoreA: localMatch.submittedScoreA ?? '',
+          submittedScoreB: localMatch.submittedScoreB ?? '',
+          submittedAt: localMatch.submittedAt ?? null,
+          refereeInProgress: localMatch.refereeInProgress ?? nextMatch.refereeInProgress ?? false,
+          matchInProgress: localMatch.matchInProgress ?? nextMatch.matchInProgress ?? false,
         };
       }
 
       if (!remoteInProgress && !remoteMatchInProgress && recentRelease) {
-        recentRefereeReleaseRef.current.delete(match.id);
+        recentRefereeReleaseRef.current.delete(localMatch.id);
       }
       if (recentLocalEdit) {
         const remoteCaughtUpToLocalEdit =
-          String(remote.submittedScoreA ?? '') === String(match.submittedScoreA ?? '')
-          && String(remote.submittedScoreB ?? '') === String(match.submittedScoreB ?? '')
+          String(remoteMatch.submittedScoreA ?? '') === String(localMatch.submittedScoreA ?? '')
+          && String(remoteMatch.submittedScoreB ?? '') === String(localMatch.submittedScoreB ?? '')
           && remoteSubmittedAt >= localSubmittedAt;
         if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !nextMatch.refereeInProgress) {
-          recentRefereeLocalEditsRef.current.delete(match.id);
+          recentRefereeLocalEditsRef.current.delete(localMatch.id);
         }
       }
 
-      const hasChanged =
-        (match.scoreA ?? '') !== (nextMatch.scoreA ?? '') ||
-        (match.scoreB ?? '') !== (nextMatch.scoreB ?? '') ||
-        (match.validatedAt ?? null) !== (nextMatch.validatedAt ?? null) ||
-        (match.manualOverrideAt ?? null) !== (nextMatch.manualOverrideAt ?? null) ||
-        (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
-        (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
-        (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
-        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress) ||
-        Boolean(match.matchInProgress) !== Boolean(nextMatch.matchInProgress);
-      if (!hasChanged) return match;
-      changed = true;
-      return nextMatch;
+      const hasChanged = JSON.stringify(localMatch) !== JSON.stringify(nextMatch);
+      if (hasChanged) changed = true;
+      return hasChanged ? nextMatch : localMatch;
+    };
+
+    const merged = safeRemoteMatches.map((remoteMatch) => {
+      const localBySameId = localById.get(remoteMatch.id) || null;
+      if (localBySameId) {
+        return mergeLocalIntoRemote(localBySameId, remoteMatch);
+      }
+
+      const remoteIdentityKey = matchIdentityKey(remoteMatch);
+      const localBySameIdentity = remoteIdentityKey ? localByIdentity.get(remoteIdentityKey) : null;
+      const sameTeams = Boolean(
+        localBySameIdentity
+        && String(localBySameIdentity.teamAId ?? '') === String(remoteMatch.teamAId ?? '')
+        && String(localBySameIdentity.teamBId ?? '') === String(remoteMatch.teamBId ?? '')
+      );
+
+      if (sameTeams) {
+        return mergeLocalIntoRemote(localBySameIdentity, remoteMatch);
+      }
+
+      if (localBySameIdentity) {
+        changed = true;
+      }
+      return remoteMatch;
     });
 
-    const localIds = new Set(safeLocalMatches.map((match) => match.id));
-    const localIdentityKeys = new Set(safeLocalMatches.map((match) => matchIdentityKey(match)).filter(Boolean));
-    const remoteOnlyMatches = safeRemoteMatches.filter((match) => {
-      if (localIds.has(match.id)) return false;
-      const remoteIdentityKey = matchIdentityKey(match);
-      return !remoteIdentityKey || !localIdentityKeys.has(remoteIdentityKey);
-    });
-    if (remoteOnlyMatches.length) {
-      changed = true;
-      merged.push(...safeClone(remoteOnlyMatches, []));
-    }
-
-    return changed ? dedupeMatches(merged) : safeLocalMatches;
+    return dedupeMatches(merged);
   }
 
   function mergeRemoteRefereeState(payload) {
@@ -1846,6 +1876,7 @@ export default function App() {
   const currentMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
+      .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
       .map((match) => ({
@@ -1854,12 +1885,13 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const upcomingMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => {
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
+        if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
@@ -1870,7 +1902,7 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const publicPodiumLeaders = useMemo(() => {
     const extractPodium = (matches) => {
@@ -1917,23 +1949,15 @@ export default function App() {
     }
 
     const items = currentMatches
-      .filter((match) => {
-        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
-        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
-        return teamAName !== 'à définir' && teamBName !== 'à définir';
-      })
       .map((match, index) => ({
         type: 'match',
         title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
         match,
       }));
+    const currentIds = new Set(items.map((item) => item.match.id));
     const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
     upcomingMatches
-      .filter((match) => {
-        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
-        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
-        return teamAName !== 'à définir' && teamBName !== 'à définir';
-      })
+      .filter((match) => !currentIds.has(match.id))
       .slice(0, remainingSlots)
       .forEach((match, index) => {
         items.push({
@@ -1943,7 +1967,7 @@ export default function App() {
         });
       });
     return items;
-  }, [currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam]);
+  }, [currentMatches, upcomingMatches, publicPodiumLeaders]);
 
   const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
   const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
