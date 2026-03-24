@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19H';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19H';
+const APP_VERSION = 'V19';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -832,13 +832,6 @@ function hasBothTeamsDefined(match) {
   return Boolean(match?.teamAId && match?.teamBId);
 }
 
-function isPublicDisplayableMatch(match, resolveTeam) {
-  if (!hasBothTeamsDefined(match)) return false;
-  const teamAName = String(resolveTeam(match.teamAId)?.name || '').trim().toLowerCase();
-  const teamBName = String(resolveTeam(match.teamBId)?.name || '').trim().toLowerCase();
-  return Boolean(teamAName && teamBName && teamAName !== 'à définir' && teamBName !== 'à définir');
-}
-
 function clearMatchScores(match) {
   return {
     ...match,
@@ -1179,8 +1172,6 @@ export default function App() {
   const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
-  const [refereeSelectedScoreDraft, setRefereeSelectedScoreDraft] = useState(null);
-  const [refereeScoreDrafts, setRefereeScoreDrafts] = useState({});
   const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
@@ -1188,28 +1179,6 @@ export default function App() {
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
-  const recentRefereeLocalEditsRef = useRef(new Map());
-  const latestPersistedStateRef = useRef(null);
-  const refereeSelectedScoreDraftRef = useRef(refereeSelectedScoreDraft);
-  const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
-  const cloudSaveInFlightRef = useRef(false);
-  const queuedCloudSaveRequestRef = useRef(null);
-  const teamsRef = useRef(teams);
-  const startTimeRef = useRef(startTime);
-  const slotDurationRef = useRef(slotDuration);
-  const phaseRulesRef = useRef(phaseRules);
-  const organizerPasswordRef = useRef(organizerPassword);
-  const tournamentNameRef = useRef(tournamentName);
-  const tournamentLogoRef = useRef(tournamentLogo);
-  const sharedTournamentIdRef = useRef(sharedTournamentId);
-  const remoteSavedAtRef = useRef(remoteSavedAt);
-  const brassage1Ref = useRef(brassage1);
-  const brassage2Ref = useRef(brassage2);
-  const mainStageRef = useRef(mainStage);
-  const knockoutRef = useRef(knockout);
-  const championshipLeg1Ref = useRef(championshipLeg1);
-  const championshipLeg2Ref = useRef(championshipLeg2);
-  const singleKnockoutRef = useRef(singleKnockout);
   const pendingFreshTournamentTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -1307,42 +1276,19 @@ export default function App() {
     allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
-  function getPersistedStateSnapshot(savedAt = lastSavedAt, overrides = {}) {
-    return {
-      teams: safeClone(overrides.teams ?? teamsRef.current, []),
-      settings: {
-        startTime: overrides.startTime ?? startTimeRef.current,
-        slotDuration: overrides.slotDuration ?? slotDurationRef.current,
-        phaseRules: safeClone(overrides.phaseRules ?? phaseRulesRef.current, DEFAULT_PHASE_RULES),
-        organizerPassword: overrides.organizerPassword ?? organizerPasswordRef.current,
-        tournamentName: overrides.tournamentName ?? tournamentNameRef.current,
-        tournamentLogo: overrides.tournamentLogo ?? tournamentLogoRef.current,
-        sharedTournamentId: overrides.sharedTournamentId ?? sharedTournamentIdRef.current,
-      },
-      meta: {
-        lastSavedAt: savedAt,
-        remoteSavedAt: overrides.remoteSavedAt ?? remoteSavedAtRef.current,
-      },
-      brassage1: safeClone(overrides.brassage1 ?? brassage1Ref.current, {}),
-      brassage2: safeClone(overrides.brassage2 ?? brassage2Ref.current, {}),
-      mainStage: safeClone(overrides.mainStage ?? mainStageRef.current, {}),
-      knockout: safeClone(overrides.knockout ?? knockoutRef.current, {}),
-      championshipLeg1: safeClone(overrides.championshipLeg1 ?? championshipLeg1Ref.current, {}),
-      championshipLeg2: safeClone(overrides.championshipLeg2 ?? championshipLeg2Ref.current, {}),
-      singleKnockout: safeClone(overrides.singleKnockout ?? singleKnockoutRef.current, {}),
-    };
-  }
-
   function getPersistedState(savedAt = lastSavedAt) {
-    return getPersistedStateSnapshot(savedAt);
-  }
-
-  function commitRefereeScoreDrafts(updater) {
-    setRefereeScoreDrafts((current) => {
-      const nextDrafts = typeof updater === 'function' ? updater(current) : updater;
-      refereeScoreDraftsRef.current = nextDrafts;
-      return nextDrafts;
-    });
+    return {
+      teams,
+      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId },
+      meta: { lastSavedAt: savedAt, remoteSavedAt },
+      brassage1,
+      brassage2,
+      mainStage,
+      knockout,
+      championshipLeg1,
+      championshipLeg2,
+      singleKnockout,
+    };
   }
 
   function applyPersistedState(parsed, options = {}) {
@@ -1398,163 +1344,113 @@ export default function App() {
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
-    const remoteArrayProvided = Array.isArray(remoteMatches);
     const safeLocalMatches = dedupeMatches(Array.isArray(localMatches) ? localMatches : []);
-    const safeRemoteMatches = dedupeMatches(remoteArrayProvided ? remoteMatches : []);
-    if (!remoteArrayProvided) {
-      return safeLocalMatches;
-    }
-    if (!safeRemoteMatches.length) {
-      return [];
+    const safeRemoteMatches = dedupeMatches(Array.isArray(remoteMatches) ? remoteMatches : []);
+    if (!safeLocalMatches.length && safeRemoteMatches.length) {
+      return safeClone(safeRemoteMatches, []);
     }
 
-    const localById = new Map(safeLocalMatches.map((match) => [match.id, match]));
-    const localByIdentity = new Map(
-      safeLocalMatches
-        .map((match) => [matchIdentityKey(match), match])
-        .filter(([identityKey]) => Boolean(identityKey))
-    );
+    let changed = false;
+    const remoteById = new Map(safeRemoteMatches.map((match) => [match.id, match]));
     const now = Date.now();
-    let changed = safeLocalMatches.length !== safeRemoteMatches.length;
+    const merged = safeLocalMatches.map((match) => {
+      const remote = remoteById.get(match.id);
+      if (!remote) return match;
 
-    const mergeLocalIntoRemote = (localMatch, remoteMatch) => {
-      if (!localMatch) return remoteMatch;
-
-      const recentRelease = recentRefereeReleaseRef.current.get(localMatch.id);
-      const recentLocalEdit = recentRefereeLocalEditsRef.current.get(localMatch.id);
-      const remoteInProgress = Boolean(remoteMatch.refereeInProgress);
-      const remoteMatchInProgress = Boolean(remoteMatch.matchInProgress || remoteMatch.refereeInProgress);
-      const localMatchInProgress = Boolean(localMatch.matchInProgress || localMatch.refereeInProgress);
+      const recentRelease = recentRefereeReleaseRef.current.get(match.id);
+      const remoteInProgress = Boolean(remote.refereeInProgress);
+      const remoteMatchInProgress = Boolean(remote.matchInProgress || remote.refereeInProgress);
+      const localMatchInProgress = Boolean(match.matchInProgress || match.refereeInProgress);
       const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
-      const localSubmittedAt = toTimestamp(localMatch.submittedAt);
-      const remoteSubmittedAt = toTimestamp(remoteMatch.submittedAt);
-      const localValidatedAt = toTimestamp(localMatch.validatedAt);
-      const remoteValidatedAt = toTimestamp(remoteMatch.validatedAt);
-      const localManualOverrideAt = toTimestamp(localMatch.manualOverrideAt);
-      const remoteManualOverrideAt = toTimestamp(remoteMatch.manualOverrideAt);
+      const localSubmittedAt = toTimestamp(match.submittedAt);
+      const remoteSubmittedAt = toTimestamp(remote.submittedAt);
+      const localValidatedAt = toTimestamp(match.validatedAt);
+      const remoteValidatedAt = toTimestamp(remote.validatedAt);
+      const localManualOverrideAt = toTimestamp(match.manualOverrideAt);
+      const remoteManualOverrideAt = toTimestamp(remote.manualOverrideAt);
       const localOfficialAt = Math.max(localValidatedAt, localManualOverrideAt);
       const remoteOfficialAt = Math.max(remoteValidatedAt, remoteManualOverrideAt);
       const localOfficialScoresDiffer =
-        String(localMatch.scoreA ?? '') !== String(remoteMatch.scoreA ?? '') ||
-        String(localMatch.scoreB ?? '') !== String(remoteMatch.scoreB ?? '');
+        String(match.scoreA ?? '') !== String(remote.scoreA ?? '') ||
+        String(match.scoreB ?? '') !== String(remote.scoreB ?? '');
       const shouldKeepLocalOfficialEdit =
         localOfficialScoresDiffer &&
         localOfficialAt > remoteOfficialAt &&
         localOfficialAt >= remoteSubmittedAt;
-      const remoteIsValid = isMatchResultValid(remoteMatch, phaseRules);
-      const localIsValid = isMatchResultValid(localMatch, phaseRules);
+      const remoteIsValid = isMatchResultValid(remote, phaseRules);
+      const localIsValid = isMatchResultValid(match, phaseRules);
       const pendingScoresDiffer =
-        String(localMatch.submittedScoreA ?? '') !== String(remoteMatch.submittedScoreA ?? '') ||
-        String(localMatch.submittedScoreB ?? '') !== String(remoteMatch.submittedScoreB ?? '');
-      const hasRecentProtectedLocalEdit = Boolean(
-        recentLocalEdit
-        && recentLocalEdit.until > now
-        && String(localMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
-        && String(localMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
-      );
-      const remotePendingCaughtUpToLocalEdit = Boolean(
-        recentLocalEdit
-        && String(remoteMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
-        && String(remoteMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
-        && remoteSubmittedAt >= localSubmittedAt
-      );
-      const shouldIgnoreRemotePendingBecauseLocalEdit =
-        hasRecentProtectedLocalEdit
-        && pendingScoresDiffer
-        && !remotePendingCaughtUpToLocalEdit
-        && remoteSubmittedAt <= localSubmittedAt;
+        String(match.submittedScoreA ?? '') !== String(remote.submittedScoreA ?? '') ||
+        String(match.submittedScoreB ?? '') !== String(remote.submittedScoreB ?? '');
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
         pendingScoresDiffer &&
-        (remoteMatchInProgress || Boolean(remoteMatch.submittedAt));
+        (remoteMatchInProgress || Boolean(remote.submittedAt));
 
-      let nextMatch = { ...remoteMatch };
+      let nextMatch = match;
 
       if (!shouldKeepLocalOfficialEdit && remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
         nextMatch = {
           ...nextMatch,
-          scoreA: remoteMatch.scoreA ?? '',
-          scoreB: remoteMatch.scoreB ?? '',
-          validatedAt: remoteMatch.validatedAt ?? null,
-          manualOverrideAt: remoteMatch.manualOverrideAt ?? null,
+          scoreA: remote.scoreA ?? '',
+          scoreB: remote.scoreB ?? '',
+          validatedAt: remote.validatedAt ?? null,
+          manualOverrideAt: remote.manualOverrideAt ?? null,
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (!shouldKeepLocalOfficialEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
+      } else if (!shouldKeepLocalOfficialEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
-          submittedScoreA: remoteMatch.submittedScoreA ?? '',
-          submittedScoreB: remoteMatch.submittedScoreB ?? '',
-          submittedAt: remoteMatch.submittedAt ?? null,
+          submittedScoreA: remote.submittedScoreA ?? '',
+          submittedScoreB: remote.submittedScoreB ?? '',
+          submittedAt: remote.submittedAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : remoteMatchInProgress,
         };
       } else if (shouldIgnoreRemoteLock) {
         nextMatch = {
           ...nextMatch,
-          submittedScoreA: localMatch.submittedScoreA ?? nextMatch.submittedScoreA ?? '',
-          submittedScoreB: localMatch.submittedScoreB ?? nextMatch.submittedScoreB ?? '',
-          submittedAt: localMatch.submittedAt ?? nextMatch.submittedAt ?? null,
           refereeInProgress: false,
           matchInProgress: localMatchInProgress || remoteMatchInProgress,
-        };
-      } else if (shouldIgnoreRemotePendingBecauseLocalEdit) {
-        nextMatch = {
-          ...nextMatch,
-          submittedScoreA: localMatch.submittedScoreA ?? '',
-          submittedScoreB: localMatch.submittedScoreB ?? '',
-          submittedAt: localMatch.submittedAt ?? null,
-          refereeInProgress: localMatch.refereeInProgress ?? nextMatch.refereeInProgress ?? false,
-          matchInProgress: localMatch.matchInProgress ?? nextMatch.matchInProgress ?? false,
         };
       }
 
       if (!remoteInProgress && !remoteMatchInProgress && recentRelease) {
-        recentRefereeReleaseRef.current.delete(localMatch.id);
-      }
-      if (recentLocalEdit) {
-        const remoteCaughtUpToLocalEdit =
-          String(remoteMatch.submittedScoreA ?? '') === String(localMatch.submittedScoreA ?? '')
-          && String(remoteMatch.submittedScoreB ?? '') === String(localMatch.submittedScoreB ?? '')
-          && remoteSubmittedAt >= localSubmittedAt;
-        if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !nextMatch.refereeInProgress) {
-          recentRefereeLocalEditsRef.current.delete(localMatch.id);
-        }
+        recentRefereeReleaseRef.current.delete(match.id);
       }
 
-      const hasChanged = JSON.stringify(localMatch) !== JSON.stringify(nextMatch);
-      if (hasChanged) changed = true;
-      return hasChanged ? nextMatch : localMatch;
-    };
-
-    const merged = safeRemoteMatches.map((remoteMatch) => {
-      const localBySameId = localById.get(remoteMatch.id) || null;
-      if (localBySameId) {
-        return mergeLocalIntoRemote(localBySameId, remoteMatch);
-      }
-
-      const remoteIdentityKey = matchIdentityKey(remoteMatch);
-      const localBySameIdentity = remoteIdentityKey ? localByIdentity.get(remoteIdentityKey) : null;
-      const sameTeams = Boolean(
-        localBySameIdentity
-        && String(localBySameIdentity.teamAId ?? '') === String(remoteMatch.teamAId ?? '')
-        && String(localBySameIdentity.teamBId ?? '') === String(remoteMatch.teamBId ?? '')
-      );
-
-      if (sameTeams) {
-        return mergeLocalIntoRemote(localBySameIdentity, remoteMatch);
-      }
-
-      if (localBySameIdentity) {
-        changed = true;
-      }
-      return remoteMatch;
+      const hasChanged =
+        (match.scoreA ?? '') !== (nextMatch.scoreA ?? '') ||
+        (match.scoreB ?? '') !== (nextMatch.scoreB ?? '') ||
+        (match.validatedAt ?? null) !== (nextMatch.validatedAt ?? null) ||
+        (match.manualOverrideAt ?? null) !== (nextMatch.manualOverrideAt ?? null) ||
+        (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
+        (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
+        (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
+        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress) ||
+        Boolean(match.matchInProgress) !== Boolean(nextMatch.matchInProgress);
+      if (!hasChanged) return match;
+      changed = true;
+      return nextMatch;
     });
 
-    return dedupeMatches(merged);
+    const localIds = new Set(safeLocalMatches.map((match) => match.id));
+    const localIdentityKeys = new Set(safeLocalMatches.map((match) => matchIdentityKey(match)).filter(Boolean));
+    const remoteOnlyMatches = safeRemoteMatches.filter((match) => {
+      if (localIds.has(match.id)) return false;
+      const remoteIdentityKey = matchIdentityKey(match);
+      return !remoteIdentityKey || !localIdentityKeys.has(remoteIdentityKey);
+    });
+    if (remoteOnlyMatches.length) {
+      changed = true;
+      merged.push(...safeClone(remoteOnlyMatches, []));
+    }
+
+    return changed ? dedupeMatches(merged) : safeLocalMatches;
   }
 
   function mergeRemoteRefereeState(payload) {
@@ -1653,27 +1549,12 @@ export default function App() {
       }
       return false;
     }
-
-    if (cloudSaveInFlightRef.current) {
-      queuedCloudSaveRequestRef.current = { showMessage, silent };
-      if (!silent) {
-        setRemoteSyncMessage('Sauvegarde Firebase en file d’attente...');
-      }
-      return true;
-    }
-
-    cloudSaveInFlightRef.current = true;
-    const effectiveId = String(sharedTournamentIdRef.current || '').trim() || buildDefaultSharedTournamentId(tournamentNameRef.current);
-    if (!sharedTournamentIdRef.current) {
-      sharedTournamentIdRef.current = effectiveId;
-      setSharedTournamentId(effectiveId);
-    }
+    const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
+    if (!sharedTournamentId) setSharedTournamentId(effectiveId);
     const savedAt = new Date().toISOString();
-    const basePayload = getPersistedStateSnapshot(savedAt, { sharedTournamentId: effectiveId });
-    latestPersistedStateRef.current = basePayload;
-    const payload = safeClone(basePayload, {});
-    payload.settings = { ...(payload.settings || {}), sharedTournamentId: effectiveId };
-    payload.meta = { ...(payload.meta || {}), lastSavedAt: savedAt, remoteSavedAt: savedAt };
+    const payload = getPersistedState(savedAt);
+    payload.settings.sharedTournamentId = effectiveId;
+    payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
     if (!silent) {
       setIsRemoteSyncing(true);
       setRemoteSyncMessage('Sauvegarde Firebase en cours...');
@@ -1701,52 +1582,24 @@ export default function App() {
       if (showMessage) window.alert(error.message || 'Échec de la sauvegarde Firebase.');
       return false;
     } finally {
-      cloudSaveInFlightRef.current = false;
       if (!silent) setIsRemoteSyncing(false);
-      const queuedRequest = queuedCloudSaveRequestRef.current;
-      if (queuedRequest) {
-        queuedCloudSaveRequestRef.current = null;
-        saveTournamentToCloud(queuedRequest.showMessage, queuedRequest.silent);
-      }
     }
   }
 
   function saveTournamentState(showMessage = true) {
     if (typeof window === 'undefined') return;
     const savedAt = new Date().toISOString();
-    const snapshot = getPersistedStateSnapshot(savedAt);
-    latestPersistedStateRef.current = snapshot;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState(savedAt)));
     setLastSavedAt(savedAt);
     if (showMessage) {
       window.alert('État du tournoi sauvegardé sur ce navigateur.');
     }
   }
 
-  useEffect(() => { refereeScoreDraftsRef.current = refereeScoreDrafts; }, [refereeScoreDrafts]);
-  useEffect(() => { refereeSelectedScoreDraftRef.current = refereeSelectedScoreDraft; }, [refereeSelectedScoreDraft]);
-  useEffect(() => { teamsRef.current = teams; }, [teams]);
-  useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
-  useEffect(() => { slotDurationRef.current = slotDuration; }, [slotDuration]);
-  useEffect(() => { phaseRulesRef.current = phaseRules; }, [phaseRules]);
-  useEffect(() => { organizerPasswordRef.current = organizerPassword; }, [organizerPassword]);
-  useEffect(() => { tournamentNameRef.current = tournamentName; }, [tournamentName]);
-  useEffect(() => { tournamentLogoRef.current = tournamentLogo; }, [tournamentLogo]);
-  useEffect(() => { sharedTournamentIdRef.current = sharedTournamentId; }, [sharedTournamentId]);
-  useEffect(() => { remoteSavedAtRef.current = remoteSavedAt; }, [remoteSavedAt]);
-  useEffect(() => { brassage1Ref.current = brassage1; }, [brassage1]);
-  useEffect(() => { brassage2Ref.current = brassage2; }, [brassage2]);
-  useEffect(() => { mainStageRef.current = mainStage; }, [mainStage]);
-  useEffect(() => { knockoutRef.current = knockout; }, [knockout]);
-  useEffect(() => { championshipLeg1Ref.current = championshipLeg1; }, [championshipLeg1]);
-  useEffect(() => { championshipLeg2Ref.current = championshipLeg2; }, [championshipLeg2]);
-  useEffect(() => { singleKnockoutRef.current = singleKnockout; }, [singleKnockout]);
-
   useEffect(() => {
-    latestPersistedStateRef.current = getPersistedStateSnapshot();
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
@@ -1876,7 +1729,6 @@ export default function App() {
   const currentMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
-      .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
       .map((match) => ({
@@ -1885,13 +1737,12 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, scheduleData]);
 
   const upcomingMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => {
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
-        if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
@@ -1902,7 +1753,7 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, scheduleData]);
 
   const publicPodiumLeaders = useMemo(() => {
     const extractPodium = (matches) => {
@@ -1949,15 +1800,23 @@ export default function App() {
     }
 
     const items = currentMatches
+      .filter((match) => {
+        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
+        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
+        return teamAName !== 'à définir' && teamBName !== 'à définir';
+      })
       .map((match, index) => ({
         type: 'match',
         title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
         match,
       }));
-    const currentIds = new Set(items.map((item) => item.match.id));
     const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
     upcomingMatches
-      .filter((match) => !currentIds.has(match.id))
+      .filter((match) => {
+        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
+        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
+        return teamAName !== 'à définir' && teamBName !== 'à définir';
+      })
       .slice(0, remainingSlots)
       .forEach((match, index) => {
         items.push({
@@ -1967,7 +1826,7 @@ export default function App() {
         });
       });
     return items;
-  }, [currentMatches, upcomingMatches, publicPodiumLeaders]);
+  }, [currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam]);
 
   const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
   const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
@@ -2003,27 +1862,48 @@ export default function App() {
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
-  const filterRefereeVisibleMatches = useCallback((matches) => (
-    dedupeMatches(Array.isArray(matches) ? matches : [])
-      .filter((match) => hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
-  ), [phaseRules]);
+  const hasResolvedRefereeTeams = useCallback((match) => {
+    if (!hasBothTeamsDefined(match)) return false;
+    const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLocaleLowerCase('fr-FR');
+    const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLocaleLowerCase('fr-FR');
+    return !!teamAName && !!teamBName && teamAName !== 'à définir' && teamBName !== 'à définir';
+  }, [teamMap]);
+
+  const filterRefereeVisibleMatches = useCallback((matches) => {
+    const uniqueMatches = [];
+    const seenKeys = new Map();
+    dedupeMatches(Array.isArray(matches) ? matches : []).forEach((match) => {
+      if (!hasResolvedRefereeTeams(match)) return;
+      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return;
+      const pairKey = [match.phase || '', match.group || '', match.round || '', ...getSortedTeamIds(match)].join('|');
+      const dedupeKey = pairKey.replace(/\|/g, '') ? pairKey : matchIdentityKey(match);
+      const existingIndex = seenKeys.get(dedupeKey);
+      if (existingIndex === undefined) {
+        seenKeys.set(dedupeKey, uniqueMatches.length);
+        uniqueMatches.push(match);
+        return;
+      }
+      uniqueMatches[existingIndex] = pickPreferredMatch(uniqueMatches[existingIndex], match);
+    });
+    return uniqueMatches;
+  }, [phaseRules, hasResolvedRefereeTeams]);
 
   const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
     { title: 'Championnat Aller', scope: 'championshipLeg1', matches: filterRefereeVisibleMatches(championshipLeg1.matches), isUnlocked: true, lockReason: '' },
     { title: 'Championnat Retour', scope: 'championshipLeg2', matches: filterRefereeVisibleMatches(championshipLeg2.matches), isUnlocked: stageValidation.championnatAllerComplete, lockReason: 'Tous les scores du Championnat Aller doivent être valides.' },
-    { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(singleKnockout.quarters), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete, lockReason: 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
-    { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
-    { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Quarts de finale', scope: 'quarters', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.quarters)), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete, lockReason: 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.semis)), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
+    { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(singleKnockout.finals)), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
   ] : [
     { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(visibleBrassage1Matches), isUnlocked: true, lockReason: '' },
     { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(visibleBrassage2Matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
     { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(visiblePrincipaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
     { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(visibleConsolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
-    { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(knockout.principalQuarters), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
-    { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(knockout.principalSemis), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
-    { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(knockout.principalFinals), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
-    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(knockout.consolanteSemis), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
-    { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(knockout.consolanteFinals), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
+    { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalQuarters)), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
+    { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalSemis)), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
+    { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.principalFinals)), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
+    { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.consolanteSemis)), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
+    { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(sanitizeKnockoutMatches(knockout.consolanteFinals)), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
   ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
 
   const refereeSelectedEntry = useMemo(() => {
@@ -2034,158 +1914,12 @@ export default function App() {
     return match ? { ...group, match } : null;
   }, [refereeSelectedMatch, refereeMatchGroups]);
 
-  function getRecentProtectedRefereeEdit(matchId) {
-    if (!matchId) return null;
-    const recentEdit = recentRefereeLocalEditsRef.current.get(matchId);
-    if (!recentEdit) return null;
-    if (recentEdit.until <= Date.now()) {
-      recentRefereeLocalEditsRef.current.delete(matchId);
-      return null;
-    }
-    return recentEdit;
-  }
-
-  function getMatchesInScope(scope) {
-    if (scope === 'championshipLeg1') return championshipLeg1Ref.current?.matches || [];
-    if (scope === 'championshipLeg2') return championshipLeg2Ref.current?.matches || [];
-    if (scope === 'quarters') return singleKnockoutRef.current?.quarters || [];
-    if (scope === 'semis') return singleKnockoutRef.current?.semis || [];
-    if (scope === 'finals') return singleKnockoutRef.current?.finals || [];
-    if (scope === 'brassage1') return brassage1Ref.current?.matches || [];
-    if (scope === 'brassage2') return brassage2Ref.current?.matches || [];
-    if (scope === 'principale') return mainStageRef.current?.principaleMatches || [];
-    if (scope === 'consolante') return mainStageRef.current?.consolanteMatches || [];
-    if (scope === 'principalQuarters') return knockoutRef.current?.principalQuarters || [];
-    if (scope === 'principalSemis') return knockoutRef.current?.principalSemis || [];
-    if (scope === 'principalFinals') return knockoutRef.current?.principalFinals || [];
-    if (scope === 'consolanteSemis') return knockoutRef.current?.consolanteSemis || [];
-    return knockoutRef.current?.consolanteFinals || [];
-  }
-
-  function findMatchInScope(scope, matchId) {
-    return getMatchesInScope(scope).find((match) => match.id === matchId) || null;
-  }
-
-  function getPreferredRefereeDraft(match) {
-    if (!match) return null;
-    const candidates = [];
-    const selectedDraft = refereeSelectedScoreDraftRef.current;
-    if (selectedDraft?.matchId === match.id) {
-      candidates.push({ scoreA: selectedDraft.scoreA ?? '', scoreB: selectedDraft.scoreB ?? '', submittedAt: selectedDraft.submittedAt ?? null, priority: 4 });
-    }
-    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
-    if (protectedEdit) {
-      candidates.push({ scoreA: protectedEdit.submittedScoreA ?? '', scoreB: protectedEdit.submittedScoreB ?? '', submittedAt: protectedEdit.submittedAt ?? null, priority: 3 });
-    }
-    const storedDraft = refereeScoreDraftsRef.current?.[match.id];
-    if (storedDraft) {
-      candidates.push({ scoreA: storedDraft.scoreA ?? '', scoreB: storedDraft.scoreB ?? '', submittedAt: storedDraft.submittedAt ?? null, priority: 2 });
-    }
-    candidates.push({ scoreA: match.submittedScoreA ?? '', scoreB: match.submittedScoreB ?? '', submittedAt: match.submittedAt ?? null, priority: 1 });
-    return candidates.reduce((currentBest, candidate) => {
-      if (!currentBest) return candidate;
-      const currentTs = toTimestamp(currentBest.submittedAt);
-      const candidateTs = toTimestamp(candidate.submittedAt);
-      if (candidateTs !== currentTs) return candidateTs > currentTs ? candidate : currentBest;
-      return candidate.priority > currentBest.priority ? candidate : currentBest;
-    }, null);
-  }
-
-  function getRefereeDraftValue(match, field) {
-    const preferredDraft = getPreferredRefereeDraft(match);
-    if (!preferredDraft) return undefined;
-    return field === 'scoreA' ? preferredDraft.scoreA : preferredDraft.scoreB;
-  }
-
   useEffect(() => {
     if (refereeSelectedMatch && !refereeSelectedEntry) {
-      setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
     }
   }, [refereeSelectedMatch, refereeSelectedEntry]);
 
-  useEffect(() => {
-    if (!refereeSelectedEntry?.match) {
-      setRefereeSelectedScoreDraft(null);
-      return;
-    }
-    const match = refereeSelectedEntry.match;
-    const baseScoreA = match.submittedScoreA ?? '';
-    const baseScoreB = match.submittedScoreB ?? '';
-    setRefereeSelectedScoreDraft({
-      matchId: match.id,
-      scoreA: baseScoreA,
-      scoreB: baseScoreB,
-      submittedAt: match.submittedAt ?? null,
-    });
-    commitRefereeScoreDrafts((current) => {
-      if (current[match.id]) return current;
-      return {
-        ...current,
-        [match.id]: {
-          scoreA: baseScoreA,
-          scoreB: baseScoreB,
-          submittedAt: match.submittedAt ?? null,
-        },
-      };
-    });
-  }, [refereeSelectedEntry?.match?.id]);
-
-  useEffect(() => {
-    if (!refereeSelectedEntry?.match) return;
-    const match = refereeSelectedEntry.match;
-    const officialStatus = getMatchStatusLabel(match, phaseRules);
-    const remoteA = match.submittedScoreA ?? '';
-    const remoteB = match.submittedScoreB ?? '';
-    const remoteSubmittedAt = toTimestamp(match.submittedAt);
-    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
-    const protectedStillPending = Boolean(
-      protectedEdit
-      && (
-        String(remoteA ?? '') !== String(protectedEdit.submittedScoreA ?? '')
-        || String(remoteB ?? '') !== String(protectedEdit.submittedScoreB ?? '')
-        || remoteSubmittedAt < toTimestamp(protectedEdit.submittedAt)
-      )
-    );
-    const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
-    setRefereeSelectedScoreDraft((current) => {
-      if (!current || current.matchId !== match.id) return current;
-      if (shouldClear && !protectedStillPending) return null;
-      const draftMatchesRemote = String(current.scoreA ?? '') === String(remoteA ?? '') && String(current.scoreB ?? '') === String(remoteB ?? '');
-      const draftExpired = !match.refereeInProgress && !match.matchInProgress;
-      if ((draftMatchesRemote || draftExpired) && !protectedStillPending) {
-        return {
-          matchId: match.id,
-          scoreA: remoteA,
-          scoreB: remoteB,
-          submittedAt: match.submittedAt ?? null,
-        };
-      }
-      return current;
-    });
-    commitRefereeScoreDrafts((current) => {
-      const draft = current[match.id];
-      if (!draft) return current;
-      if (shouldClear && !protectedStillPending) {
-        const next = { ...current };
-        delete next[match.id];
-        return next;
-      }
-      const draftMatchesRemote = String(draft.scoreA ?? '') === String(remoteA ?? '') && String(draft.scoreB ?? '') === String(remoteB ?? '');
-      const draftExpired = !match.refereeInProgress && !match.matchInProgress;
-      if ((draftMatchesRemote || draftExpired) && !protectedStillPending) {
-        return {
-          ...current,
-          [match.id]: {
-            scoreA: remoteA,
-            scoreB: remoteB,
-            submittedAt: match.submittedAt ?? null,
-          },
-        };
-      }
-      return current;
-    });
-  }, [refereeSelectedEntry?.match?.id, refereeSelectedEntry?.match?.submittedScoreA, refereeSelectedEntry?.match?.submittedScoreB, refereeSelectedEntry?.match?.submittedAt, refereeSelectedEntry?.match?.refereeInProgress, refereeSelectedEntry?.match?.matchInProgress, refereeSelectedEntry?.match?.validatedAt, phaseRules]);
 
   useEffect(() => {
     const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
@@ -2909,115 +2643,20 @@ export default function App() {
 
   function updateMatchesInScope(scope, updater) {
     const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
-    if (scope === 'championshipLeg1') {
-      setChampionshipLeg1((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        championshipLeg1Ref.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'championshipLeg2') {
-      setChampionshipLeg2((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        championshipLeg2Ref.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'quarters') {
-      setSingleKnockout((current) => {
-        const next = { ...current, quarters: applyUpdater(current.quarters) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'semis') {
-      setSingleKnockout((current) => {
-        const next = { ...current, semis: applyUpdater(current.semis) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'finals') {
-      setSingleKnockout((current) => {
-        const next = { ...current, finals: applyUpdater(current.finals) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'brassage1') {
-      setBrassage1((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        brassage1Ref.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'brassage2') {
-      setBrassage2((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        brassage2Ref.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'principale') {
-      setMainStage((current) => {
-        const next = { ...current, principaleMatches: applyUpdater(current.principaleMatches) };
-        mainStageRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'consolante') {
-      setMainStage((current) => {
-        const next = { ...current, consolanteMatches: applyUpdater(current.consolanteMatches) };
-        mainStageRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'principalQuarters') {
-      setKnockout((current) => {
-        const next = { ...current, principalQuarters: applyUpdater(current.principalQuarters) };
-        knockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'principalSemis') {
-      setKnockout((current) => {
-        const next = { ...current, principalSemis: applyUpdater(current.principalSemis) };
-        knockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'principalFinals') {
-      setKnockout((current) => {
-        const next = { ...current, principalFinals: applyUpdater(current.principalFinals) };
-        knockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    if (scope === 'consolanteSemis') {
-      setKnockout((current) => {
-        const next = { ...current, consolanteSemis: applyUpdater(current.consolanteSemis) };
-        knockoutRef.current = next;
-        return next;
-      });
-      return;
-    }
-    setKnockout((current) => {
-      const next = { ...current, consolanteFinals: applyUpdater(current.consolanteFinals) };
-      knockoutRef.current = next;
-      return next;
-    });
+    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: applyUpdater(current.quarters) }));
+    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: applyUpdater(current.semis) }));
+    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: applyUpdater(current.finals) }));
+    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: applyUpdater(current.principaleMatches) }));
+    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: applyUpdater(current.consolanteMatches) }));
+    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: applyUpdater(current.principalQuarters) }));
+    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: applyUpdater(current.principalSemis) }));
+    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: applyUpdater(current.principalFinals) }));
+    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: applyUpdater(current.consolanteSemis) }));
+    return setKnockout((current) => ({ ...current, consolanteFinals: applyUpdater(current.consolanteFinals) }));
   }
 
   function getPendingMatchSnapshot(match) {
@@ -3060,121 +2699,41 @@ export default function App() {
   }
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const fallbackMatch = findMatchInScope(scope, matchId);
-    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
-    const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
-    const editTimestamp = new Date().toISOString();
-    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
-    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
-    const nextScoreA = field === 'scoreA'
-      ? normalized
-      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
-    const nextScoreB = field === 'scoreB'
-      ? normalized
-      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
-    const nextDraft = {
-      matchId,
-      scoreA: nextScoreA,
-      scoreB: nextScoreB,
-      submittedAt: editTimestamp,
-    };
-    const localPendingSnapshot = {
-      submittedScoreA: String(nextScoreA ?? ''),
-      submittedScoreB: String(nextScoreB ?? ''),
-      submittedAt: editTimestamp,
-    };
-
-    refereeSelectedScoreDraftRef.current = nextDraft;
-    setRefereeSelectedScoreDraft(nextDraft);
-    commitRefereeScoreDrafts((current) => ({
-      ...current,
-      [matchId]: {
-        ...(current[matchId] || { scoreA: '', scoreB: '' }),
-        scoreA: nextScoreA,
-        scoreB: nextScoreB,
-        submittedAt: editTimestamp,
-      },
-    }));
-    recentRefereeLocalEditsRef.current.set(matchId, {
-      ...localPendingSnapshot,
-      until: Date.now() + 30000,
-    });
+    const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
+      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
       return {
         ...match,
-        submittedScoreA: nextScoreA,
-        submittedScoreB: nextScoreB,
-        submittedAt: editTimestamp,
+        [field]: match[field],
+        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
+        submittedAt: new Date().toISOString(),
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(120);
+    queueBackgroundCloudSave(0);
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
-    const fallbackMatch = findMatchInScope(scope, matchId);
-    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
-    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
-    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
-    const currentRawValue = field === 'scoreA'
-      ? (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA)
-      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB);
-    const currentValue = toNumber(currentRawValue) ?? 0;
-    const computedNextValue = String(Math.max(0, currentValue + delta));
-    const editTimestamp = new Date().toISOString();
-    const nextScoreA = field === 'scoreA'
-      ? computedNextValue
-      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
-    const nextScoreB = field === 'scoreB'
-      ? computedNextValue
-      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
-    const nextDraft = {
-      matchId,
-      scoreA: nextScoreA,
-      scoreB: nextScoreB,
-      submittedAt: editTimestamp,
-    };
-    const localPendingSnapshot = {
-      submittedScoreA: String(nextScoreA ?? ''),
-      submittedScoreB: String(nextScoreB ?? ''),
-      submittedAt: editTimestamp,
-    };
-
-    refereeSelectedScoreDraftRef.current = nextDraft;
-    setRefereeSelectedScoreDraft(nextDraft);
-    commitRefereeScoreDrafts((current) => ({
-      ...current,
-      [matchId]: {
-        ...(current[matchId] || { scoreA: '', scoreB: '' }),
-        scoreA: nextScoreA,
-        scoreB: nextScoreB,
-        submittedAt: editTimestamp,
-      },
-    }));
-    recentRefereeLocalEditsRef.current.set(matchId, {
-      ...localPendingSnapshot,
-      until: Date.now() + 30000,
-    });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
+      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
+      const currentValue = toNumber(field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB) ?? 0;
+      const nextValue = Math.max(0, currentValue + delta);
       return {
         ...match,
-        submittedScoreA: nextScoreA,
-        submittedScoreB: nextScoreB,
-        submittedAt: editTimestamp,
+        [field]: match[field],
+        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: nextValue,
+        submittedAt: new Date().toISOString(),
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(120);
+    queueBackgroundCloudSave(0);
   }
 
   function approveRefereeScore(scope, matchId) {
-    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
@@ -3195,7 +2754,6 @@ export default function App() {
   }
 
   function rejectRefereeScore(scope, matchId) {
-    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
         ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), refereeInProgress: false, matchInProgress: false }
@@ -3205,7 +2763,6 @@ export default function App() {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
-    recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -3216,14 +2773,12 @@ export default function App() {
         matchInProgress: true,
       };
     }));
-    setRefereeSelectedScoreDraft((current) => (current && current.matchId === matchId ? null : current));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
     queueBackgroundCloudSave(250);
   }
 
   function releaseRefereeSelectedMatch(entry) {
     if (!entry?.match) {
-      setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
       return;
     }
@@ -3238,7 +2793,6 @@ export default function App() {
       )));
       queueBackgroundCloudSave();
     }
-    setRefereeSelectedScoreDraft(null);
     setRefereeSelectedMatch(null);
   }
 
@@ -3434,21 +2988,15 @@ export default function App() {
 
   function renderRefereeSelectedMatch(entry) {
     if (!entry?.match) return null;
-    const { scope, title, match: entryMatch } = entry;
-    const match = findMatchInScope(scope, entryMatch.id) || entryMatch;
+    const { scope, title, match } = entry;
     const schedule = scheduleData.scheduleMap[match.id];
     const pendingStatus = getPendingStatus(match);
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const isLocked = officialStatus === 'Valide';
-    const selectedDraft = refereeSelectedScoreDraft?.matchId === match.id ? refereeSelectedScoreDraft : null;
-    const preferredDraft = getPreferredRefereeDraft(match);
-    const liveStoredDraft = refereeScoreDraftsRef.current?.[match.id] || null;
-    const draftScoreA = selectedDraft?.scoreA ?? liveStoredDraft?.scoreA ?? preferredDraft?.scoreA ?? getRefereeDraftValue(match, 'scoreA');
-    const draftScoreB = selectedDraft?.scoreB ?? liveStoredDraft?.scoreB ?? preferredDraft?.scoreB ?? getRefereeDraftValue(match, 'scoreB');
-    const displayScoreA = isLocked ? (match.scoreA ?? '') : (draftScoreA !== undefined ? draftScoreA : (match.submittedScoreA ?? ''));
-    const displayScoreB = isLocked ? (match.scoreB ?? '') : (draftScoreB !== undefined ? draftScoreB : (match.submittedScoreB ?? ''));
-    const pendingA = toNumber(displayScoreA !== '' ? displayScoreA : match.submittedScoreA);
-    const pendingB = toNumber(displayScoreB !== '' ? displayScoreB : match.submittedScoreB);
+    const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
+    const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
+    const pendingA = toNumber(match.submittedScoreA);
+    const pendingB = toNumber(match.submittedScoreB);
     const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
     const canChooseAnotherMatch = !hasStarted;
     const badgeText = officialStatus === 'Valide'
