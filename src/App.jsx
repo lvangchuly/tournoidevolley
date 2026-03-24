@@ -1163,8 +1163,6 @@ export default function App() {
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
-  const latestPersistedStateRef = useRef(null);
-  const sharedTournamentIdRef = useRef(String(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley')).trim());
   const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
   const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
   const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
@@ -1183,6 +1181,7 @@ export default function App() {
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
   const recentRefereeLocalEditsRef = useRef(new Map());
+  const latestPersistedStateRef = useRef(null);
   const pendingFreshTournamentTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -1280,23 +1279,6 @@ export default function App() {
     allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
-  useEffect(() => {
-    const normalizedSharedId = String(sharedTournamentId || '').trim();
-    sharedTournamentIdRef.current = normalizedSharedId;
-    latestPersistedStateRef.current = {
-      teams,
-      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId: normalizedSharedId },
-      meta: { lastSavedAt, remoteSavedAt },
-      brassage1,
-      brassage2,
-      mainStage,
-      knockout,
-      championshipLeg1,
-      championshipLeg2,
-      singleKnockout,
-    };
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, lastSavedAt, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
-
   function getPersistedState(savedAt = lastSavedAt) {
     return {
       teams,
@@ -1340,7 +1322,7 @@ export default function App() {
   }
 
   function queueBackgroundCloudSave(delay = 150) {
-    if (typeof window === 'undefined' || !sharedTournamentIdRef.current) return;
+    if (typeof window === 'undefined' || !sharedTournamentId) return;
     if (backgroundCloudSaveTimeoutRef.current) {
       window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
     }
@@ -1597,15 +1579,11 @@ export default function App() {
       }
       return false;
     }
-    const effectiveId = sharedTournamentIdRef.current || buildDefaultSharedTournamentId(tournamentName);
-    if (!sharedTournamentIdRef.current) {
-      sharedTournamentIdRef.current = effectiveId;
-      setSharedTournamentId(effectiveId);
-    }
+    const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
+    if (!sharedTournamentId) setSharedTournamentId(effectiveId);
     const savedAt = new Date().toISOString();
-    const payload = latestPersistedStateRef.current
-      ? JSON.parse(JSON.stringify(latestPersistedStateRef.current))
-      : getPersistedState(savedAt);
+    const basePayload = latestPersistedStateRef.current || getPersistedState();
+    const payload = safeClone(basePayload, {});
     payload.settings = { ...(payload.settings || {}), sharedTournamentId: effectiveId };
     payload.meta = { ...(payload.meta || {}), lastSavedAt: savedAt, remoteSavedAt: savedAt };
     if (!silent) {
@@ -1650,9 +1628,10 @@ export default function App() {
   }
 
   useEffect(() => {
+    latestPersistedStateRef.current = getPersistedState();
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
@@ -1982,36 +1961,15 @@ export default function App() {
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const remoteA = match.submittedScoreA ?? '';
     const remoteB = match.submittedScoreB ?? '';
-    const recentLocalEdit = recentRefereeLocalEditsRef.current.get(match.id);
-    const recentLocalEditActive = Boolean(recentLocalEdit && recentLocalEdit.until > Date.now());
-    const remoteCaughtUpToRecentLocalEdit = Boolean(
-      recentLocalEdit
-      && String(remoteA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
-      && String(remoteB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
-      && toTimestamp(match.submittedAt) >= toTimestamp(recentLocalEdit.submittedAt)
-    );
-
     setRefereeScoreDrafts((current) => {
       const draft = current[match.id];
       if (!draft) return current;
-      const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '' && !recentLocalEditActive);
+      const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
       if (shouldClear) {
         const next = { ...current };
         delete next[match.id];
         return next;
       }
-
-      if (recentLocalEditActive && !remoteCaughtUpToRecentLocalEdit) {
-        return {
-          ...current,
-          [match.id]: {
-            scoreA: recentLocalEdit.submittedScoreA ?? draft.scoreA ?? '',
-            scoreB: recentLocalEdit.submittedScoreB ?? draft.scoreB ?? '',
-            submittedAt: recentLocalEdit.submittedAt ?? draft.submittedAt ?? null,
-          },
-        };
-      }
-
       const draftMatchesRemote = String(draft.scoreA ?? '') === String(remoteA ?? '') && String(draft.scoreB ?? '') === String(remoteB ?? '');
       const draftExpired = !match.refereeInProgress && !match.matchInProgress;
       if (draftMatchesRemote || draftExpired) {
@@ -2748,117 +2706,22 @@ export default function App() {
     setKnockout((current) => ({ ...current, principalFinals: stampGeneratedMatches(assignSchedule(finalsRaw, startSlot)) }));
   }
 
-  function syncLatestPersistedMatches(scope, nextMatches) {
-    const persisted = latestPersistedStateRef.current
-      ? JSON.parse(JSON.stringify(latestPersistedStateRef.current))
-      : getPersistedState();
-    const safeMatches = dedupeMatches(Array.isArray(nextMatches) ? nextMatches : []);
-
-    if (scope === 'championshipLeg1') {
-      persisted.championshipLeg1 = { ...(persisted.championshipLeg1 || { pools: [], matches: [] }), matches: safeMatches };
-    } else if (scope === 'championshipLeg2') {
-      persisted.championshipLeg2 = { ...(persisted.championshipLeg2 || { pools: [], matches: [] }), matches: safeMatches };
-    } else if (scope === 'quarters') {
-      persisted.singleKnockout = { ...(persisted.singleKnockout || { quarters: [], semis: [], finals: [] }), quarters: safeMatches };
-    } else if (scope === 'semis') {
-      persisted.singleKnockout = { ...(persisted.singleKnockout || { quarters: [], semis: [], finals: [] }), semis: safeMatches };
-    } else if (scope === 'finals') {
-      persisted.singleKnockout = { ...(persisted.singleKnockout || { quarters: [], semis: [], finals: [] }), finals: safeMatches };
-    } else if (scope === 'brassage1') {
-      persisted.brassage1 = { ...(persisted.brassage1 || { pools: [], matches: [] }), matches: safeMatches };
-    } else if (scope === 'brassage2') {
-      persisted.brassage2 = { ...(persisted.brassage2 || { pools: [], matches: [] }), matches: safeMatches };
-    } else if (scope === 'principale') {
-      persisted.mainStage = { ...(persisted.mainStage || { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }), principaleMatches: safeMatches };
-    } else if (scope === 'consolante') {
-      persisted.mainStage = { ...(persisted.mainStage || { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] }), consolanteMatches: safeMatches };
-    } else if (scope === 'principalQuarters') {
-      persisted.knockout = { ...(persisted.knockout || { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }), principalQuarters: safeMatches };
-    } else if (scope === 'principalSemis') {
-      persisted.knockout = { ...(persisted.knockout || { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }), principalSemis: safeMatches };
-    } else if (scope === 'principalFinals') {
-      persisted.knockout = { ...(persisted.knockout || { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }), principalFinals: safeMatches };
-    } else if (scope === 'consolanteSemis') {
-      persisted.knockout = { ...(persisted.knockout || { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }), consolanteSemis: safeMatches };
-    } else {
-      persisted.knockout = { ...(persisted.knockout || { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] }), consolanteFinals: safeMatches };
-    }
-
-    latestPersistedStateRef.current = persisted;
-  }
-
   function updateMatchesInScope(scope, updater) {
     const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
-    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => {
-      const nextMatches = applyUpdater(current.matches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, matches: nextMatches };
-    });
-    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => {
-      const nextMatches = applyUpdater(current.matches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, matches: nextMatches };
-    });
-    if (scope === 'quarters') return setSingleKnockout((current) => {
-      const nextMatches = applyUpdater(current.quarters);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, quarters: nextMatches };
-    });
-    if (scope === 'semis') return setSingleKnockout((current) => {
-      const nextMatches = applyUpdater(current.semis);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, semis: nextMatches };
-    });
-    if (scope === 'finals') return setSingleKnockout((current) => {
-      const nextMatches = applyUpdater(current.finals);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, finals: nextMatches };
-    });
-    if (scope === 'brassage1') return setBrassage1((current) => {
-      const nextMatches = applyUpdater(current.matches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, matches: nextMatches };
-    });
-    if (scope === 'brassage2') return setBrassage2((current) => {
-      const nextMatches = applyUpdater(current.matches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, matches: nextMatches };
-    });
-    if (scope === 'principale') return setMainStage((current) => {
-      const nextMatches = applyUpdater(current.principaleMatches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, principaleMatches: nextMatches };
-    });
-    if (scope === 'consolante') return setMainStage((current) => {
-      const nextMatches = applyUpdater(current.consolanteMatches);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, consolanteMatches: nextMatches };
-    });
-    if (scope === 'principalQuarters') return setKnockout((current) => {
-      const nextMatches = applyUpdater(current.principalQuarters);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, principalQuarters: nextMatches };
-    });
-    if (scope === 'principalSemis') return setKnockout((current) => {
-      const nextMatches = applyUpdater(current.principalSemis);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, principalSemis: nextMatches };
-    });
-    if (scope === 'principalFinals') return setKnockout((current) => {
-      const nextMatches = applyUpdater(current.principalFinals);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, principalFinals: nextMatches };
-    });
-    if (scope === 'consolanteSemis') return setKnockout((current) => {
-      const nextMatches = applyUpdater(current.consolanteSemis);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, consolanteSemis: nextMatches };
-    });
-    return setKnockout((current) => {
-      const nextMatches = applyUpdater(current.consolanteFinals);
-      syncLatestPersistedMatches(scope, nextMatches);
-      return { ...current, consolanteFinals: nextMatches };
-    });
+    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: applyUpdater(current.quarters) }));
+    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: applyUpdater(current.semis) }));
+    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: applyUpdater(current.finals) }));
+    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: applyUpdater(current.matches) }));
+    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: applyUpdater(current.principaleMatches) }));
+    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: applyUpdater(current.consolanteMatches) }));
+    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: applyUpdater(current.principalQuarters) }));
+    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: applyUpdater(current.principalSemis) }));
+    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: applyUpdater(current.principalFinals) }));
+    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: applyUpdater(current.consolanteSemis) }));
+    return setKnockout((current) => ({ ...current, consolanteFinals: applyUpdater(current.consolanteFinals) }));
   }
 
   function getPendingMatchSnapshot(match) {
@@ -2936,7 +2799,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 30000,
+        until: Date.now() + 15000,
       });
     }
     queueBackgroundCloudSave(0);
@@ -2968,23 +2831,10 @@ export default function App() {
       };
       return nextMatch;
     }));
-    if (computedNextValue !== null) {
-      setRefereeScoreDrafts((current) => {
-        const existing = current[matchId] || { scoreA: '', scoreB: '' };
-        return {
-          ...current,
-          [matchId]: {
-            ...existing,
-            [field]: computedNextValue,
-            submittedAt: editTimestamp,
-          },
-        };
-      });
-    }
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 30000,
+        until: Date.now() + 15000,
       });
     }
     queueBackgroundCloudSave(0);
