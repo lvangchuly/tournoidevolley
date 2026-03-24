@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19R';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19S';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19R';
+const APP_VERSION = 'V19S';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1447,7 +1447,7 @@ export default function App() {
       return safeLocalMatches;
     }
     if (!safeRemoteMatches.length) {
-      return [];
+      return safeLocalMatches;
     }
 
     const localById = new Map(safeLocalMatches.map((match) => [match.id, match]));
@@ -1612,12 +1612,52 @@ export default function App() {
     return dedupeMatches(merged);
   }
 
+
+  function mergeRemoteLeagueState(currentState, remoteState) {
+    const normalizedCurrent = normalizeLeagueState(currentState || { pools: [], matches: [] });
+    const normalizedRemote = normalizeLeagueState(remoteState || { pools: [], matches: [] });
+    const remoteHasPools = Array.isArray(normalizedRemote.pools) && normalizedRemote.pools.length > 0;
+    return {
+      ...normalizedCurrent,
+      ...normalizedRemote,
+      pools: remoteHasPools ? normalizedRemote.pools : normalizedCurrent.pools,
+      matches: mergeRemoteMatches(normalizedCurrent.matches, normalizedRemote.matches),
+    };
+  }
+
+  function mergeRemoteMainStageState(currentState, remoteState) {
+    const normalizedCurrent = normalizeMainStageState(currentState || {});
+    const normalizedRemote = normalizeMainStageState(remoteState || {});
+    return {
+      ...normalizedCurrent,
+      ...normalizedRemote,
+      principalePools: normalizedRemote.principalePools?.length ? normalizedRemote.principalePools : normalizedCurrent.principalePools,
+      principaleMatches: mergeRemoteMatches(normalizedCurrent.principaleMatches, normalizedRemote.principaleMatches || []),
+      consolantePools: normalizedRemote.consolantePools?.length ? normalizedRemote.consolantePools : normalizedCurrent.consolantePools,
+      consolanteMatches: mergeRemoteMatches(normalizedCurrent.consolanteMatches, normalizedRemote.consolanteMatches || []),
+    };
+  }
+
+  function buildCurrentTeamContext() {
+    const currentTeams = normalizeTeamsList(teamsRef.current || []).filter((team) => (team.name || '').trim() !== '');
+    return {
+      teams: currentTeams,
+      teamMap: new Map(currentTeams.map((team) => [team.id, team])),
+      teamIds: currentTeams.map((team) => team.id),
+    };
+  }
+
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
 
+    const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
+    const localSnapshotTimestamp = toTimestamp(latestPersistedStateRef.current?.meta?.lastSavedAt || latestPersistedStateRef.current?.meta?.remoteSavedAt || null);
+    if (remotePayloadTimestamp && localSnapshotTimestamp && remotePayloadTimestamp < localSnapshotTimestamp) {
+      return;
+    }
+
     const pendingFreshTournamentTimestamp = pendingFreshTournamentTimestampRef.current;
     if (pendingFreshTournamentTimestamp) {
-      const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
       const pendingResetTimestamp = toTimestamp(pendingFreshTournamentTimestamp);
       if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingResetTimestamp) {
         return;
@@ -1628,13 +1668,12 @@ export default function App() {
     const remoteMatchCount = countMatchesInPersistedState(payload);
     const localMatchCount = allCompetitionMatches.length;
     const remoteTeamCount = Array.isArray(payload?.teams) ? payload.teams.length : 0;
-    const shouldHydrateStructure = mode !== 'organizer' && (
+    const shouldHydrateStructure =
       (remoteMatchCount > 0 && localMatchCount === 0)
       || remoteMatchCount > localMatchCount
-      || (remoteTeamCount > 0 && teams.length < remoteTeamCount)
-    );
+      || (remoteTeamCount > 0 && teams.length < remoteTeamCount);
 
-    if (shouldHydrateStructure) {
+    if (shouldHydrateStructure && mode !== 'referee') {
       applyPersistedState(payload, { preserveSelection: true });
     }
 
@@ -1643,14 +1682,10 @@ export default function App() {
     if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
     }
-    if (payload.brassage1?.matches) setBrassage1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage1.matches) }));
-    if (payload.brassage2?.matches) setBrassage2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage2.matches) }));
-    if (payload.mainStage?.principaleMatches || payload.mainStage?.consolanteMatches) {
-      setMainStage((current) => ({
-        ...current,
-        principaleMatches: mergeRemoteMatches(current.principaleMatches, payload.mainStage?.principaleMatches || []),
-        consolanteMatches: mergeRemoteMatches(current.consolanteMatches, payload.mainStage?.consolanteMatches || []),
-      }));
+    if (payload.brassage1) setBrassage1((current) => mergeRemoteLeagueState(current, payload.brassage1));
+    if (payload.brassage2) setBrassage2((current) => mergeRemoteLeagueState(current, payload.brassage2));
+    if (payload.mainStage) {
+      setMainStage((current) => mergeRemoteMainStageState(current, payload.mainStage));
     }
     if (payload.knockout) {
       setKnockout((current) => ({
@@ -1662,8 +1697,8 @@ export default function App() {
         consolanteFinals: mergeRemoteMatches(current.consolanteFinals, payload.knockout?.consolanteFinals || []),
       }));
     }
-    if (payload.championshipLeg1?.matches) setChampionshipLeg1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg1.matches) }));
-    if (payload.championshipLeg2?.matches) setChampionshipLeg2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg2.matches) }));
+    if (payload.championshipLeg1) setChampionshipLeg1((current) => mergeRemoteLeagueState(current, payload.championshipLeg1));
+    if (payload.championshipLeg2) setChampionshipLeg2((current) => mergeRemoteLeagueState(current, payload.championshipLeg2));
     if (payload.singleKnockout) {
       setSingleKnockout((current) => ({
         ...current,
@@ -2717,16 +2752,20 @@ export default function App() {
 
   function generateBrassage2() {
     if (isSmallTournamentMode) {
-      if (championshipLeg1.matches.length === 0) {
+      const currentLeg1 = championshipLeg1Ref.current;
+      const currentLeg2 = championshipLeg2Ref.current;
+      if (currentLeg1.matches.length === 0) {
         window.alert('Génère d’abord le Championnat Aller.');
         return;
       }
-      if (!stageValidation.championnatAllerComplete) {
+      const championshipAllerComplete = currentLeg1.matches.length > 0 && currentLeg1.matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      if (!championshipAllerComplete) {
         window.alert('Tous les scores du Championnat Aller doivent être valides avant de générer le Championnat Retour.');
         return;
       }
-      if (!confirmClearStageScores(championshipLeg2.matches, 'le Championnat Retour')) return;
-      const teamIds = championshipLeg1.pools[0]?.teamIds || sortTeamsForSeeding(activeTeams).map((team) => team.id);
+      if (!confirmClearStageScores(currentLeg2.matches, 'le Championnat Retour')) return;
+      const { teams: currentTeams } = buildCurrentTeamContext();
+      const teamIds = currentLeg1.pools[0]?.teamIds || sortTeamsForSeeding(currentTeams).map((team) => team.id);
       const pools = createChampionshipPool(teamIds, CHAMPIONSHIP_RETOUR_POOL_NAME);
       const matches = createChampionshipMatches(teamIds, 'Championnat Retour', CHAMPIONSHIP_RETOUR_POOL_NAME, true);
       setChampionshipLeg2({ pools, matches });
@@ -2735,18 +2774,23 @@ export default function App() {
       queueBackgroundCloudSave(250);
       return;
     }
-    if (brassage1.matches.length === 0) {
+    const currentBrassage1 = brassage1Ref.current;
+    const currentBrassage2 = brassage2Ref.current;
+    if (currentBrassage1.matches.length === 0) {
       window.alert('Génère d’abord le brassage 1.');
       return;
     }
-    if (!stageValidation.brassage1Complete) {
+    const currentVisibleBrassage1Matches = filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1');
+    const brassage1Complete = currentVisibleBrassage1Matches.length > 0 && currentVisibleBrassage1Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!brassage1Complete) {
       window.alert('Tous les scores du Brassage 1 doivent être valides avant de générer le Brassage 2.');
       return;
     }
-    if (!confirmClearStageScores(brassage2.matches, 'le brassage 2')) return;
-    const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
+    if (!confirmClearStageScores(currentBrassage2.matches, 'le brassage 2')) return;
+    const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
+    const rankedIds = computeRanking(currentTeamIds, currentVisibleBrassage1Matches, currentTeamMap, phaseRulesRef.current).map((row) => row.teamId);
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
-    const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(brassage1.matches.length));
+    const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(currentBrassage1.matches.length));
     setBrassage2({ pools, matches });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
@@ -2842,19 +2886,25 @@ export default function App() {
   }
 
   function generateMainStage() {
-    if (brassage2.matches.length === 0) {
+    const currentBrassage1 = brassage1Ref.current;
+    const currentBrassage2 = brassage2Ref.current;
+    const currentMainStage = mainStageRef.current;
+    if (currentBrassage2.matches.length === 0) {
       window.alert('Génère d’abord le brassage 2.');
       return;
     }
-    if (!stageValidation.brassage2Complete) {
+    const currentVisibleBrassage2Matches = filterMatchesToPools(currentBrassage2.matches, currentBrassage2.pools, 'Brassage 2');
+    const brassage2Complete = currentVisibleBrassage2Matches.length > 0 && currentVisibleBrassage2Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!brassage2Complete) {
       window.alert('Tous les scores du Brassage 2 doivent être valides avant de générer la phase suivante.');
       return;
     }
     if (!confirmClearStageScores([
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
+      ...currentMainStage.principaleMatches,
+      ...currentMainStage.consolanteMatches,
     ], 'la principale / consolante')) return;
-    const rankedIds = rankingAfterBrassages.map((row) => row.teamId);
+    const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
+    const rankedIds = computeRanking(currentTeamIds, [...filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1'), ...currentVisibleBrassage2Matches], currentTeamMap, phaseRulesRef.current).map((row) => row.teamId);
     const principaleIds = rankedIds.slice(0, 12);
     const consolanteIds = rankedIds.slice(12, 18);
     const principalePools = createPools(principaleIds, PRINCIPALE_POOL_NAMES);
@@ -2862,7 +2912,7 @@ export default function App() {
     const scheduled = scheduleMainStageMatches(
       principalePools,
       consolantePools,
-      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length),
+      stageSlotCount(currentBrassage1.matches.length) + stageSlotCount(currentBrassage2.matches.length),
     );
 
     setMainStage({
