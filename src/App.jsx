@@ -828,6 +828,32 @@ function sanitizeKnockoutMatches(matches) {
   return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match?.teamAId && match?.teamBId);
 }
 
+function hasBothTeamsDefined(match) {
+  return Boolean(match?.teamAId && match?.teamBId);
+}
+
+function clearMatchScores(match) {
+  return {
+    ...match,
+    scoreA: '',
+    scoreB: '',
+    submittedScoreA: '',
+    submittedScoreB: '',
+    submittedAt: null,
+    validatedAt: null,
+    manualOverrideAt: null,
+    refereeInProgress: false,
+    matchInProgress: false,
+  };
+}
+
+function stampGeneratedMatches(matches, generatedAt = new Date().toISOString()) {
+  return (Array.isArray(matches) ? matches : []).map((match) => ({
+    ...clearMatchScores(match),
+    generatedAt,
+  }));
+}
+
 function Button({ children, variant = 'primary', ...props }) {
   return (
     <button className={`btn btn-${variant}`} {...props}>
@@ -1212,23 +1238,23 @@ export default function App() {
     ...knockout.consolanteFinals,
   ] , teamMap, phaseRules), [allTeamIds, isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
 
-  const allCompetitionMatches = useMemo(() => (isSmallTournamentMode ? [
+  const allCompetitionMatches = useMemo(() => dedupeMatches(isSmallTournamentMode ? [
     ...championshipLeg1.matches,
     ...championshipLeg2.matches,
     ...singleKnockout.quarters,
     ...singleKnockout.semis,
     ...singleKnockout.finals,
   ] : [
-    ...brassage1.matches,
-    ...brassage2.matches,
-    ...mainStage.principaleMatches,
-    ...mainStage.consolanteMatches,
-    ...knockout.principalQuarters,
-    ...knockout.principalSemis,
-    ...knockout.principalFinals,
-    ...knockout.consolanteSemis,
-    ...knockout.consolanteFinals,
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout]);
+    ...visibleBrassage1Matches,
+    ...visibleBrassage2Matches,
+    ...visiblePrincipaleMatches,
+    ...visibleConsolanteMatches,
+    ...sanitizeKnockoutMatches(knockout.principalQuarters),
+    ...sanitizeKnockoutMatches(knockout.principalSemis),
+    ...sanitizeKnockoutMatches(knockout.principalFinals),
+    ...sanitizeKnockoutMatches(knockout.consolanteSemis),
+    ...sanitizeKnockoutMatches(knockout.consolanteFinals),
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout]);
 
   const activeInProgressTeamIds = useMemo(() => {
     const ids = new Set();
@@ -1831,7 +1857,8 @@ export default function App() {
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
   const filterRefereeVisibleMatches = useCallback((matches) => (
-    matches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide')
+    dedupeMatches(Array.isArray(matches) ? matches : [])
+      .filter((match) => hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
   ), [phaseRules]);
 
   const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
@@ -2465,10 +2492,10 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pA[1]?.teamId || null),
     ]);
-    const principalQuarters = assignSchedule(
+    const principalQuarters = stampGeneratedMatches(assignSchedule(
       principalQuartersRaw,
       stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length),
-    );
+    ));
     setKnockout((current) => ({
       ...current,
       principalQuarters: sanitizeKnockoutMatches(principalQuarters),
@@ -2498,10 +2525,10 @@ export default function App() {
       makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
       makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
     ]);
-    const consolanteSemis = assignSchedule(
+    const consolanteSemis = stampGeneratedMatches(assignSchedule(
       consolanteSemisRaw,
       stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length),
-    );
+    ));
     setKnockout((current) => ({
       ...current,
       consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
@@ -2536,7 +2563,7 @@ export default function App() {
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
     setKnockout((current) => ({
       ...current,
-      principalSemis: sanitizeKnockoutMatches(assignSchedule(principalSemisRaw, startSlot)),
+      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(principalSemisRaw, startSlot))),
       principalFinals: [],
     }));
     queueBackgroundCloudSave(250);
@@ -2562,7 +2589,7 @@ export default function App() {
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
     setKnockout((current) => ({
       ...current,
-      consolanteFinals: sanitizeKnockoutMatches(assignSchedule(consolanteFinalsRaw, startSlot)),
+      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(consolanteFinalsRaw, startSlot))),
     }));
     queueBackgroundCloudSave(250);
   }
@@ -2584,7 +2611,7 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
     ];
     const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length) + stageSlotCount(knockout.principalSemis.length + knockout.consolanteFinals.length);
-    setKnockout((current) => ({ ...current, principalFinals: assignSchedule(finalsRaw, startSlot) }));
+    setKnockout((current) => ({ ...current, principalFinals: stampGeneratedMatches(assignSchedule(finalsRaw, startSlot)) }));
   }
 
   function updateMatchesInScope(scope, updater) {
