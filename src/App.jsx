@@ -1025,8 +1025,14 @@ function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
           </div>
         </div>
         <div className="public-match-side-note">
-          <div className="public-end-label">{endLabel}</div>
-          <div className="public-end-time">{endText}</div>
+          <div className="public-start-block">
+            <div className="public-start-label">Début à</div>
+            <div className="public-start-time">{startText}</div>
+          </div>
+          <div className="public-end-block">
+            <div className="public-end-label">{endLabel}</div>
+            <div className="public-end-time">{endText}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1245,16 +1251,16 @@ export default function App() {
     ...singleKnockout.semis,
     ...singleKnockout.finals,
   ] : [
-    ...filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'),
-    ...filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'),
-    ...filterMatchesToPools(mainStage.principaleMatches, mainStage.principalePools, 'Principale'),
-    ...filterMatchesToPools(mainStage.consolanteMatches, mainStage.consolantePools, 'Consolante'),
+    ...visibleBrassage1Matches,
+    ...visibleBrassage2Matches,
+    ...visiblePrincipaleMatches,
+    ...visibleConsolanteMatches,
     ...sanitizeKnockoutMatches(knockout.principalQuarters),
     ...sanitizeKnockoutMatches(knockout.principalSemis),
     ...sanitizeKnockoutMatches(knockout.principalFinals),
     ...sanitizeKnockoutMatches(knockout.consolanteSemis),
     ...sanitizeKnockoutMatches(knockout.consolanteFinals),
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage1.pools, brassage2.matches, brassage2.pools, mainStage.principaleMatches, mainStage.principalePools, mainStage.consolanteMatches, mainStage.consolantePools, knockout]);
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout]);
 
   const activeInProgressTeamIds = useMemo(() => {
     const ids = new Set();
