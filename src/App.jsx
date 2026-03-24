@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19W';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19X';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19W';
+const APP_VERSION = 'V19X';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3220,114 +3220,86 @@ export default function App() {
   function updateMatchesInScope(scope, updater) {
     const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
     if (scope === 'championshipLeg1') {
-      setChampionshipLeg1((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        championshipLeg1Ref.current = next;
-        return next;
-      });
+      const next = { ...championshipLeg1Ref.current, matches: applyUpdater(championshipLeg1Ref.current?.matches) };
+      championshipLeg1Ref.current = next;
+      setChampionshipLeg1(next);
       return;
     }
     if (scope === 'championshipLeg2') {
-      setChampionshipLeg2((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        championshipLeg2Ref.current = next;
-        return next;
-      });
+      const next = { ...championshipLeg2Ref.current, matches: applyUpdater(championshipLeg2Ref.current?.matches) };
+      championshipLeg2Ref.current = next;
+      setChampionshipLeg2(next);
       return;
     }
     if (scope === 'quarters') {
-      setSingleKnockout((current) => {
-        const next = { ...current, quarters: applyUpdater(current.quarters) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
+      const next = { ...singleKnockoutRef.current, quarters: applyUpdater(singleKnockoutRef.current?.quarters) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
       return;
     }
     if (scope === 'semis') {
-      setSingleKnockout((current) => {
-        const next = { ...current, semis: applyUpdater(current.semis) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
+      const next = { ...singleKnockoutRef.current, semis: applyUpdater(singleKnockoutRef.current?.semis) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
       return;
     }
     if (scope === 'finals') {
-      setSingleKnockout((current) => {
-        const next = { ...current, finals: applyUpdater(current.finals) };
-        singleKnockoutRef.current = next;
-        return next;
-      });
+      const next = { ...singleKnockoutRef.current, finals: applyUpdater(singleKnockoutRef.current?.finals) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
       return;
     }
     if (scope === 'brassage1') {
-      setBrassage1((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        brassage1Ref.current = next;
-        return next;
-      });
+      const next = { ...brassage1Ref.current, matches: applyUpdater(brassage1Ref.current?.matches) };
+      brassage1Ref.current = next;
+      setBrassage1(next);
       return;
     }
     if (scope === 'brassage2') {
-      setBrassage2((current) => {
-        const next = { ...current, matches: applyUpdater(current.matches) };
-        brassage2Ref.current = next;
-        return next;
-      });
+      const next = { ...brassage2Ref.current, matches: applyUpdater(brassage2Ref.current?.matches) };
+      brassage2Ref.current = next;
+      setBrassage2(next);
       return;
     }
     if (scope === 'principale') {
-      setMainStage((current) => {
-        const next = { ...current, principaleMatches: applyUpdater(current.principaleMatches) };
-        mainStageRef.current = next;
-        return next;
-      });
+      const next = { ...mainStageRef.current, principaleMatches: applyUpdater(mainStageRef.current?.principaleMatches) };
+      mainStageRef.current = next;
+      setMainStage(next);
       return;
     }
     if (scope === 'consolante') {
-      setMainStage((current) => {
-        const next = { ...current, consolanteMatches: applyUpdater(current.consolanteMatches) };
-        mainStageRef.current = next;
-        return next;
-      });
+      const next = { ...mainStageRef.current, consolanteMatches: applyUpdater(mainStageRef.current?.consolanteMatches) };
+      mainStageRef.current = next;
+      setMainStage(next);
       return;
     }
     if (scope === 'principalQuarters') {
-      setKnockout((current) => {
-        const next = { ...current, principalQuarters: applyUpdater(current.principalQuarters) };
-        knockoutRef.current = next;
-        return next;
-      });
+      const next = { ...knockoutRef.current, principalQuarters: applyUpdater(knockoutRef.current?.principalQuarters) };
+      knockoutRef.current = next;
+      setKnockout(next);
       return;
     }
     if (scope === 'principalSemis') {
-      setKnockout((current) => {
-        const next = { ...current, principalSemis: applyUpdater(current.principalSemis) };
-        knockoutRef.current = next;
-        return next;
-      });
+      const next = { ...knockoutRef.current, principalSemis: applyUpdater(knockoutRef.current?.principalSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
       return;
     }
     if (scope === 'principalFinals') {
-      setKnockout((current) => {
-        const next = { ...current, principalFinals: applyUpdater(current.principalFinals) };
-        knockoutRef.current = next;
-        return next;
-      });
+      const next = { ...knockoutRef.current, principalFinals: applyUpdater(knockoutRef.current?.principalFinals) };
+      knockoutRef.current = next;
+      setKnockout(next);
       return;
     }
     if (scope === 'consolanteSemis') {
-      setKnockout((current) => {
-        const next = { ...current, consolanteSemis: applyUpdater(current.consolanteSemis) };
-        knockoutRef.current = next;
-        return next;
-      });
+      const next = { ...knockoutRef.current, consolanteSemis: applyUpdater(knockoutRef.current?.consolanteSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
       return;
     }
-    setKnockout((current) => {
-      const next = { ...current, consolanteFinals: applyUpdater(current.consolanteFinals) };
-      knockoutRef.current = next;
-      return next;
-    });
+    const next = { ...knockoutRef.current, consolanteFinals: applyUpdater(knockoutRef.current?.consolanteFinals) };
+    knockoutRef.current = next;
+    setKnockout(next);
   }
 
   function getPendingMatchSnapshot(match) {
