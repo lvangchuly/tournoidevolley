@@ -441,7 +441,8 @@ tbody tr:last-child td { border-bottom: none; }
   gap: 12px;
   align-items: center;
 }
-.public-match-meta { margin-top: 10px; }
+.public-match-meta { display: inline-flex; align-items: baseline; gap: 6px; }
+.public-court-number { font-size: 1.28em; font-weight: 800; line-height: 1; color: #0f172a; }
 .public-match-grid {
   display: grid;
   grid-template-columns: 1fr auto;

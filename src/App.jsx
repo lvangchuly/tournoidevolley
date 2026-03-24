@@ -1011,7 +1011,7 @@ function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
         <div className="public-label">{statusLabel}</div>
         <div className="public-phase-label">{phaseAndGroup}</div>
       </div>
-      <div className="muted small public-match-meta">{startText} • Terrain {match.court}</div>
+      <div className="muted small public-match-meta">Terrain <span className="public-court-number">{match.court}</span></div>
       <div className="public-match-grid public-match-grid-featured">
         <div className="public-match-main">
           <div className="public-match-team-row">
