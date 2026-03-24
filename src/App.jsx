@@ -2007,8 +2007,24 @@ export default function App() {
     return match ? { ...group, match } : null;
   }, [refereeSelectedMatch, refereeMatchGroups]);
 
+  function getRecentProtectedRefereeEdit(matchId) {
+    if (!matchId) return null;
+    const recentEdit = recentRefereeLocalEditsRef.current.get(matchId);
+    if (!recentEdit) return null;
+    if (recentEdit.until <= Date.now()) {
+      recentRefereeLocalEditsRef.current.delete(matchId);
+      return null;
+    }
+    return recentEdit;
+  }
+
   function getRefereeDraftValue(match, field) {
-    const draft = match ? refereeScoreDrafts[match.id] : null;
+    if (!match) return undefined;
+    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
+    if (protectedEdit) {
+      return field === 'scoreA' ? protectedEdit.submittedScoreA : protectedEdit.submittedScoreB;
+    }
+    const draft = refereeScoreDrafts[match.id];
     if (!draft) return undefined;
     return field === 'scoreA' ? draft.scoreA : draft.scoreB;
   }
@@ -2043,18 +2059,28 @@ export default function App() {
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const remoteA = match.submittedScoreA ?? '';
     const remoteB = match.submittedScoreB ?? '';
+    const remoteSubmittedAt = toTimestamp(match.submittedAt);
+    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
+    const protectedStillPending = Boolean(
+      protectedEdit
+      && (
+        String(remoteA ?? '') !== String(protectedEdit.submittedScoreA ?? '')
+        || String(remoteB ?? '') !== String(protectedEdit.submittedScoreB ?? '')
+        || remoteSubmittedAt < toTimestamp(protectedEdit.submittedAt)
+      )
+    );
     commitRefereeScoreDrafts((current) => {
       const draft = current[match.id];
       if (!draft) return current;
       const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
-      if (shouldClear) {
+      if (shouldClear && !protectedStillPending) {
         const next = { ...current };
         delete next[match.id];
         return next;
       }
       const draftMatchesRemote = String(draft.scoreA ?? '') === String(remoteA ?? '') && String(draft.scoreB ?? '') === String(remoteB ?? '');
       const draftExpired = !match.refereeInProgress && !match.matchInProgress;
-      if (draftMatchesRemote || draftExpired) {
+      if ((draftMatchesRemote || draftExpired) && !protectedStillPending) {
         return {
           ...current,
           [match.id]: {
