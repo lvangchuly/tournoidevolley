@@ -2799,19 +2799,6 @@ export default function App() {
         until: Date.now() + 15000,
       });
     }
-    if (computedNextValue !== null) {
-      setRefereeScoreDrafts((current) => {
-        const existing = current[matchId] || { scoreA: '', scoreB: '' };
-        return {
-          ...current,
-          [matchId]: {
-            ...existing,
-            [field]: computedNextValue,
-            submittedAt: editTimestamp,
-          },
-        };
-      });
-    }
     queueBackgroundCloudSave(0);
   }
 
@@ -2841,6 +2828,19 @@ export default function App() {
       };
       return nextMatch;
     }));
+    if (computedNextValue !== null) {
+      setRefereeScoreDrafts((current) => {
+        const existing = current[matchId] || { scoreA: '', scoreB: '' };
+        return {
+          ...current,
+          [matchId]: {
+            ...existing,
+            [field]: computedNextValue,
+            submittedAt: editTimestamp,
+          },
+        };
+      });
+    }
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
