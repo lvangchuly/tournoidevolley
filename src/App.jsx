@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19L';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19Q';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19L';
+const APP_VERSION = 'V19Q';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1370,7 +1370,15 @@ export default function App() {
     if (parsed.championshipLeg1) setChampionshipLeg1(normalizeLeagueState(parsed.championshipLeg1));
     if (parsed.championshipLeg2) setChampionshipLeg2(normalizeLeagueState(parsed.championshipLeg2));
     if (parsed.singleKnockout) setSingleKnockout(normalizeSingleKnockoutState(parsed.singleKnockout));
-    if (!options.preserveSelection) setRefereeSelectedMatch(null);
+    if (!options.preserveSelection) {
+      setRefereeSelectedMatch(null);
+      setRefereeSelectedScoreDraft(null);
+      refereeSelectedScoreDraftRef.current = null;
+      setRefereeScoreDrafts({});
+      refereeScoreDraftsRef.current = {};
+      recentRefereeLocalEditsRef.current = new Map();
+      recentRefereeReleaseRef.current = new Map();
+    }
 
   }
 
@@ -2340,6 +2348,22 @@ export default function App() {
     return countMatchesWithStatus(matches, 'Valide');
   }
 
+  function matchHasEnteredScore(match) {
+    if (!match) return false;
+    const values = [match.scoreA, match.scoreB, match.submittedScoreA, match.submittedScoreB];
+    return values.some((value) => String(value ?? '').trim() !== '');
+  }
+
+  function countMatchesWithEnteredScores(matches) {
+    return (Array.isArray(matches) ? matches : []).filter(matchHasEnteredScore).length;
+  }
+
+  function confirmClearStageScores(matches, label) {
+    const scoredCount = countMatchesWithEnteredScores(matches);
+    if (!scoredCount) return true;
+    return window.confirm(`${scoredCount} match(s) dans ${label} contiennent déjà un score. Continuer effacera ces scores. Confirmer ?`);
+  }
+
   function confirmOverwritePlayedMatches(matches, label) {
     const validCount = countValidMatches(matches);
     if (!validCount) return true;
@@ -2447,6 +2471,21 @@ export default function App() {
     };
   }
 
+  function restoreOrganizerFreshView() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url.toString());
+    }
+    setMode('organizer');
+    setIsOrganizerAuthenticated(true);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+    setActiveTab('dashboard');
+    setOrganizerMatchTeamFilter('');
+  }
+
   async function startNewTournament() {
     const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
     if (!confirmed) return;
@@ -2457,7 +2496,8 @@ export default function App() {
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
     if (typeof window !== 'undefined') {
@@ -2481,6 +2521,7 @@ export default function App() {
         }
         pendingFreshTournamentTimestampRef.current = savedAt;
         applyPersistedState(cloudPayload);
+        restoreOrganizerFreshView();
         setRemoteSavedAt(savedAt);
         setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
         if (typeof window !== 'undefined') {
@@ -2577,7 +2618,8 @@ export default function App() {
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
   }
@@ -2642,16 +2684,6 @@ export default function App() {
   }
 
   function generateBrassage2() {
-    if (!confirmOverwritePlayedMatches([
-      ...brassage2.matches,
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'le brassage 2 et les phases suivantes')) return;
     if (isSmallTournamentMode) {
       if (championshipLeg1.matches.length === 0) {
         window.alert('Génère d’abord le Championnat Aller.');
@@ -2661,12 +2693,7 @@ export default function App() {
         window.alert('Tous les scores du Championnat Aller doivent être valides avant de générer le Championnat Retour.');
         return;
       }
-      if (!confirmOverwritePlayedMatches([
-        ...championshipLeg2.matches,
-        ...singleKnockout.quarters,
-        ...singleKnockout.semis,
-        ...singleKnockout.finals,
-      ], 'le Championnat Retour et le tableau final')) return;
+      if (!confirmClearStageScores(championshipLeg2.matches, 'le Championnat Retour')) return;
       const teamIds = championshipLeg1.pools[0]?.teamIds || sortTeamsForSeeding(activeTeams).map((team) => team.id);
       const pools = createChampionshipPool(teamIds, CHAMPIONSHIP_RETOUR_POOL_NAME);
       const matches = createChampionshipMatches(teamIds, 'Championnat Retour', CHAMPIONSHIP_RETOUR_POOL_NAME, true);
@@ -2684,6 +2711,7 @@ export default function App() {
       window.alert('Tous les scores du Brassage 1 doivent être valides avant de générer le Brassage 2.');
       return;
     }
+    if (!confirmClearStageScores(brassage2.matches, 'le brassage 2')) return;
     const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(brassage1.matches.length));
@@ -2782,15 +2810,6 @@ export default function App() {
   }
 
   function generateMainStage() {
-    if (!confirmOverwritePlayedMatches([
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'la principale, la consolante et les phases finales')) return;
     if (brassage2.matches.length === 0) {
       window.alert('Génère d’abord le brassage 2.');
       return;
@@ -2799,6 +2818,10 @@ export default function App() {
       window.alert('Tous les scores du Brassage 2 doivent être valides avant de générer la phase suivante.');
       return;
     }
+    if (!confirmClearStageScores([
+      ...mainStage.principaleMatches,
+      ...mainStage.consolanteMatches,
+    ], 'la principale / consolante')) return;
     const rankedIds = rankingAfterBrassages.map((row) => row.teamId);
     const principaleIds = rankedIds.slice(0, 12);
     const consolanteIds = rankedIds.slice(12, 18);
@@ -2822,11 +2845,6 @@ export default function App() {
   }
 
   function generatePrincipalQuarters() {
-    if (!confirmOverwritePlayedMatches([
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-    ], 'les quarts et la suite du tableau principal')) return;
     if (!mainStage.principalePools.length) {
       window.alert('Génère d’abord la principale.');
       return;
@@ -2835,6 +2853,7 @@ export default function App() {
       window.alert('Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
       return;
     }
+    if (!confirmClearStageScores(knockout.principalQuarters, 'les quarts principale')) return;
     const pA = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'A');
     const pB = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'B');
     const pC = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'C');
@@ -2860,10 +2879,6 @@ export default function App() {
   }
 
   function generateConsolanteSemis() {
-    if (!confirmOverwritePlayedMatches([
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'les demi-finales et finales de consolante')) return;
     if (!mainStage.consolantePools.length) {
       window.alert('Génère d’abord la consolante.');
       return;
@@ -2872,6 +2887,7 @@ export default function App() {
       window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les demi-finales consolante.');
       return;
     }
+    if (!confirmClearStageScores(knockout.consolanteSemis, 'les demi-finales consolante')) return;
     const cA = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'A');
     const cB = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'B');
     const consolanteSemisRaw = sanitizeKnockoutMatches([
@@ -2892,10 +2908,6 @@ export default function App() {
   }
 
   function generatePrincipalSemis() {
-    if (!confirmOverwritePlayedMatches([
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-    ], 'les demi-finales et finales principale')) return;
     const canGeneratePrincipalSemis = knockout.principalQuarters.length > 0 && stageValidation.principalQuartersComplete;
     if (!canGeneratePrincipalSemis) {
       window.alert('Tous les quarts de finale principaux doivent être valides avant de générer les demi-finales principale.');
@@ -2909,6 +2921,7 @@ export default function App() {
       window.alert('Renseigne d’abord des scores valides pour les quarts principale.');
       return;
     }
+    if (!confirmClearStageScores(knockout.principalSemis, 'les demi-finales principale')) return;
     const principalSemisRaw = [
       makeKnockoutMatch('Tableau principal', 'Demi 1', q1.winner, q2.winner),
       makeKnockoutMatch('Tableau principal', 'Demi 2', q3.winner, q4.winner),
@@ -2923,7 +2936,6 @@ export default function App() {
   }
 
   function generateConsolanteFinals() {
-    if (!confirmOverwritePlayedMatches(knockout.consolanteFinals, 'les finales de consolante')) return;
     const canGenerateConsolanteFinals = knockout.consolanteSemis.length > 0 && stageValidation.consolanteSemisComplete;
     if (!canGenerateConsolanteFinals) {
       window.alert('Toutes les demi-finales de consolante doivent être valides avant de générer les finales de consolante.');
@@ -2935,6 +2947,7 @@ export default function App() {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales de consolante.');
       return;
     }
+    if (!confirmClearStageScores(knockout.consolanteFinals, 'les finales de consolante')) return;
     const consolanteFinalsRaw = [
       makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
       makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
@@ -2948,7 +2961,6 @@ export default function App() {
   }
 
   function generatePrincipalFinals() {
-    if (!confirmOverwritePlayedMatches(knockout.principalFinals, 'la finale principale')) return;
     if (knockout.principalSemis.length === 0) {
       window.alert('Génère d’abord les demi-finales principales.');
       return;
@@ -2959,6 +2971,7 @@ export default function App() {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales principales.');
       return;
     }
+    if (!confirmClearStageScores(knockout.principalFinals, 'la finale principale')) return;
     const finalsRaw = [
       makeKnockoutMatch('Tableau principal', 'Petite finale', s1.loser, s2.loser),
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
