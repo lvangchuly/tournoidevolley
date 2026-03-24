@@ -1595,3 +1595,44 @@ tbody tr:last-child td { border-bottom: none; }
     width: calc((100% - 100px - 136px - 160px) / 2);
   }
 }
+
+
+.public-podium-card {
+  display: grid;
+  gap: 14px;
+}
+
+.public-podium-card-body {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.public-podium-team-row {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.public-podium-team-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #64748b;
+}
+
+.public-podium-team-content {
+  min-width: 0;
+}
+
+.public-podium-team-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.public-podium-badge {
+  max-width: 100%;
+}

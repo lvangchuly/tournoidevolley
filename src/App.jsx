@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v18I';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v18I';
+const APP_VERSION = 'V19';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -940,6 +940,35 @@ function formatRemainingMatchesLabel(matches, phaseRules) {
   return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
 }
 
+
+
+function PublicPodiumHighlightCard({ title, principalTeamId, consolanteTeamId, resolveTeam }) {
+  const renderSlot = (label, teamId) => {
+    if (!teamId) return <div className="public-podium-team-value muted">À venir</div>;
+    const team = resolveTeam(teamId);
+    return <TeamBadge name={team.name} level={team.level} className="team-badge-public public-podium-badge" />;
+  };
+
+  return (
+    <div className="public-match-card public-podium-card">
+      <div className="public-match-topline">
+        <div className="public-label">Tournoi terminé</div>
+        <div className="public-phase-label">{title}</div>
+      </div>
+      <div className="public-podium-card-body">
+        <div className="public-podium-team-row">
+          <div className="public-podium-team-label">Principale</div>
+          <div className="public-podium-team-content">{renderSlot('Principale', principalTeamId)}</div>
+        </div>
+        <div className="public-podium-team-row">
+          <div className="public-podium-team-label">Consolante</div>
+          <div className="public-podium-team-content">{renderSlot('Consolante', consolanteTeamId)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   if (!match) return null;
   const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
@@ -1694,20 +1723,78 @@ export default function App() {
       }))
   ), [allCompetitionMatches, phaseRules, scheduleData]);
 
+  const publicPodiumLeaders = useMemo(() => {
+    const extractPodium = (matches) => {
+      const finalMatch = matches.find((match) => match.group === 'Finale');
+      const smallFinal = matches.find((match) => match.group === 'Petite finale');
+      const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
+      const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
+      return {
+        first: finalResult.winner || null,
+        second: finalResult.loser || null,
+        third: smallResult.winner || null,
+      };
+    };
+
+    const principale = extractPodium(knockout.principalFinals);
+    const consolante = extractPodium(knockout.consolanteFinals);
+    const tournamentFinished = Boolean(principale.first && principale.second && principale.third && consolante.first && consolante.second && consolante.third);
+
+    return { tournamentFinished, principale, consolante };
+  }, [knockout.principalFinals, knockout.consolanteFinals, phaseRules]);
+
   const featuredPublicMatches = useMemo(() => {
-    const items = currentMatches.map((match, index) => ({
-      title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
-      match,
-    }));
-    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
-    upcomingMatches.slice(0, remainingSlots).forEach((match, index) => {
-      items.push({
-        title: `Prochain match ${index + 1}`,
+    if (publicPodiumLeaders.tournamentFinished) {
+      return [
+        {
+          type: 'podium',
+          title: '1res places',
+          principalTeamId: publicPodiumLeaders.principale.first,
+          consolanteTeamId: publicPodiumLeaders.consolante.first,
+        },
+        {
+          type: 'podium',
+          title: '2es places',
+          principalTeamId: publicPodiumLeaders.principale.second,
+          consolanteTeamId: publicPodiumLeaders.consolante.second,
+        },
+        {
+          type: 'podium',
+          title: '3es places',
+          principalTeamId: publicPodiumLeaders.principale.third,
+          consolanteTeamId: publicPodiumLeaders.consolante.third,
+        },
+      ];
+    }
+
+    const items = currentMatches
+      .filter((match) => {
+        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
+        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
+        return teamAName !== 'à définir' && teamBName !== 'à définir';
+      })
+      .map((match, index) => ({
+        type: 'match',
+        title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
         match,
+      }));
+    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
+    upcomingMatches
+      .filter((match) => {
+        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
+        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
+        return teamAName !== 'à définir' && teamBName !== 'à définir';
+      })
+      .slice(0, remainingSlots)
+      .forEach((match, index) => {
+        items.push({
+          type: 'match',
+          title: `Prochain match ${index + 1}`,
+          match,
+        });
       });
-    });
     return items;
-  }, [currentMatches, upcomingMatches]);
+  }, [currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam]);
 
   const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
   const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
@@ -3111,8 +3198,18 @@ export default function App() {
           {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="cards-grid three-up">
-            {featuredPublicMatches.map(({ title, match }) => (
-              <LargePublicMatch key={match.id} title={title} match={match} resolveTeam={resolveTeam} phaseRules={phaseRules} />
+            {featuredPublicMatches.map((item, index) => (
+              item.type === 'podium' ? (
+                <PublicPodiumHighlightCard
+                  key={`podium-${index}-${item.title}`}
+                  title={item.title}
+                  principalTeamId={item.principalTeamId}
+                  consolanteTeamId={item.consolanteTeamId}
+                  resolveTeam={resolveTeam}
+                />
+              ) : (
+                <LargePublicMatch key={item.match.id} title={item.title} match={item.match} resolveTeam={resolveTeam} phaseRules={phaseRules} />
+              )
             ))}
           </div>
 
