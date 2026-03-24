@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19G';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19I';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19G';
+const APP_VERSION = 'V19I';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -832,6 +832,13 @@ function hasBothTeamsDefined(match) {
   return Boolean(match?.teamAId && match?.teamBId);
 }
 
+function isPublicDisplayableMatch(match, resolveTeam) {
+  if (!hasBothTeamsDefined(match)) return false;
+  const teamAName = String(resolveTeam(match.teamAId)?.name || '').trim().toLowerCase();
+  const teamBName = String(resolveTeam(match.teamBId)?.name || '').trim().toLowerCase();
+  return Boolean(teamAName && teamBName && teamAName !== 'à définir' && teamBName !== 'à définir');
+}
+
 function clearMatchScores(match) {
   return {
     ...match,
@@ -1463,7 +1470,20 @@ export default function App() {
 
       let nextMatch = { ...remoteMatch };
 
-      if (!shouldKeepLocalOfficialEdit && remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
+      if (shouldKeepLocalOfficialEdit) {
+        nextMatch = {
+          ...nextMatch,
+          scoreA: localMatch.scoreA ?? '',
+          scoreB: localMatch.scoreB ?? '',
+          validatedAt: localMatch.validatedAt ?? null,
+          manualOverrideAt: localMatch.manualOverrideAt ?? null,
+          submittedScoreA: '',
+          submittedScoreB: '',
+          submittedAt: null,
+          refereeInProgress: false,
+          matchInProgress: false,
+        };
+      } else if (remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
         nextMatch = {
           ...nextMatch,
           scoreA: remoteMatch.scoreA ?? '',
@@ -1476,7 +1496,7 @@ export default function App() {
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (!shouldKeepLocalOfficialEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
+      } else if (!shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remoteMatch.submittedScoreA ?? '',
@@ -1772,7 +1792,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!sharedTournamentId) return;
+    if (!sharedTournamentId || mode === 'organizer') return;
     let cancelled = false;
 
     const pollRemoteRefereeState = async () => {
@@ -1785,7 +1805,7 @@ export default function App() {
     };
 
     pollRemoteRefereeState();
-    const remotePollIntervalMs = mode === 'organizer' ? 300 : mode === 'public' ? 400 : 800;
+    const remotePollIntervalMs = mode === 'public' ? 400 : 800;
     const intervalId = window.setInterval(pollRemoteRefereeState, remotePollIntervalMs);
     return () => {
       cancelled = true;
@@ -1869,6 +1889,7 @@ export default function App() {
   const currentMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
+      .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
       .map((match) => ({
@@ -1877,12 +1898,13 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const upcomingMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => {
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
+        if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
@@ -1893,7 +1915,7 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const publicPodiumLeaders = useMemo(() => {
     const extractPodium = (matches) => {
@@ -1940,23 +1962,15 @@ export default function App() {
     }
 
     const items = currentMatches
-      .filter((match) => {
-        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
-        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
-        return teamAName !== 'à définir' && teamBName !== 'à définir';
-      })
       .map((match, index) => ({
         type: 'match',
         title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
         match,
       }));
+    const currentIds = new Set(items.map((item) => item.match.id));
     const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
     upcomingMatches
-      .filter((match) => {
-        const teamAName = String(resolveTeam(match.teamAId).name || '').trim().toLowerCase();
-        const teamBName = String(resolveTeam(match.teamBId).name || '').trim().toLowerCase();
-        return teamAName !== 'à définir' && teamBName !== 'à définir';
-      })
+      .filter((match) => !currentIds.has(match.id))
       .slice(0, remainingSlots)
       .forEach((match, index) => {
         items.push({
@@ -1965,8 +1979,29 @@ export default function App() {
           match,
         });
       });
+
+    if (items.length === 0) {
+      allCompetitionMatches
+        .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
+        .filter((match) => !isMatchResultValid(match, phaseRules) || isMatchCurrentlyInProgress(match, phaseRules))
+        .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
+        .slice(0, MAX_ACTIVE_COURTS)
+        .forEach((match, index) => {
+          items.push({
+            type: 'match',
+            title: index === 0 ? 'Prochain match' : `Prochain match ${index + 1}`,
+            match: {
+              ...match,
+              time: scheduleData.scheduleMap[match.id]?.startText || match.time,
+              scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
+              scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
+            },
+          });
+        });
+    }
+
     return items;
-  }, [currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam]);
+  }, [allCompetitionMatches, currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam, phaseRules, scheduleData]);
 
   const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
   const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
