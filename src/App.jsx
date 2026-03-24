@@ -1245,16 +1245,16 @@ export default function App() {
     ...singleKnockout.semis,
     ...singleKnockout.finals,
   ] : [
-    ...visibleBrassage1Matches,
-    ...visibleBrassage2Matches,
-    ...visiblePrincipaleMatches,
-    ...visibleConsolanteMatches,
+    ...filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'),
+    ...filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'),
+    ...filterMatchesToPools(mainStage.principaleMatches, mainStage.principalePools, 'Principale'),
+    ...filterMatchesToPools(mainStage.consolanteMatches, mainStage.consolantePools, 'Consolante'),
     ...sanitizeKnockoutMatches(knockout.principalQuarters),
     ...sanitizeKnockoutMatches(knockout.principalSemis),
     ...sanitizeKnockoutMatches(knockout.principalFinals),
     ...sanitizeKnockoutMatches(knockout.consolanteSemis),
     ...sanitizeKnockoutMatches(knockout.consolanteFinals),
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout]);
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage1.pools, brassage2.matches, brassage2.pools, mainStage.principaleMatches, mainStage.principalePools, mainStage.consolanteMatches, mainStage.consolantePools, knockout]);
 
   const activeInProgressTeamIds = useMemo(() => {
     const ids = new Set();
