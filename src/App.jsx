@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19N';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19O';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19N';
+const APP_VERSION = 'V19O';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2471,6 +2471,21 @@ export default function App() {
     };
   }
 
+  function restoreOrganizerFreshView() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url.toString());
+    }
+    setMode('organizer');
+    setIsOrganizerAuthenticated(true);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+    setActiveTab('dashboard');
+    setOrganizerMatchTeamFilter('');
+  }
+
   async function startNewTournament() {
     const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
     if (!confirmed) return;
@@ -2481,7 +2496,8 @@ export default function App() {
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
     if (typeof window !== 'undefined') {
@@ -2505,6 +2521,7 @@ export default function App() {
         }
         pendingFreshTournamentTimestampRef.current = savedAt;
         applyPersistedState(cloudPayload);
+        restoreOrganizerFreshView();
         setRemoteSavedAt(savedAt);
         setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
         if (typeof window !== 'undefined') {
@@ -2601,7 +2618,8 @@ export default function App() {
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
   }
