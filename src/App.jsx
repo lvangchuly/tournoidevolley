@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19S';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19T';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19S';
+const APP_VERSION = 'V19T';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2739,13 +2739,27 @@ export default function App() {
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
     const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
-    setBrassage1({ pools, matches });
-    setBrassage2({ pools: [], matches: [] });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-    setChampionshipLeg1({ pools: [], matches: [] });
-    setChampionshipLeg2({ pools: [], matches: [] });
-    setSingleKnockout({ quarters: [], semis: [], finals: [] });
+    const nextBrassage1 = { pools, matches };
+    const nextBrassage2 = { pools: [], matches: [] };
+    const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    const nextChampionshipLeg1 = { pools: [], matches: [] };
+    const nextChampionshipLeg2 = { pools: [], matches: [] };
+    const nextSingleKnockout = { quarters: [], semis: [], finals: [] };
+    brassage1Ref.current = nextBrassage1;
+    brassage2Ref.current = nextBrassage2;
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    championshipLeg1Ref.current = nextChampionshipLeg1;
+    championshipLeg2Ref.current = nextChampionshipLeg2;
+    singleKnockoutRef.current = nextSingleKnockout;
+    setBrassage1(nextBrassage1);
+    setBrassage2(nextBrassage2);
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
+    setChampionshipLeg1(nextChampionshipLeg1);
+    setChampionshipLeg2(nextChampionshipLeg2);
+    setSingleKnockout(nextSingleKnockout);
     setActiveTab('brassage1');
     queueBackgroundCloudSave(250);
   }
@@ -2768,8 +2782,12 @@ export default function App() {
       const teamIds = currentLeg1.pools[0]?.teamIds || sortTeamsForSeeding(currentTeams).map((team) => team.id);
       const pools = createChampionshipPool(teamIds, CHAMPIONSHIP_RETOUR_POOL_NAME);
       const matches = createChampionshipMatches(teamIds, 'Championnat Retour', CHAMPIONSHIP_RETOUR_POOL_NAME, true);
-      setChampionshipLeg2({ pools, matches });
-      setSingleKnockout({ quarters: [], semis: [], finals: [] });
+      const nextChampionshipLeg2 = { pools, matches };
+      const nextSingleKnockout = { quarters: [], semis: [], finals: [] };
+      championshipLeg2Ref.current = nextChampionshipLeg2;
+      singleKnockoutRef.current = nextSingleKnockout;
+      setChampionshipLeg2(nextChampionshipLeg2);
+      setSingleKnockout(nextSingleKnockout);
       setActiveTab('championship');
       queueBackgroundCloudSave(250);
       return;
@@ -2788,12 +2806,24 @@ export default function App() {
     }
     if (!confirmClearStageScores(currentBrassage2.matches, 'le brassage 2')) return;
     const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
-    const rankedIds = computeRanking(currentTeamIds, currentVisibleBrassage1Matches, currentTeamMap, phaseRulesRef.current).map((row) => row.teamId);
+    const rankingSourceTeamIds = currentBrassage1.pools.flatMap((pool) => Array.isArray(pool?.teamIds) ? pool.teamIds : []).filter(Boolean);
+    const teamIdsForRanking = rankingSourceTeamIds.length ? Array.from(new Set(rankingSourceTeamIds)) : currentTeamIds;
+    const rankedIds = computeRanking(teamIdsForRanking, currentVisibleBrassage1Matches, currentTeamMap, phaseRulesRef.current).map((row) => row.teamId).filter(Boolean);
+    if (rankedIds.length < 2) {
+      window.alert('Impossible de générer le Brassage 2 : aucun classement exploitable n’a été trouvé à partir du Brassage 1.');
+      return;
+    }
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(currentBrassage1.matches.length));
-    setBrassage2({ pools, matches });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    const nextBrassage2 = { pools, matches };
+    const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    brassage2Ref.current = nextBrassage2;
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    setBrassage2(nextBrassage2);
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
     setActiveTab('brassage2');
     queueBackgroundCloudSave(250);
   }
@@ -2915,13 +2945,17 @@ export default function App() {
       stageSlotCount(currentBrassage1.matches.length) + stageSlotCount(currentBrassage2.matches.length),
     );
 
-    setMainStage({
+    const nextMainStage = {
       principalePools,
       principaleMatches: scheduled.filter((match) => match.phase === 'Principale'),
       consolantePools,
       consolanteMatches: scheduled.filter((match) => match.phase === 'Consolante'),
-    });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
     setActiveTab('principale');
     queueBackgroundCloudSave(250);
   }
