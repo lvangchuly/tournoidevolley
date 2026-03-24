@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19Q';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19R';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19Q';
+const APP_VERSION = 'V19R';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -77,6 +77,25 @@ function safeClone(value, fallback) {
     return value ? JSON.parse(JSON.stringify(value)) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function safeGetLocalStorageItem(key) {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetLocalStorageItem(key, value) {
+  if (typeof window === 'undefined') return false;
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -253,7 +272,7 @@ function loadState() {
   if (typeof window === 'undefined') return null;
   try {
     const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
-    const raw = storageKeys.map((key) => window.localStorage.getItem(key)).find(Boolean);
+    const raw = storageKeys.map((key) => safeGetLocalStorageItem(key)).find(Boolean);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.teams)) parsed.teams = normalizeTeamsList(parsed.teams);
@@ -1068,24 +1087,37 @@ function buildFirebaseTournamentUrl(sharedTournamentId) {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments/${effectiveId}.json`;
 }
 
-function buildRefereeAccessUrl(sharedTournamentId) {
-  if (typeof window === 'undefined') return '?mode=referee';
-  const url = new URL(window.location.origin + window.location.pathname);
-  url.searchParams.set('mode', 'referee');
+function buildBaseAccessHref() {
+  if (typeof window === 'undefined') return '';
+  const href = String(window.location.href || '');
+  if (!href) return '';
+  const hashIndex = href.indexOf('#');
+  const withoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+  const queryIndex = withoutHash.indexOf('?');
+  return queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+}
+
+function buildAccessHref(sharedTournamentId, isReferee = false) {
+  const baseHref = buildBaseAccessHref();
+  const params = new URLSearchParams();
+  if (isReferee) params.set('mode', 'referee');
   if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
+    params.set('sharedTournamentId', sharedTournamentId);
   }
-  return url.toString();
+  const queryString = params.toString();
+  if (!baseHref) {
+    return queryString ? `?${queryString}` : '?';
+  }
+  return queryString ? `${baseHref}?${queryString}` : baseHref;
+}
+
+function buildRefereeAccessUrl(sharedTournamentId) {
+  return buildAccessHref(sharedTournamentId, true);
 }
 
 
 function buildPublicAccessUrl(sharedTournamentId) {
-  if (typeof window === 'undefined') return '?sharedTournamentId=demo';
-  const url = new URL(window.location.origin + window.location.pathname);
-  if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
-  }
-  return url.toString();
+  return buildAccessHref(sharedTournamentId, false) || '?sharedTournamentId=demo';
 }
 
 function formatRemoteTimestamp(value) {
@@ -1715,7 +1747,7 @@ export default function App() {
       setRemoteSavedAt(savedAt);
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(payload));
       }
       if (showMessage) window.alert('Tournoi partagé sauvegardé sur Firebase.');
       return true;
@@ -1739,7 +1771,7 @@ export default function App() {
     const savedAt = new Date().toISOString();
     const snapshot = getPersistedStateSnapshot(savedAt);
     latestPersistedStateRef.current = snapshot;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+    safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(snapshot));
     setLastSavedAt(savedAt);
     if (showMessage) {
       window.alert('État du tournoi sauvegardé sur ce navigateur.');
@@ -1768,7 +1800,7 @@ export default function App() {
   useEffect(() => {
     latestPersistedStateRef.current = getPersistedStateSnapshot();
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
+    safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
   }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
@@ -1944,13 +1976,13 @@ export default function App() {
       const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
       const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
 
-      const first = isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
+      const first = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
         ? finalResult.winner
         : null;
-      const second = isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
+      const second = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
         ? finalResult.loser
         : null;
-      const third = isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
+      const third = smallFinal && isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
         ? smallResult.winner
         : null;
 
@@ -2501,7 +2533,7 @@ export default function App() {
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(freshState));
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(freshState));
     }
     if (String(freshState.settings?.sharedTournamentId || '').trim()) {
       const savedAt = new Date().toISOString();
@@ -2525,7 +2557,7 @@ export default function App() {
         setRemoteSavedAt(savedAt);
         setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudPayload));
+          safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(cloudPayload));
         }
       } catch (error) {
         setRemoteSyncMessage(error.message || 'Échec de la réinitialisation Firebase.');
