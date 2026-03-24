@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19E';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19F';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19E';
+const APP_VERSION = 'V19F';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3036,122 +3036,116 @@ export default function App() {
   }
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
     const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
     const editTimestamp = new Date().toISOString();
-    setRefereeSelectedScoreDraft((current) => {
-      const fallbackMatch = findMatchInScope(scope, matchId);
-      const storedDraft = refereeScoreDraftsRef.current?.[matchId];
-      const baseScoreA = current?.matchId === matchId
-        ? (current.scoreA ?? '')
-        : (storedDraft?.scoreA ?? fallbackMatch?.submittedScoreA ?? '');
-      const baseScoreB = current?.matchId === matchId
-        ? (current.scoreB ?? '')
-        : (storedDraft?.scoreB ?? fallbackMatch?.submittedScoreB ?? '');
-      return {
-        matchId,
-        scoreA: field === 'scoreA' ? normalized : baseScoreA,
-        scoreB: field === 'scoreB' ? normalized : baseScoreB,
+    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
+    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
+    const nextScoreA = field === 'scoreA'
+      ? normalized
+      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const nextScoreB = field === 'scoreB'
+      ? normalized
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const nextDraft = {
+      matchId,
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
+      submittedAt: editTimestamp,
+    };
+    const localPendingSnapshot = {
+      submittedScoreA: String(nextScoreA ?? ''),
+      submittedScoreB: String(nextScoreB ?? ''),
+      submittedAt: editTimestamp,
+    };
+
+    refereeSelectedScoreDraftRef.current = nextDraft;
+    setRefereeSelectedScoreDraft(nextDraft);
+    commitRefereeScoreDrafts((current) => ({
+      ...current,
+      [matchId]: {
+        ...(current[matchId] || { scoreA: '', scoreB: '' }),
+        scoreA: nextScoreA,
+        scoreB: nextScoreB,
         submittedAt: editTimestamp,
-      };
+      },
+    }));
+    recentRefereeLocalEditsRef.current.set(matchId, {
+      ...localPendingSnapshot,
+      until: Date.now() + 30000,
     });
-    commitRefereeScoreDrafts((current) => {
-      const existing = current[matchId] || { scoreA: '', scoreB: '' };
-      return {
-        ...current,
-        [matchId]: {
-          ...existing,
-          [field]: normalized,
-          submittedAt: editTimestamp,
-        },
-      };
-    });
-    let localPendingSnapshot = null;
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
-      const nextMatch = {
+      return {
         ...match,
-        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
+        submittedScoreA: nextScoreA,
+        submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
-      localPendingSnapshot = {
-        submittedScoreA: String(nextMatch.submittedScoreA ?? ''),
-        submittedScoreB: String(nextMatch.submittedScoreB ?? ''),
-        submittedAt: editTimestamp,
-      };
-      return nextMatch;
     }));
-    if (localPendingSnapshot) {
-      recentRefereeLocalEditsRef.current.set(matchId, {
-        ...localPendingSnapshot,
-        until: Date.now() + 30000,
-      });
-    }
     queueBackgroundCloudSave(120);
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
+    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
+    const currentRawValue = field === 'scoreA'
+      ? (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA)
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB);
+    const currentValue = toNumber(currentRawValue) ?? 0;
+    const computedNextValue = String(Math.max(0, currentValue + delta));
     const editTimestamp = new Date().toISOString();
-    let localPendingSnapshot = null;
-    let computedNextValue = null;
+    const nextScoreA = field === 'scoreA'
+      ? computedNextValue
+      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const nextScoreB = field === 'scoreB'
+      ? computedNextValue
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const nextDraft = {
+      matchId,
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
+      submittedAt: editTimestamp,
+    };
+    const localPendingSnapshot = {
+      submittedScoreA: String(nextScoreA ?? ''),
+      submittedScoreB: String(nextScoreB ?? ''),
+      submittedAt: editTimestamp,
+    };
+
+    refereeSelectedScoreDraftRef.current = nextDraft;
+    setRefereeSelectedScoreDraft(nextDraft);
+    commitRefereeScoreDrafts((current) => ({
+      ...current,
+      [matchId]: {
+        ...(current[matchId] || { scoreA: '', scoreB: '' }),
+        scoreA: nextScoreA,
+        scoreB: nextScoreB,
+        submittedAt: editTimestamp,
+      },
+    }));
+    recentRefereeLocalEditsRef.current.set(matchId, {
+      ...localPendingSnapshot,
+      until: Date.now() + 30000,
+    });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
-      const draftValue = refereeScoreDraftsRef.current?.[matchId]?.[field];
-      const currentValue = toNumber(draftValue !== undefined ? draftValue : (field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB)) ?? 0;
-      const nextValue = Math.max(0, currentValue + delta);
-      computedNextValue = String(nextValue);
-      const nextMatch = {
+      return {
         ...match,
-        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: computedNextValue,
+        submittedScoreA: nextScoreA,
+        submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
-      localPendingSnapshot = {
-        submittedScoreA: String(nextMatch.submittedScoreA ?? ''),
-        submittedScoreB: String(nextMatch.submittedScoreB ?? ''),
-        submittedAt: editTimestamp,
-      };
-      return nextMatch;
     }));
-    if (computedNextValue !== null) {
-      setRefereeSelectedScoreDraft((current) => {
-        const fallbackMatch = findMatchInScope(scope, matchId);
-        const storedDraft = refereeScoreDraftsRef.current?.[matchId];
-        const baseScoreA = current?.matchId === matchId
-          ? (current.scoreA ?? '')
-          : (storedDraft?.scoreA ?? fallbackMatch?.submittedScoreA ?? '');
-        const baseScoreB = current?.matchId === matchId
-          ? (current.scoreB ?? '')
-          : (storedDraft?.scoreB ?? fallbackMatch?.submittedScoreB ?? '');
-        return {
-          matchId,
-          scoreA: field === 'scoreA' ? computedNextValue : baseScoreA,
-          scoreB: field === 'scoreB' ? computedNextValue : baseScoreB,
-          submittedAt: editTimestamp,
-        };
-      });
-      commitRefereeScoreDrafts((current) => {
-        const existing = current[matchId] || { scoreA: '', scoreB: '' };
-        return {
-          ...current,
-          [matchId]: {
-            ...existing,
-            [field]: computedNextValue,
-            submittedAt: editTimestamp,
-          },
-        };
-      });
-    }
-    if (localPendingSnapshot) {
-      recentRefereeLocalEditsRef.current.set(matchId, {
-        ...localPendingSnapshot,
-        until: Date.now() + 30000,
-      });
-    }
     queueBackgroundCloudSave(120);
   }
 
