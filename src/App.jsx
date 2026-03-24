@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19T';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19U';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19T';
+const APP_VERSION = 'V19U';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2961,19 +2961,25 @@ export default function App() {
   }
 
   function generatePrincipalQuarters() {
-    if (!mainStage.principalePools.length) {
+    const currentMainStage = mainStageRef.current;
+    const currentKnockout = knockoutRef.current;
+    if (!currentMainStage.principalePools.length) {
       window.alert('Génère d’abord la principale.');
       return;
     }
-    if (!stageValidation.principalePoolsComplete) {
+    const currentVisiblePrincipaleMatches = filterMatchesToPools(currentMainStage.principaleMatches, currentMainStage.principalePools, 'Principale');
+    const principalePoolsComplete = currentVisiblePrincipaleMatches.length > 0 && currentVisiblePrincipaleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!principalePoolsComplete) {
       window.alert('Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
       return;
     }
-    if (!confirmClearStageScores(knockout.principalQuarters, 'les quarts principale')) return;
-    const pA = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'A');
-    const pB = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'B');
-    const pC = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'C');
-    const pD = getStandingsRowsForPool(principaleStandings, mainStage.principalePools, 'D');
+    if (!confirmClearStageScores(currentKnockout.principalQuarters, 'les quarts principale')) return;
+    const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current);
+    const pA = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'A');
+    const pB = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'B');
+    const pC = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'C');
+    const pD = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'D');
     const principalQuartersRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau principal', 'Quart 1', pA[0]?.teamId || null, pD[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 2', pB[0]?.teamId || null, pC[1]?.teamId || null),
@@ -2982,118 +2988,143 @@ export default function App() {
     ]);
     const principalQuarters = stampGeneratedMatches(assignSchedule(
       principalQuartersRaw,
-      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length),
+      stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length),
     ));
-    setKnockout((current) => ({
-      ...current,
+    const nextKnockout = {
+      ...currentKnockout,
       principalQuarters: sanitizeKnockoutMatches(principalQuarters),
       principalSemis: [],
       principalFinals: [],
-    }));
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
     setActiveTab('finales');
     queueBackgroundCloudSave(250);
   }
 
   function generateConsolanteSemis() {
-    if (!mainStage.consolantePools.length) {
+    const currentMainStage = mainStageRef.current;
+    const currentKnockout = knockoutRef.current;
+    if (!currentMainStage.consolantePools.length) {
       window.alert('Génère d’abord la consolante.');
       return;
     }
-    if (!stageValidation.consolantePoolsComplete) {
+    const currentVisibleConsolanteMatches = filterMatchesToPools(currentMainStage.consolanteMatches, currentMainStage.consolantePools, 'Consolante');
+    const consolantePoolsComplete = currentVisibleConsolanteMatches.length > 0 && currentVisibleConsolanteMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!consolantePoolsComplete) {
       window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les demi-finales consolante.');
       return;
     }
-    if (!confirmClearStageScores(knockout.consolanteSemis, 'les demi-finales consolante')) return;
-    const cA = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'A');
-    const cB = getStandingsRowsForPool(consolanteStandings, mainStage.consolantePools, 'B');
+    if (!confirmClearStageScores(currentKnockout.consolanteSemis, 'les demi-finales consolante')) return;
+    const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+    const currentConsolanteStandings = computeGroupStandings(currentMainStage.consolantePools, currentVisibleConsolanteMatches, currentTeamMap, phaseRulesRef.current);
+    const cA = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'A');
+    const cB = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'B');
     const consolanteSemisRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
       makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
     ]);
     const consolanteSemis = stampGeneratedMatches(assignSchedule(
       consolanteSemisRaw,
-      stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length),
+      stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length),
     ));
-    setKnockout((current) => ({
-      ...current,
+    const nextKnockout = {
+      ...currentKnockout,
       consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
       consolanteFinals: [],
-    }));
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
     setActiveTab('finales');
     queueBackgroundCloudSave(250);
   }
 
   function generatePrincipalSemis() {
-    const canGeneratePrincipalSemis = knockout.principalQuarters.length > 0 && stageValidation.principalQuartersComplete;
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    const canGeneratePrincipalSemis = currentKnockout.principalQuarters.length > 0 && currentKnockout.principalQuarters.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!canGeneratePrincipalSemis) {
       window.alert('Tous les quarts de finale principaux doivent être valides avant de générer les demi-finales principale.');
       return;
     }
-    const q1 = getWinnerLoser(knockout.principalQuarters[0], phaseRules);
-    const q2 = getWinnerLoser(knockout.principalQuarters[1], phaseRules);
-    const q3 = getWinnerLoser(knockout.principalQuarters[2], phaseRules);
-    const q4 = getWinnerLoser(knockout.principalQuarters[3], phaseRules);
+    const q1 = getWinnerLoser(currentKnockout.principalQuarters[0], phaseRulesRef.current);
+    const q2 = getWinnerLoser(currentKnockout.principalQuarters[1], phaseRulesRef.current);
+    const q3 = getWinnerLoser(currentKnockout.principalQuarters[2], phaseRulesRef.current);
+    const q4 = getWinnerLoser(currentKnockout.principalQuarters[3], phaseRulesRef.current);
     if (!q1.winner || !q2.winner || !q3.winner || !q4.winner) {
       window.alert('Renseigne d’abord des scores valides pour les quarts principale.');
       return;
     }
-    if (!confirmClearStageScores(knockout.principalSemis, 'les demi-finales principale')) return;
+    if (!confirmClearStageScores(currentKnockout.principalSemis, 'les demi-finales principale')) return;
     const principalSemisRaw = [
       makeKnockoutMatch('Tableau principal', 'Demi 1', q1.winner, q2.winner),
       makeKnockoutMatch('Tableau principal', 'Demi 2', q3.winner, q4.winner),
     ];
-    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
-    setKnockout((current) => ({
-      ...current,
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length);
+    const nextKnockout = {
+      ...currentKnockout,
       principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(principalSemisRaw, startSlot))),
       principalFinals: [],
-    }));
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
     queueBackgroundCloudSave(250);
   }
 
   function generateConsolanteFinals() {
-    const canGenerateConsolanteFinals = knockout.consolanteSemis.length > 0 && stageValidation.consolanteSemisComplete;
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    const canGenerateConsolanteFinals = currentKnockout.consolanteSemis.length > 0 && currentKnockout.consolanteSemis.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!canGenerateConsolanteFinals) {
       window.alert('Toutes les demi-finales de consolante doivent être valides avant de générer les finales de consolante.');
       return;
     }
-    const c1 = getWinnerLoser(knockout.consolanteSemis[0], phaseRules);
-    const c2 = getWinnerLoser(knockout.consolanteSemis[1], phaseRules);
+    const c1 = getWinnerLoser(currentKnockout.consolanteSemis[0], phaseRulesRef.current);
+    const c2 = getWinnerLoser(currentKnockout.consolanteSemis[1], phaseRulesRef.current);
     if (!c1.winner || !c2.winner) {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales de consolante.');
       return;
     }
-    if (!confirmClearStageScores(knockout.consolanteFinals, 'les finales de consolante')) return;
+    if (!confirmClearStageScores(currentKnockout.consolanteFinals, 'les finales de consolante')) return;
     const consolanteFinalsRaw = [
       makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
       makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
     ];
-    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
-    setKnockout((current) => ({
-      ...current,
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length);
+    const nextKnockout = {
+      ...currentKnockout,
       consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(consolanteFinalsRaw, startSlot))),
-    }));
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
     queueBackgroundCloudSave(250);
   }
 
   function generatePrincipalFinals() {
-    if (knockout.principalSemis.length === 0) {
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    if (currentKnockout.principalSemis.length === 0) {
       window.alert('Génère d’abord les demi-finales principales.');
       return;
     }
-    const s1 = getWinnerLoser(knockout.principalSemis[0], phaseRules);
-    const s2 = getWinnerLoser(knockout.principalSemis[1], phaseRules);
+    const s1 = getWinnerLoser(currentKnockout.principalSemis[0], phaseRulesRef.current);
+    const s2 = getWinnerLoser(currentKnockout.principalSemis[1], phaseRulesRef.current);
     if (!s1.winner || !s2.winner) {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales principales.');
       return;
     }
-    if (!confirmClearStageScores(knockout.principalFinals, 'la finale principale')) return;
+    if (!confirmClearStageScores(currentKnockout.principalFinals, 'la finale principale')) return;
     const finalsRaw = [
       makeKnockoutMatch('Tableau principal', 'Petite finale', s1.loser, s2.loser),
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
     ];
-    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length) + stageSlotCount(knockout.principalSemis.length + knockout.consolanteFinals.length);
-    setKnockout((current) => ({ ...current, principalFinals: stampGeneratedMatches(assignSchedule(finalsRaw, startSlot)) }));
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length) + stageSlotCount(currentKnockout.principalSemis.length + currentKnockout.consolanteFinals.length);
+    const nextKnockout = {
+      ...currentKnockout,
+      principalFinals: stampGeneratedMatches(assignSchedule(finalsRaw, startSlot)),
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
   }
 
   function updateMatchesInScope(scope, updater) {
