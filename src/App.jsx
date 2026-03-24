@@ -1163,6 +1163,8 @@ export default function App() {
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
+  const latestPersistedStateRef = useRef(null);
+  const sharedTournamentIdRef = useRef(String(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley')).trim());
   const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
   const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
   const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
@@ -1278,6 +1280,23 @@ export default function App() {
     allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
+  useEffect(() => {
+    const normalizedSharedId = String(sharedTournamentId || '').trim();
+    sharedTournamentIdRef.current = normalizedSharedId;
+    latestPersistedStateRef.current = {
+      teams,
+      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId: normalizedSharedId },
+      meta: { lastSavedAt, remoteSavedAt },
+      brassage1,
+      brassage2,
+      mainStage,
+      knockout,
+      championshipLeg1,
+      championshipLeg2,
+      singleKnockout,
+    };
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, lastSavedAt, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+
   function getPersistedState(savedAt = lastSavedAt) {
     return {
       teams,
@@ -1321,7 +1340,7 @@ export default function App() {
   }
 
   function queueBackgroundCloudSave(delay = 150) {
-    if (typeof window === 'undefined' || !sharedTournamentId) return;
+    if (typeof window === 'undefined' || !sharedTournamentIdRef.current) return;
     if (backgroundCloudSaveTimeoutRef.current) {
       window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
     }
@@ -1578,12 +1597,17 @@ export default function App() {
       }
       return false;
     }
-    const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
-    if (!sharedTournamentId) setSharedTournamentId(effectiveId);
+    const effectiveId = sharedTournamentIdRef.current || buildDefaultSharedTournamentId(tournamentName);
+    if (!sharedTournamentIdRef.current) {
+      sharedTournamentIdRef.current = effectiveId;
+      setSharedTournamentId(effectiveId);
+    }
     const savedAt = new Date().toISOString();
-    const payload = getPersistedState(savedAt);
-    payload.settings.sharedTournamentId = effectiveId;
-    payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
+    const payload = latestPersistedStateRef.current
+      ? JSON.parse(JSON.stringify(latestPersistedStateRef.current))
+      : getPersistedState(savedAt);
+    payload.settings = { ...(payload.settings || {}), sharedTournamentId: effectiveId };
+    payload.meta = { ...(payload.meta || {}), lastSavedAt: savedAt, remoteSavedAt: savedAt };
     if (!silent) {
       setIsRemoteSyncing(true);
       setRemoteSyncMessage('Sauvegarde Firebase en cours...');
@@ -2796,7 +2820,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 15000,
+        until: Date.now() + 30000,
       });
     }
     queueBackgroundCloudSave(0);
@@ -2844,7 +2868,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 15000,
+        until: Date.now() + 30000,
       });
     }
     queueBackgroundCloudSave(0);
