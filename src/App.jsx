@@ -1182,6 +1182,9 @@ export default function App() {
   const recentRefereeReleaseRef = useRef(new Map());
   const recentRefereeLocalEditsRef = useRef(new Map());
   const latestPersistedStateRef = useRef(null);
+  const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
+  const cloudSaveInFlightRef = useRef(false);
+  const queuedCloudSaveRequestRef = useRef(null);
   const teamsRef = useRef(teams);
   const startTimeRef = useRef(startTime);
   const slotDurationRef = useRef(slotDuration);
@@ -1323,6 +1326,14 @@ export default function App() {
 
   function getPersistedState(savedAt = lastSavedAt) {
     return getPersistedStateSnapshot(savedAt);
+  }
+
+  function commitRefereeScoreDrafts(updater) {
+    setRefereeScoreDrafts((current) => {
+      const nextDrafts = typeof updater === 'function' ? updater(current) : updater;
+      refereeScoreDraftsRef.current = nextDrafts;
+      return nextDrafts;
+    });
   }
 
   function applyPersistedState(parsed, options = {}) {
@@ -1610,6 +1621,16 @@ export default function App() {
       }
       return false;
     }
+
+    if (cloudSaveInFlightRef.current) {
+      queuedCloudSaveRequestRef.current = { showMessage, silent };
+      if (!silent) {
+        setRemoteSyncMessage('Sauvegarde Firebase en file d’attente...');
+      }
+      return true;
+    }
+
+    cloudSaveInFlightRef.current = true;
     const effectiveId = String(sharedTournamentIdRef.current || '').trim() || buildDefaultSharedTournamentId(tournamentNameRef.current);
     if (!sharedTournamentIdRef.current) {
       sharedTournamentIdRef.current = effectiveId;
@@ -1648,7 +1669,13 @@ export default function App() {
       if (showMessage) window.alert(error.message || 'Échec de la sauvegarde Firebase.');
       return false;
     } finally {
+      cloudSaveInFlightRef.current = false;
       if (!silent) setIsRemoteSyncing(false);
+      const queuedRequest = queuedCloudSaveRequestRef.current;
+      if (queuedRequest) {
+        queuedCloudSaveRequestRef.current = null;
+        saveTournamentToCloud(queuedRequest.showMessage, queuedRequest.silent);
+      }
     }
   }
 
@@ -1664,6 +1691,7 @@ export default function App() {
     }
   }
 
+  useEffect(() => { refereeScoreDraftsRef.current = refereeScoreDrafts; }, [refereeScoreDrafts]);
   useEffect(() => { teamsRef.current = teams; }, [teams]);
   useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
   useEffect(() => { slotDurationRef.current = slotDuration; }, [slotDuration]);
@@ -1996,7 +2024,7 @@ export default function App() {
     const match = refereeSelectedEntry.match;
     const baseScoreA = match.submittedScoreA ?? '';
     const baseScoreB = match.submittedScoreB ?? '';
-    setRefereeScoreDrafts((current) => {
+    commitRefereeScoreDrafts((current) => {
       if (current[match.id]) return current;
       return {
         ...current,
@@ -2015,7 +2043,7 @@ export default function App() {
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const remoteA = match.submittedScoreA ?? '';
     const remoteB = match.submittedScoreB ?? '';
-    setRefereeScoreDrafts((current) => {
+    commitRefereeScoreDrafts((current) => {
       const draft = current[match.id];
       if (!draft) return current;
       const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
@@ -2915,7 +2943,7 @@ export default function App() {
   function updateRefereeMatchScore(scope, matchId, field, value) {
     const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
     const editTimestamp = new Date().toISOString();
-    setRefereeScoreDrafts((current) => {
+    commitRefereeScoreDrafts((current) => {
       const existing = current[matchId] || { scoreA: '', scoreB: '' };
       return {
         ...current,
@@ -2960,7 +2988,7 @@ export default function App() {
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
-      const draftValue = refereeScoreDrafts[matchId]?.[field];
+      const draftValue = refereeScoreDraftsRef.current?.[matchId]?.[field];
       const currentValue = toNumber(draftValue !== undefined ? draftValue : (field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB)) ?? 0;
       const nextValue = Math.max(0, currentValue + delta);
       computedNextValue = String(nextValue);
@@ -2979,7 +3007,7 @@ export default function App() {
       return nextMatch;
     }));
     if (computedNextValue !== null) {
-      setRefereeScoreDrafts((current) => {
+      commitRefereeScoreDrafts((current) => {
         const existing = current[matchId] || { scoreA: '', scoreB: '' };
         return {
           ...current,
