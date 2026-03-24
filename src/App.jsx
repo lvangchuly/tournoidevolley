@@ -1390,9 +1390,16 @@ export default function App() {
         && String(match.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
         && String(match.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
       );
+      const remotePendingCaughtUpToLocalEdit = Boolean(
+        recentLocalEdit
+        && String(remote.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(remote.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+        && remoteSubmittedAt >= localSubmittedAt
+      );
       const shouldIgnoreRemotePendingBecauseLocalEdit =
         hasRecentProtectedLocalEdit
         && pendingScoresDiffer
+        && !remotePendingCaughtUpToLocalEdit
         && remoteSubmittedAt <= localSubmittedAt;
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
@@ -1439,7 +1446,7 @@ export default function App() {
           String(remote.submittedScoreA ?? '') === String(match.submittedScoreA ?? '')
           && String(remote.submittedScoreB ?? '') === String(match.submittedScoreB ?? '')
           && remoteSubmittedAt >= localSubmittedAt;
-        if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !match.refereeInProgress) {
+        if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !nextMatch.refereeInProgress) {
           recentRefereeLocalEditsRef.current.delete(match.id);
         }
       }
@@ -1895,16 +1902,16 @@ export default function App() {
     { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
     { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
   ] : [
-    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(brassage1.matches), isUnlocked: true, lockReason: '' },
-    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(brassage2.matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
-    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(mainStage.principaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
-    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(mainStage.consolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(visibleBrassage1Matches), isUnlocked: true, lockReason: '' },
+    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(visibleBrassage2Matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
+    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(visiblePrincipaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(visibleConsolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
     { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(knockout.principalQuarters), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
     { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(knockout.principalSemis), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
     { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(knockout.principalFinals), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
     { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(knockout.consolanteSemis), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
     { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(knockout.consolanteFinals), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -2723,7 +2730,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 2500,
+        until: Date.now() + 8000,
       });
     }
     queueBackgroundCloudSave(0);
@@ -2755,7 +2762,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 2500,
+        until: Date.now() + 8000,
       });
     }
     queueBackgroundCloudSave(0);
