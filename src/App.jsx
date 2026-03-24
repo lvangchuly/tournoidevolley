@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V19K';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19L';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'V19K';
+const APP_VERSION = 'V19L';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1924,24 +1924,44 @@ export default function App() {
   ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const publicPodiumLeaders = useMemo(() => {
+    const isResolvedPodiumTeam = (teamId) => {
+      if (!teamId) return false;
+      const teamName = String(resolveTeam(teamId)?.name || '').trim().toLowerCase();
+      return Boolean(teamName && teamName !== 'à définir');
+    };
+
     const extractPodium = (matches) => {
       const finalMatch = matches.find((match) => match.group === 'Finale');
       const smallFinal = matches.find((match) => match.group === 'Petite finale');
       const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
       const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
-      return {
-        first: finalResult.winner || null,
-        second: finalResult.loser || null,
-        third: smallResult.winner || null,
-      };
+
+      const first = isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
+        ? finalResult.winner
+        : null;
+      const second = isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
+        ? finalResult.loser
+        : null;
+      const third = isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
+        ? smallResult.winner
+        : null;
+
+      return { first, second, third };
     };
 
     const principale = extractPodium(knockout.principalFinals);
     const consolante = extractPodium(knockout.consolanteFinals);
-    const tournamentFinished = Boolean(principale.first && principale.second && principale.third && consolante.first && consolante.second && consolante.third);
+    const tournamentFinished = Boolean(
+      principale.first
+      && principale.second
+      && principale.third
+      && consolante.first
+      && consolante.second
+      && consolante.third
+    );
 
     return { tournamentFinished, principale, consolante };
-  }, [knockout.principalFinals, knockout.consolanteFinals, phaseRules]);
+  }, [knockout.principalFinals, knockout.consolanteFinals, phaseRules, resolveTeam]);
 
   const featuredPublicMatches = useMemo(() => {
     if (publicPodiumLeaders.tournamentFinished) {
