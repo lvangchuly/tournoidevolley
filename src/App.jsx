@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v19A';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V19B';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v19A';
+const APP_VERSION = 'V19B';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1172,6 +1172,7 @@ export default function App() {
   const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
+  const [refereeScoreDrafts, setRefereeScoreDrafts] = useState({});
   const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
@@ -1921,12 +1922,66 @@ export default function App() {
     return match ? { ...group, match } : null;
   }, [refereeSelectedMatch, refereeMatchGroups]);
 
+  function getRefereeDraftValue(match, field) {
+    const draft = match ? refereeScoreDrafts[match.id] : null;
+    if (!draft) return undefined;
+    return field === 'scoreA' ? draft.scoreA : draft.scoreB;
+  }
+
   useEffect(() => {
     if (refereeSelectedMatch && !refereeSelectedEntry) {
       setRefereeSelectedMatch(null);
     }
   }, [refereeSelectedMatch, refereeSelectedEntry]);
 
+  useEffect(() => {
+    if (!refereeSelectedEntry?.match) return;
+    const match = refereeSelectedEntry.match;
+    const baseScoreA = match.submittedScoreA ?? '';
+    const baseScoreB = match.submittedScoreB ?? '';
+    setRefereeScoreDrafts((current) => {
+      if (current[match.id]) return current;
+      return {
+        ...current,
+        [match.id]: {
+          scoreA: baseScoreA,
+          scoreB: baseScoreB,
+          submittedAt: match.submittedAt ?? null,
+        },
+      };
+    });
+  }, [refereeSelectedEntry?.match?.id]);
+
+  useEffect(() => {
+    if (!refereeSelectedEntry?.match) return;
+    const match = refereeSelectedEntry.match;
+    const officialStatus = getMatchStatusLabel(match, phaseRules);
+    const remoteA = match.submittedScoreA ?? '';
+    const remoteB = match.submittedScoreB ?? '';
+    setRefereeScoreDrafts((current) => {
+      const draft = current[match.id];
+      if (!draft) return current;
+      const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
+      if (shouldClear) {
+        const next = { ...current };
+        delete next[match.id];
+        return next;
+      }
+      const draftMatchesRemote = String(draft.scoreA ?? '') === String(remoteA ?? '') && String(draft.scoreB ?? '') === String(remoteB ?? '');
+      const draftExpired = !match.refereeInProgress && !match.matchInProgress;
+      if (draftMatchesRemote || draftExpired) {
+        return {
+          ...current,
+          [match.id]: {
+            scoreA: remoteA,
+            scoreB: remoteB,
+            submittedAt: match.submittedAt ?? null,
+          },
+        };
+      }
+      return current;
+    });
+  }, [refereeSelectedEntry?.match?.id, refereeSelectedEntry?.match?.submittedScoreA, refereeSelectedEntry?.match?.submittedScoreB, refereeSelectedEntry?.match?.submittedAt, refereeSelectedEntry?.match?.refereeInProgress, refereeSelectedEntry?.match?.matchInProgress, refereeSelectedEntry?.match?.validatedAt, phaseRules]);
 
   useEffect(() => {
     const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
@@ -2708,6 +2763,17 @@ export default function App() {
   function updateRefereeMatchScore(scope, matchId, field, value) {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
     const editTimestamp = new Date().toISOString();
+    setRefereeScoreDrafts((current) => {
+      const existing = current[matchId] || { scoreA: '', scoreB: '' };
+      return {
+        ...current,
+        [matchId]: {
+          ...existing,
+          [field]: normalized,
+          submittedAt: editTimestamp,
+        },
+      };
+    });
     let localPendingSnapshot = null;
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -2730,7 +2796,20 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 8000,
+        until: Date.now() + 15000,
+      });
+    }
+    if (computedNextValue !== null) {
+      setRefereeScoreDrafts((current) => {
+        const existing = current[matchId] || { scoreA: '', scoreB: '' };
+        return {
+          ...current,
+          [matchId]: {
+            ...existing,
+            [field]: computedNextValue,
+            submittedAt: editTimestamp,
+          },
+        };
       });
     }
     queueBackgroundCloudSave(0);
@@ -2739,11 +2818,14 @@ export default function App() {
   function stepRefereeMatchScore(scope, matchId, field, delta) {
     const editTimestamp = new Date().toISOString();
     let localPendingSnapshot = null;
+    let computedNextValue = null;
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
-      const currentValue = toNumber(field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB) ?? 0;
+      const draftValue = refereeScoreDrafts[matchId]?.[field];
+      const currentValue = toNumber(draftValue !== undefined ? draftValue : (field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB)) ?? 0;
       const nextValue = Math.max(0, currentValue + delta);
+      computedNextValue = nextValue;
       const nextMatch = {
         ...match,
         [field]: match[field],
@@ -2762,7 +2844,7 @@ export default function App() {
     if (localPendingSnapshot) {
       recentRefereeLocalEditsRef.current.set(matchId, {
         ...localPendingSnapshot,
-        until: Date.now() + 8000,
+        until: Date.now() + 15000,
       });
     }
     queueBackgroundCloudSave(0);
@@ -3031,8 +3113,10 @@ export default function App() {
     const pendingStatus = getPendingStatus(match);
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const isLocked = officialStatus === 'Valide';
-    const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
-    const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
+    const draftScoreA = getRefereeDraftValue(match, 'scoreA');
+    const draftScoreB = getRefereeDraftValue(match, 'scoreB');
+    const displayScoreA = isLocked ? (match.scoreA ?? '') : (draftScoreA !== undefined ? draftScoreA : (match.submittedScoreA ?? ''));
+    const displayScoreB = isLocked ? (match.scoreB ?? '') : (draftScoreB !== undefined ? draftScoreB : (match.submittedScoreB ?? ''));
     const pendingA = toNumber(match.submittedScoreA);
     const pendingB = toNumber(match.submittedScoreB);
     const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
