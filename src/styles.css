@@ -709,6 +709,24 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .referee-page { min-height: 100vh; padding: 24px 0 40px; background: #f8fafc; }
 .referee-hero { background: linear-gradient(135deg, #065f46, #0f766e); }
+.referee-hero-with-logo {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+.referee-hero-with-logo h1,
+.referee-hero-with-logo p,
+.referee-hero-with-logo .hero-pill,
+.referee-hero-with-logo .hero-pill span,
+.referee-hero-with-logo .hero-pill strong,
+.referee-hero-with-logo .hero-tag,
+.referee-hero-with-logo .hero-version {
+  color: white;
+  text-shadow: 0 2px 10px rgba(15, 23, 42, 0.55);
+}
+.referee-hero-with-logo .hero-tag {
+  background: rgba(15, 23, 42, 0.35);
+  border-color: rgba(255,255,255,0.32);
+}
 .hero-pill-inline {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
