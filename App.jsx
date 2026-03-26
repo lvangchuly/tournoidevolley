@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-v18A';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20C';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
-const APP_VERSION = 'v18A';
+const APP_VERSION = 'V20C';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -80,6 +80,25 @@ function safeClone(value, fallback) {
   }
 }
 
+function safeGetLocalStorageItem(key) {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetLocalStorageItem(key, value) {
+  if (typeof window === 'undefined') return false;
+  try {
+    window.localStorage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeTeamsList(inputTeams) {
   if (!Array.isArray(inputTeams) || inputTeams.length === 0) return defaultTeams();
   return inputTeams
@@ -94,12 +113,45 @@ function normalizeTeamsList(inputTeams) {
     }));
 }
 
+function getSortedTeamIds(match) {
+  return [match?.teamAId || '', match?.teamBId || ''].filter(Boolean).sort();
+}
+
+function teamPairKey(match, phaseOverride = '') {
+  const teamIds = getSortedTeamIds(match);
+  if (teamIds.length < 2) return '';
+  return [phaseOverride || match?.phase || '', ...teamIds].join('|');
+}
+
+function isKnockoutMatchSlot(match) {
+  const phase = String(match?.phase || '');
+  const group = String(match?.group || '');
+  return /quart de finale|demi-finale|tableau principal|tableau consolante|finale/i.test(phase)
+    || /quart|demi|finale|petite finale/i.test(group);
+}
+
 function matchIdentityKey(match) {
   if (!match) return '';
+  const phase = match.phase || '';
+  const group = match.group || '';
+  const round = match.round || '';
+  if (isKnockoutMatchSlot(match) && (phase || group)) {
+    return [phase, group || '', round || ''].join('|');
+  }
+  const teamIds = getSortedTeamIds(match);
+  const canonicalKey = [
+    phase,
+    group,
+    round,
+    ...teamIds,
+  ].join('|');
+  if (canonicalKey.replace(/\|/g, '')) {
+    return canonicalKey;
+  }
   return match.id || [
-    match.phase || '',
-    match.group || '',
-    match.round || '',
+    phase,
+    group,
+    round,
     match.teamAId || '',
     match.teamBId || '',
     match.court || '',
@@ -119,7 +171,8 @@ function pickPreferredMatch(existingMatch, incomingMatch) {
     (existingMatch.submittedScoreA !== '' && existingMatch.submittedScoreA !== null && existingMatch.submittedScoreA !== undefined ? 100 : 0) +
     (existingMatch.submittedScoreB !== '' && existingMatch.submittedScoreB !== null && existingMatch.submittedScoreB !== undefined ? 100 : 0) +
     (existingMatch.matchInProgress ? 10 : 0) +
-    (existingMatch.refereeInProgress ? 1 : 0);
+    (existingMatch.refereeInProgress ? 1 : 0) +
+    (existingMatch.manualOverrideAt ? 5000 : 0);
   const incomingWeight =
     (incomingMatch.validatedAt ? 1000000 : 0) +
     (incomingMatch.scoreA !== '' && incomingMatch.scoreA !== null && incomingMatch.scoreA !== undefined ? 10000 : 0) +
@@ -128,14 +181,15 @@ function pickPreferredMatch(existingMatch, incomingMatch) {
     (incomingMatch.submittedScoreA !== '' && incomingMatch.submittedScoreA !== null && incomingMatch.submittedScoreA !== undefined ? 100 : 0) +
     (incomingMatch.submittedScoreB !== '' && incomingMatch.submittedScoreB !== null && incomingMatch.submittedScoreB !== undefined ? 100 : 0) +
     (incomingMatch.matchInProgress ? 10 : 0) +
-    (incomingMatch.refereeInProgress ? 1 : 0);
+    (incomingMatch.refereeInProgress ? 1 : 0) +
+    (incomingMatch.manualOverrideAt ? 5000 : 0);
 
   if (incomingWeight !== existingWeight) {
     return incomingWeight > existingWeight ? incomingMatch : existingMatch;
   }
 
-  const existingTimestamp = Math.max(toTimestamp(existingMatch.validatedAt), toTimestamp(existingMatch.submittedAt));
-  const incomingTimestamp = Math.max(toTimestamp(incomingMatch.validatedAt), toTimestamp(incomingMatch.submittedAt));
+  const existingTimestamp = Math.max(toTimestamp(existingMatch.validatedAt), toTimestamp(existingMatch.submittedAt), toTimestamp(existingMatch.manualOverrideAt));
+  const incomingTimestamp = Math.max(toTimestamp(incomingMatch.validatedAt), toTimestamp(incomingMatch.submittedAt), toTimestamp(incomingMatch.manualOverrideAt));
   if (incomingTimestamp !== existingTimestamp) {
     return incomingTimestamp > existingTimestamp ? incomingMatch : existingMatch;
   }
@@ -152,7 +206,11 @@ function dedupeMatches(matches) {
     if (!key) return;
     byKey.set(key, pickPreferredMatch(byKey.get(key), match));
   });
-  return Array.from(byKey.values());
+  return Array.from(byKey.values()).filter((match) => {
+    if (!match) return false;
+    if (!isKnockoutMatchSlot(match)) return true;
+    return Boolean(match.teamAId && match.teamBId);
+  });
 }
 
 function normalizeLeagueState(input) {
@@ -214,7 +272,7 @@ function loadState() {
   if (typeof window === 'undefined') return null;
   try {
     const storageKeys = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
-    const raw = storageKeys.map((key) => window.localStorage.getItem(key)).find(Boolean);
+    const raw = storageKeys.map((key) => safeGetLocalStorageItem(key)).find(Boolean);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed?.teams)) parsed.teams = normalizeTeamsList(parsed.teams);
@@ -231,15 +289,19 @@ function loadState() {
   }
 }
 
-function defaultTeams() {
-  const defaults = ['N', 'N', 'NP', 'NP', 'R', 'R', 'R', 'D', 'D', 'D', 'D', 'L', 'L', 'L', 'L', 'NP', 'R', 'D'];
+function defaultTeams(defaultLevelMap = null, fallbackLevel = 'D') {
+  const defaults = Array.isArray(defaultLevelMap) ? defaultLevelMap : ['N', 'N', 'NP', 'NP', 'R', 'R', 'R', 'D', 'D', 'D', 'D', 'L', 'L', 'L', 'L', 'NP', 'R', 'D'];
   return Array.from({ length: TEAM_TARGET }, (_, index) => ({
     id: uid('team'),
     name: `Équipe ${index + 1}`,
-    level: defaults[index] || 'D',
+    level: defaults[index] || fallbackLevel,
     club: '',
     contact: '',
   }));
+}
+
+function defaultTeamsAllLevelL() {
+  return defaultTeams(Array.from({ length: TEAM_TARGET }, () => 'L'), 'L');
 }
 
 function sortTeamsForSeeding(teams) {
@@ -433,6 +495,30 @@ function createThreeTeamPoolMatches(pool, phase) {
   ];
 }
 
+function scheduleAlternatingPoolsOnCourt(pools, phase, court, startSlot) {
+  const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
+  if (!safePools.length) return [];
+
+  const poolMatches = safePools.map((pool) => createThreeTeamPoolMatches(pool, phase));
+  const maxRounds = Math.max(...poolMatches.map((matches) => matches.length), 0);
+  const orderedMatches = [];
+
+  for (let roundIndex = 0; roundIndex < maxRounds; roundIndex += 1) {
+    poolMatches.forEach((matches) => {
+      const match = matches[roundIndex];
+      if (match) orderedMatches.push(match);
+    });
+  }
+
+  return orderedMatches.map((match, offset) => ({
+    ...match,
+    court,
+    slot: startSlot + offset + 1,
+    time: '',
+    validatedAt: match.validatedAt || null,
+  }));
+}
+
 function scheduleBrassageMatches(pools, phase, startSlot) {
   const poolPairs = [
     [0, 1],
@@ -443,33 +529,27 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
   const scheduled = [];
 
   poolPairs.forEach(([firstPoolIndex, secondPoolIndex], courtIndex) => {
-    const firstPool = pools[firstPoolIndex];
-    const secondPool = pools[secondPoolIndex];
-    if (!firstPool || !secondPool) return;
-
-    const firstPoolMatches = createThreeTeamPoolMatches(firstPool, phase);
-    const secondPoolMatches = createThreeTeamPoolMatches(secondPool, phase);
-
-    const orderedMatches = [
-      firstPoolMatches[0],
-      secondPoolMatches[0],
-      firstPoolMatches[1],
-      secondPoolMatches[1],
-      firstPoolMatches[2],
-      secondPoolMatches[2],
-    ];
-
-    orderedMatches.forEach((match, offset) => {
-      const zeroBasedSlot = startSlot + offset;
-      scheduled.push({
-        ...match,
-        court: courtIndex + 1,
-        slot: zeroBasedSlot + 1,
-        time: '',
-        validatedAt: match.validatedAt || null,
-      });
-    });
+    const courtMatches = scheduleAlternatingPoolsOnCourt(
+      [pools[firstPoolIndex], pools[secondPoolIndex]].filter(Boolean),
+      phase,
+      courtIndex + 1,
+      startSlot,
+    );
+    scheduled.push(...courtMatches);
   });
+
+  return scheduled.sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
+}
+
+function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
+  const scheduled = [
+    ...scheduleAlternatingPoolsOnCourt([principalePools[0], principalePools[1]].filter(Boolean), 'Principale', 1, startSlot),
+    ...scheduleAlternatingPoolsOnCourt([principalePools[2], principalePools[3]].filter(Boolean), 'Principale', 2, startSlot),
+    ...scheduleAlternatingPoolsOnCourt(consolantePools, 'Consolante', 3, startSlot),
+  ];
 
   return scheduled.sort((a, b) => {
     if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
@@ -520,13 +600,32 @@ function getRuleForPhaseLabel(phaseLabel, phaseRules) {
   return phaseRules?.[key] || DEFAULT_PHASE_RULES[key];
 }
 
+function getRuleKeyFromMatch(match) {
+  if (!match) return 'brassage1';
+  const phaseLabel = match.phase;
+  const groupLabel = String(match.group || '').trim();
+  if (phaseLabel === 'Tableau principal' || phaseLabel === 'Tableau consolante') {
+    if (/^Quart/i.test(groupLabel)) return 'quart';
+    if (/^Demi/i.test(groupLabel)) return 'demi';
+    if (/^Finale$/i.test(groupLabel)) return 'finale';
+    if (/^Petite finale/i.test(groupLabel)) return 'petiteFinale';
+    return phaseLabel === 'Tableau principal' ? 'principale' : 'consolante';
+  }
+  return getRuleKeyFromPhaseLabel(phaseLabel);
+}
+
+function getRuleForMatch(match, phaseRules) {
+  const key = getRuleKeyFromMatch(match);
+  return phaseRules?.[key] || DEFAULT_PHASE_RULES[key];
+}
+
 function isMatchResultValid(match, phaseRules) {
   const scoreA = toNumber(match.scoreA);
   const scoreB = toNumber(match.scoreB);
   if (scoreA === null || scoreB === null) return false;
   if (scoreA === scoreB) return false;
 
-  const rule = getRuleForPhaseLabel(match.phase, phaseRules);
+  const rule = getRuleForMatch(match, phaseRules);
   const target = Number(rule?.winningScore) || 21;
   const mode = rule?.mode || 'sec';
 
@@ -567,7 +666,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
     const court = match.court || 1;
     const plannedStart = courtAvailability.get(court) ?? stageStartMinutes;
     const actualEnd = isMatchResultValid(match, phaseRules) ? stampToMinutes(match.validatedAt) : null;
-    const estimatedEnd = plannedStart + estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules));
+    const estimatedEnd = plannedStart + estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules));
     const endMinutes = actualEnd !== null ? Math.max(plannedStart, actualEnd) : estimatedEnd;
 
     scheduleMap[match.id] = {
@@ -575,7 +674,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
       startText: minutesToTime(plannedStart),
       endMinutes,
       endText: minutesToTime(endMinutes),
-      estimatedDuration: estimatePhaseDurationMinutes(getRuleForPhaseLabel(match.phase, phaseRules)),
+      estimatedDuration: estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules)),
     };
 
     courtAvailability.set(court, endMinutes);
@@ -719,6 +818,102 @@ function TeamBadge({ name, level, className = '', children = null }) {
   return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}{children}</span>;
 }
 
+function formatPoolLabel(group = '') {
+  return String(group || '')
+    .replace(/^Brassage [12] - /, '')
+    .replace(/^Championnat (Aller|Retour) - /, '')
+    .replace(/^Principale\s+/, 'Poule ')
+    .replace(/^Consolante\s+/, 'Poule ')
+    .trim();
+}
+
+function getPoolLetter(poolName = '') {
+  const match = String(poolName || '').trim().match(/([A-Z])$/i);
+  return match ? match[1].toUpperCase() : String(poolName || '').trim().toUpperCase();
+}
+
+function getStandingsRowsForPool(standings, pools, targetPoolLetter) {
+  const target = String(targetPoolLetter || '').trim().toUpperCase();
+  const standingEntry = (Array.isArray(standings) ? standings : []).find((entry) => getPoolLetter(entry?.pool?.name) === target);
+  if (Array.isArray(standingEntry?.rows) && standingEntry.rows.length) {
+    return standingEntry.rows;
+  }
+  const pool = (Array.isArray(pools) ? pools : []).find((entry) => getPoolLetter(entry?.name) === target);
+  if (!Array.isArray(pool?.teamIds)) return [];
+  return pool.teamIds.filter(Boolean).map((teamId) => ({ teamId }));
+}
+
+function sanitizeKnockoutMatches(matches) {
+  return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match?.teamAId && match?.teamBId);
+}
+
+function hasBothTeamsDefined(match) {
+  return Boolean(match?.teamAId && match?.teamBId);
+}
+
+function isPublicDisplayableMatch(match, resolveTeam) {
+  if (!hasBothTeamsDefined(match)) return false;
+  const teamAName = String(resolveTeam(match.teamAId)?.name || '').trim().toLowerCase();
+  const teamBName = String(resolveTeam(match.teamBId)?.name || '').trim().toLowerCase();
+  return Boolean(teamAName && teamBName && teamAName !== 'à définir' && teamBName !== 'à définir');
+}
+
+function clearMatchScores(match) {
+  return {
+    ...match,
+    scoreA: '',
+    scoreB: '',
+    submittedScoreA: '',
+    submittedScoreB: '',
+    submittedAt: null,
+    validatedAt: null,
+    manualOverrideAt: null,
+    refereeInProgress: false,
+    matchInProgress: false,
+  };
+}
+
+function hasLiveMatchData(match) {
+  return matchHasEnteredScore(match)
+    || Boolean(match?.refereeInProgress)
+    || Boolean(match?.matchInProgress)
+    || Boolean(match?.validatedAt)
+    || Boolean(match?.manualOverrideAt)
+    || Boolean(match?.submittedAt);
+}
+
+function shouldPreserveLocalMatchIdentity(localMatch, remoteMatch) {
+  if (!localMatch?.id) return false;
+  const localGeneratedAt = toTimestamp(localMatch?.generatedAt);
+  const remoteGeneratedAt = toTimestamp(remoteMatch?.generatedAt);
+  if (localGeneratedAt !== remoteGeneratedAt) {
+    return localGeneratedAt > remoteGeneratedAt;
+  }
+  const localLive = hasLiveMatchData(localMatch);
+  const remoteLive = hasLiveMatchData(remoteMatch);
+  if (localLive !== remoteLive) {
+    return localLive && !remoteLive;
+  }
+  const localLatestAt = Math.max(
+    toTimestamp(localMatch?.submittedAt),
+    toTimestamp(localMatch?.validatedAt),
+    toTimestamp(localMatch?.manualOverrideAt),
+  );
+  const remoteLatestAt = Math.max(
+    toTimestamp(remoteMatch?.submittedAt),
+    toTimestamp(remoteMatch?.validatedAt),
+    toTimestamp(remoteMatch?.manualOverrideAt),
+  );
+  return localLatestAt >= remoteLatestAt;
+}
+
+function stampGeneratedMatches(matches, generatedAt = new Date().toISOString()) {
+  return (Array.isArray(matches) ? matches : []).map((match) => ({
+    ...clearMatchScores(match),
+    generatedAt,
+  }));
+}
+
 function Button({ children, variant = 'primary', ...props }) {
   return (
     <button className={`btn btn-${variant}`} {...props}>
@@ -776,38 +971,130 @@ function PhaseRuleEditor({ title, value, onScoreChange, onModeChange, disabled =
   );
 }
 
+
+function filterMatchesToPools(matches, pools, phaseLabel) {
+  const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+  const safePools = Array.isArray(pools) ? pools : [];
+  if (!safePools.length) return safeMatches;
+
+  const allowedPairs = new Map();
+  safePools.forEach((pool) => {
+    const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
+    if (teamIds.length < 2) return;
+    for (let i = 0; i < teamIds.length - 1; i += 1) {
+      for (let j = i + 1; j < teamIds.length; j += 1) {
+        allowedPairs.set(teamPairKey({ phase: phaseLabel, teamAId: teamIds[i], teamBId: teamIds[j] }, phaseLabel), pool.name || '');
+      }
+    }
+  });
+
+  const selectedMatches = new Map();
+  safeMatches.forEach((match) => {
+    if (!match) return;
+    if (phaseLabel && match.phase !== phaseLabel) return;
+    const pairKey = teamPairKey(match, phaseLabel);
+    if (!pairKey || !allowedPairs.has(pairKey)) return;
+    const expectedGroup = allowedPairs.get(pairKey);
+    const current = selectedMatches.get(pairKey);
+    if (!current) {
+      selectedMatches.set(pairKey, match);
+      return;
+    }
+    const currentGroupScore = current.group === expectedGroup ? 1 : 0;
+    const incomingGroupScore = match.group === expectedGroup ? 1 : 0;
+    if (incomingGroupScore !== currentGroupScore) {
+      if (incomingGroupScore > currentGroupScore) {
+        selectedMatches.set(pairKey, match);
+      }
+      return;
+    }
+    selectedMatches.set(pairKey, pickPreferredMatch(current, match));
+  });
+
+  return Array.from(selectedMatches.values());
+}
+
+function filterMatchesBySelectedTeam(matches, selectedTeamId) {
+  const safeMatches = Array.isArray(matches) ? matches : [];
+  if (!selectedTeamId) return safeMatches;
+  return safeMatches.filter((match) => match?.teamAId === selectedTeamId || match?.teamBId === selectedTeamId);
+}
+
+function formatRemainingMatchesLabel(matches, phaseRules) {
+  const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+  const remainingCount = uniqueMatches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
+  return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
+}
+
+
+
+function PublicPodiumHighlightCard({ title, principalTeamId, consolanteTeamId, resolveTeam }) {
+  const renderSlot = (label, teamId) => {
+    if (!teamId) return <div className="public-podium-team-value muted">À venir</div>;
+    const team = resolveTeam(teamId);
+    return <TeamBadge name={team.name} level={team.level} className="team-badge-public public-podium-badge" />;
+  };
+
+  return (
+    <div className="public-match-card public-podium-card">
+      <div className="public-match-topline">
+        <div className="public-label">Tournoi terminé</div>
+        <div className="public-phase-label">{title}</div>
+      </div>
+      <div className="public-podium-card-body">
+        <div className="public-podium-team-row">
+          <div className="public-podium-team-label">Principale</div>
+          <div className="public-podium-team-content">{renderSlot('Principale', principalTeamId)}</div>
+        </div>
+        <div className="public-podium-team-row">
+          <div className="public-podium-team-label">Consolante</div>
+          <div className="public-podium-team-content">{renderSlot('Consolante', consolanteTeamId)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LargePublicMatch({ title, match, resolveTeam, phaseRules }) {
   if (!match) return null;
   const isInProgress = isMatchCurrentlyInProgress(match, phaseRules);
-  const displayScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
-  const displayScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
+  const rawScoreA = isInProgress && match.submittedScoreA !== '' ? match.submittedScoreA : match.scoreA;
+  const rawScoreB = isInProgress && match.submittedScoreB !== '' ? match.submittedScoreB : match.scoreB;
+  const displayScoreA = isInProgress ? (rawScoreA === '' ? '--' : rawScoreA) : '--';
+  const displayScoreB = isInProgress ? (rawScoreB === '' ? '--' : rawScoreB) : '--';
   const phaseAndGroup = [match.phase, match.group].filter(Boolean).join(' - ');
   const statusLabel = isInProgress ? 'Match en cours' : title;
   const endLabel = isInProgress ? 'Fin de match prévue à' : 'Fin prévue à';
-  const startText = match.scheduledStartText || match.time;
-  const endText = match.scheduledEndText || '-';
+  const startText = match.scheduledStartText || match.time || '--:--';
+  const endText = match.scheduledEndText || '--:--';
   return (
     <div className="public-match-card public-match-card-featured">
       <div className="public-match-topline">
         <div className="public-label">{statusLabel}</div>
         <div className="public-phase-label">{phaseAndGroup}</div>
       </div>
-      <div className="muted small public-match-meta">{startText} • Terrain {match.court}</div>
+      <div className="muted small public-match-meta">Terrain <span className="public-court-number">{match.court}</span></div>
       <div className="public-match-grid public-match-grid-featured">
         <div className="public-match-main">
           <div className="public-match-team-row">
             <div className="public-team"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} className="team-badge-public" /></div>
-            <div className="public-score public-score-inline">{displayScoreA === '' ? '-' : displayScoreA}</div>
+            <div className="public-score public-score-inline">{displayScoreA}</div>
           </div>
           <div className="muted small public-versus">vs</div>
           <div className="public-match-team-row">
             <div className="public-team"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} className="team-badge-public" /></div>
-            <div className="public-score public-score-inline">{displayScoreB === '' ? '-' : displayScoreB}</div>
+            <div className="public-score public-score-inline">{displayScoreB}</div>
           </div>
         </div>
         <div className="public-match-side-note">
-          <div className="public-end-label">{endLabel}</div>
-          <div className="public-end-time">{endText}</div>
+          <div className="public-start-block">
+            <div className="public-start-label">Début estimé à</div>
+            <div className="public-start-time">{startText}</div>
+          </div>
+          <div className="public-end-block">
+            <div className="public-end-label">{endLabel}</div>
+            <div className="public-end-time">{endText}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -834,24 +1121,37 @@ function buildFirebaseTournamentUrl(sharedTournamentId) {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments/${effectiveId}.json`;
 }
 
-function buildRefereeAccessUrl(sharedTournamentId) {
-  if (typeof window === 'undefined') return '?mode=referee';
-  const url = new URL(window.location.origin + window.location.pathname);
-  url.searchParams.set('mode', 'referee');
+function buildBaseAccessHref() {
+  if (typeof window === 'undefined') return '';
+  const href = String(window.location.href || '');
+  if (!href) return '';
+  const hashIndex = href.indexOf('#');
+  const withoutHash = hashIndex >= 0 ? href.slice(0, hashIndex) : href;
+  const queryIndex = withoutHash.indexOf('?');
+  return queryIndex >= 0 ? withoutHash.slice(0, queryIndex) : withoutHash;
+}
+
+function buildAccessHref(sharedTournamentId, isReferee = false) {
+  const baseHref = buildBaseAccessHref();
+  const params = new URLSearchParams();
+  if (isReferee) params.set('mode', 'referee');
   if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
+    params.set('sharedTournamentId', sharedTournamentId);
   }
-  return url.toString();
+  const queryString = params.toString();
+  if (!baseHref) {
+    return queryString ? `?${queryString}` : '?';
+  }
+  return queryString ? `${baseHref}?${queryString}` : baseHref;
+}
+
+function buildRefereeAccessUrl(sharedTournamentId) {
+  return buildAccessHref(sharedTournamentId, true);
 }
 
 
 function buildPublicAccessUrl(sharedTournamentId) {
-  if (typeof window === 'undefined') return '?sharedTournamentId=demo';
-  const url = new URL(window.location.origin + window.location.pathname);
-  if (sharedTournamentId) {
-    url.searchParams.set('sharedTournamentId', sharedTournamentId);
-  }
-  return url.toString();
+  return buildAccessHref(sharedTournamentId, false) || '?sharedTournamentId=demo';
 }
 
 function formatRemoteTimestamp(value) {
@@ -947,12 +1247,37 @@ export default function App() {
   const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
   const [refereeSelectedMatch, setRefereeSelectedMatch] = useState(null);
+  const [refereeSelectedScoreDraft, setRefereeSelectedScoreDraft] = useState(null);
+  const [refereeScoreDrafts, setRefereeScoreDrafts] = useState({});
+  const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
   const autoRefereeSyncTimeoutRef = useRef(null);
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
+  const recentRefereeLocalEditsRef = useRef(new Map());
+  const latestPersistedStateRef = useRef(null);
+  const refereeSelectedScoreDraftRef = useRef(refereeSelectedScoreDraft);
+  const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
+  const cloudSaveInFlightRef = useRef(false);
+  const queuedCloudSaveRequestRef = useRef(null);
+  const teamsRef = useRef(teams);
+  const startTimeRef = useRef(startTime);
+  const slotDurationRef = useRef(slotDuration);
+  const phaseRulesRef = useRef(phaseRules);
+  const organizerPasswordRef = useRef(organizerPassword);
+  const tournamentNameRef = useRef(tournamentName);
+  const tournamentLogoRef = useRef(tournamentLogo);
+  const sharedTournamentIdRef = useRef(sharedTournamentId);
+  const remoteSavedAtRef = useRef(remoteSavedAt);
+  const brassage1Ref = useRef(brassage1);
+  const brassage2Ref = useRef(brassage2);
+  const mainStageRef = useRef(mainStage);
+  const knockoutRef = useRef(knockout);
+  const championshipLeg1Ref = useRef(championshipLeg1);
+  const championshipLeg2Ref = useRef(championshipLeg2);
+  const singleKnockoutRef = useRef(singleKnockout);
   const pendingFreshTournamentTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -972,6 +1297,21 @@ export default function App() {
   const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const teamsSortedByLevel = useMemo(() => sortTeamsForSeeding(teams), [teams]);
   const activeTeams = useMemo(() => teams.filter((team) => team.name.trim()), [teams]);
+  const duplicateTeamNameMap = useMemo(() => {
+    const counts = new Map();
+    teams.forEach((team) => {
+      const normalizedName = team.name.trim().toLocaleLowerCase('fr-FR');
+      if (!normalizedName) return;
+      counts.set(normalizedName, (counts.get(normalizedName) || 0) + 1);
+    });
+    return counts;
+  }, [teams]);
+  const duplicatedTeamNames = useMemo(() => [...duplicateTeamNameMap.entries()].filter(([, count]) => count > 1).map(([name]) => name), [duplicateTeamNameMap]);
+  const hasDuplicateTeamNames = duplicatedTeamNames.length > 0;
+  const isDuplicateTeamName = useCallback((name) => {
+    const normalizedName = String(name || '').trim().toLocaleLowerCase('fr-FR');
+    return !!normalizedName && (duplicateTeamNameMap.get(normalizedName) || 0) > 1;
+  }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
 
@@ -1003,23 +1343,23 @@ export default function App() {
     ...knockout.consolanteFinals,
   ] , teamMap, phaseRules), [allTeamIds, isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout, teamMap, phaseRules]);
 
-  const allCompetitionMatches = useMemo(() => (isSmallTournamentMode ? [
+  const allCompetitionMatches = useMemo(() => dedupeMatches(isSmallTournamentMode ? [
     ...championshipLeg1.matches,
     ...championshipLeg2.matches,
     ...singleKnockout.quarters,
     ...singleKnockout.semis,
     ...singleKnockout.finals,
   ] : [
-    ...brassage1.matches,
-    ...brassage2.matches,
-    ...mainStage.principaleMatches,
-    ...mainStage.consolanteMatches,
-    ...knockout.principalQuarters,
-    ...knockout.principalSemis,
-    ...knockout.principalFinals,
-    ...knockout.consolanteSemis,
-    ...knockout.consolanteFinals,
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout]);
+    ...filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'),
+    ...filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'),
+    ...filterMatchesToPools(mainStage.principaleMatches, mainStage.principalePools, 'Principale'),
+    ...filterMatchesToPools(mainStage.consolanteMatches, mainStage.consolantePools, 'Consolante'),
+    ...sanitizeKnockoutMatches(knockout.principalQuarters),
+    ...sanitizeKnockoutMatches(knockout.principalSemis),
+    ...sanitizeKnockoutMatches(knockout.principalFinals),
+    ...sanitizeKnockoutMatches(knockout.consolanteSemis),
+    ...sanitizeKnockoutMatches(knockout.consolanteFinals),
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage1.pools, brassage2.matches, brassage2.pools, mainStage.principaleMatches, mainStage.principalePools, mainStage.consolanteMatches, mainStage.consolantePools, knockout]);
 
   const activeInProgressTeamIds = useMemo(() => {
     const ids = new Set();
@@ -1035,19 +1375,42 @@ export default function App() {
     allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
-  function getPersistedState(savedAt = lastSavedAt) {
+  function getPersistedStateSnapshot(savedAt = lastSavedAt, overrides = {}) {
     return {
-      teams,
-      settings: { startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId },
-      meta: { lastSavedAt: savedAt, remoteSavedAt },
-      brassage1,
-      brassage2,
-      mainStage,
-      knockout,
-      championshipLeg1,
-      championshipLeg2,
-      singleKnockout,
+      teams: safeClone(overrides.teams ?? teamsRef.current, []),
+      settings: {
+        startTime: overrides.startTime ?? startTimeRef.current,
+        slotDuration: overrides.slotDuration ?? slotDurationRef.current,
+        phaseRules: safeClone(overrides.phaseRules ?? phaseRulesRef.current, DEFAULT_PHASE_RULES),
+        organizerPassword: overrides.organizerPassword ?? organizerPasswordRef.current,
+        tournamentName: overrides.tournamentName ?? tournamentNameRef.current,
+        tournamentLogo: overrides.tournamentLogo ?? tournamentLogoRef.current,
+        sharedTournamentId: overrides.sharedTournamentId ?? sharedTournamentIdRef.current,
+      },
+      meta: {
+        lastSavedAt: savedAt,
+        remoteSavedAt: overrides.remoteSavedAt ?? remoteSavedAtRef.current,
+      },
+      brassage1: safeClone(overrides.brassage1 ?? brassage1Ref.current, {}),
+      brassage2: safeClone(overrides.brassage2 ?? brassage2Ref.current, {}),
+      mainStage: safeClone(overrides.mainStage ?? mainStageRef.current, {}),
+      knockout: safeClone(overrides.knockout ?? knockoutRef.current, {}),
+      championshipLeg1: safeClone(overrides.championshipLeg1 ?? championshipLeg1Ref.current, {}),
+      championshipLeg2: safeClone(overrides.championshipLeg2 ?? championshipLeg2Ref.current, {}),
+      singleKnockout: safeClone(overrides.singleKnockout ?? singleKnockoutRef.current, {}),
     };
+  }
+
+  function getPersistedState(savedAt = lastSavedAt) {
+    return getPersistedStateSnapshot(savedAt);
+  }
+
+  function commitRefereeScoreDrafts(updater) {
+    setRefereeScoreDrafts((current) => {
+      const nextDrafts = typeof updater === 'function' ? updater(current) : updater;
+      refereeScoreDraftsRef.current = nextDrafts;
+      return nextDrafts;
+    });
   }
 
   function applyPersistedState(parsed, options = {}) {
@@ -1073,7 +1436,15 @@ export default function App() {
     if (parsed.championshipLeg1) setChampionshipLeg1(normalizeLeagueState(parsed.championshipLeg1));
     if (parsed.championshipLeg2) setChampionshipLeg2(normalizeLeagueState(parsed.championshipLeg2));
     if (parsed.singleKnockout) setSingleKnockout(normalizeSingleKnockoutState(parsed.singleKnockout));
-    if (!options.preserveSelection) setRefereeSelectedMatch(null);
+    if (!options.preserveSelection) {
+      setRefereeSelectedMatch(null);
+      setRefereeSelectedScoreDraft(null);
+      refereeSelectedScoreDraftRef.current = null;
+      setRefereeScoreDrafts({});
+      refereeScoreDraftsRef.current = {};
+      recentRefereeLocalEditsRef.current = new Map();
+      recentRefereeReleaseRef.current = new Map();
+    }
 
   }
 
@@ -1103,103 +1474,235 @@ export default function App() {
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = []) {
+    const remoteArrayProvided = Array.isArray(remoteMatches);
     const safeLocalMatches = dedupeMatches(Array.isArray(localMatches) ? localMatches : []);
-    const safeRemoteMatches = dedupeMatches(Array.isArray(remoteMatches) ? remoteMatches : []);
-    if (!safeLocalMatches.length && safeRemoteMatches.length) {
-      return safeClone(safeRemoteMatches, []);
+    const safeRemoteMatches = dedupeMatches(remoteArrayProvided ? remoteMatches : []);
+    if (!remoteArrayProvided) {
+      return safeLocalMatches;
+    }
+    if (!safeRemoteMatches.length) {
+      return safeLocalMatches;
     }
 
-    let changed = false;
-    const remoteById = new Map(safeRemoteMatches.map((match) => [match.id, match]));
+    const localById = new Map(safeLocalMatches.map((match) => [match.id, match]));
+    const localByIdentity = new Map(
+      safeLocalMatches
+        .map((match) => [matchIdentityKey(match), match])
+        .filter(([identityKey]) => Boolean(identityKey))
+    );
     const now = Date.now();
-    const merged = safeLocalMatches.map((match) => {
-      const remote = remoteById.get(match.id);
-      if (!remote) return match;
+    let changed = safeLocalMatches.length !== safeRemoteMatches.length;
 
-      const recentRelease = recentRefereeReleaseRef.current.get(match.id);
-      const remoteInProgress = Boolean(remote.refereeInProgress);
-      const remoteMatchInProgress = Boolean(remote.matchInProgress || remote.refereeInProgress);
-      const localMatchInProgress = Boolean(match.matchInProgress || match.refereeInProgress);
+    const mergeLocalIntoRemote = (localMatch, remoteMatch) => {
+      if (!localMatch) return remoteMatch;
+
+      const recentRelease = recentRefereeReleaseRef.current.get(localMatch.id);
+      const recentLocalEdit = recentRefereeLocalEditsRef.current.get(localMatch.id);
+      const remoteInProgress = Boolean(remoteMatch.refereeInProgress);
+      const remoteMatchInProgress = Boolean(remoteMatch.matchInProgress || remoteMatch.refereeInProgress);
+      const localMatchInProgress = Boolean(localMatch.matchInProgress || localMatch.refereeInProgress);
       const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
-      const localSubmittedAt = toTimestamp(match.submittedAt);
-      const remoteSubmittedAt = toTimestamp(remote.submittedAt);
-      const localValidatedAt = toTimestamp(match.validatedAt);
-      const remoteValidatedAt = toTimestamp(remote.validatedAt);
-      const remoteIsValid = isMatchResultValid(remote, phaseRules);
-      const localIsValid = isMatchResultValid(match, phaseRules);
+      const localSubmittedAt = toTimestamp(localMatch.submittedAt);
+      const remoteSubmittedAt = toTimestamp(remoteMatch.submittedAt);
+      const localValidatedAt = toTimestamp(localMatch.validatedAt);
+      const remoteValidatedAt = toTimestamp(remoteMatch.validatedAt);
+      const localManualOverrideAt = toTimestamp(localMatch.manualOverrideAt);
+      const remoteManualOverrideAt = toTimestamp(remoteMatch.manualOverrideAt);
+      const localOfficialAt = Math.max(localValidatedAt, localManualOverrideAt);
+      const remoteOfficialAt = Math.max(remoteValidatedAt, remoteManualOverrideAt);
+      const localOfficialScoresDiffer =
+        String(localMatch.scoreA ?? '') !== String(remoteMatch.scoreA ?? '') ||
+        String(localMatch.scoreB ?? '') !== String(remoteMatch.scoreB ?? '');
+      const shouldKeepLocalOfficialEdit =
+        localOfficialScoresDiffer &&
+        localOfficialAt > remoteOfficialAt &&
+        localOfficialAt >= remoteSubmittedAt;
+      const remoteIsValid = isMatchResultValid(remoteMatch, phaseRules);
+      const localIsValid = isMatchResultValid(localMatch, phaseRules);
       const pendingScoresDiffer =
-        String(match.submittedScoreA ?? '') !== String(remote.submittedScoreA ?? '') ||
-        String(match.submittedScoreB ?? '') !== String(remote.submittedScoreB ?? '');
+        String(localMatch.submittedScoreA ?? '') !== String(remoteMatch.submittedScoreA ?? '') ||
+        String(localMatch.submittedScoreB ?? '') !== String(remoteMatch.submittedScoreB ?? '');
+      const hasRecentProtectedLocalEdit = Boolean(
+        recentLocalEdit
+        && recentLocalEdit.until > now
+        && String(localMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(localMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+      );
+      const remotePendingCaughtUpToLocalEdit = Boolean(
+        recentLocalEdit
+        && String(remoteMatch.submittedScoreA ?? '') === String(recentLocalEdit.submittedScoreA ?? '')
+        && String(remoteMatch.submittedScoreB ?? '') === String(recentLocalEdit.submittedScoreB ?? '')
+        && remoteSubmittedAt >= localSubmittedAt
+      );
+      const shouldIgnoreRemotePendingBecauseLocalEdit =
+        hasRecentProtectedLocalEdit
+        && pendingScoresDiffer
+        && !remotePendingCaughtUpToLocalEdit
+        && remoteSubmittedAt <= localSubmittedAt;
       const shouldAdoptRemotePendingWithoutTimestamp =
         mode !== 'referee' &&
         pendingScoresDiffer &&
-        (remoteMatchInProgress || Boolean(remote.submittedAt));
+        (remoteMatchInProgress || Boolean(remoteMatch.submittedAt));
 
-      let nextMatch = match;
+      let nextMatch = { ...remoteMatch };
 
-      if (remoteIsValid && (!localIsValid || remoteValidatedAt >= localValidatedAt)) {
+      if (shouldKeepLocalOfficialEdit) {
         nextMatch = {
           ...nextMatch,
-          scoreA: remote.scoreA ?? '',
-          scoreB: remote.scoreB ?? '',
-          validatedAt: remote.validatedAt ?? null,
+          scoreA: localMatch.scoreA ?? '',
+          scoreB: localMatch.scoreB ?? '',
+          validatedAt: localMatch.validatedAt ?? null,
+          manualOverrideAt: localMatch.manualOverrideAt ?? null,
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp) {
+      } else if (remoteIsValid && (!localIsValid || remoteOfficialAt >= localOfficialAt)) {
         nextMatch = {
           ...nextMatch,
-          submittedScoreA: remote.submittedScoreA ?? '',
-          submittedScoreB: remote.submittedScoreB ?? '',
-          submittedAt: remote.submittedAt ?? null,
+          scoreA: remoteMatch.scoreA ?? '',
+          scoreB: remoteMatch.scoreB ?? '',
+          validatedAt: remoteMatch.validatedAt ?? null,
+          manualOverrideAt: remoteMatch.manualOverrideAt ?? null,
+          submittedScoreA: '',
+          submittedScoreB: '',
+          submittedAt: null,
+          refereeInProgress: false,
+          matchInProgress: false,
+        };
+      } else if (!shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
+        nextMatch = {
+          ...nextMatch,
+          submittedScoreA: remoteMatch.submittedScoreA ?? '',
+          submittedScoreB: remoteMatch.submittedScoreB ?? '',
+          submittedAt: remoteMatch.submittedAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : remoteMatchInProgress,
         };
       } else if (shouldIgnoreRemoteLock) {
         nextMatch = {
           ...nextMatch,
+          submittedScoreA: localMatch.submittedScoreA ?? nextMatch.submittedScoreA ?? '',
+          submittedScoreB: localMatch.submittedScoreB ?? nextMatch.submittedScoreB ?? '',
+          submittedAt: localMatch.submittedAt ?? nextMatch.submittedAt ?? null,
           refereeInProgress: false,
           matchInProgress: localMatchInProgress || remoteMatchInProgress,
+        };
+      } else if (shouldIgnoreRemotePendingBecauseLocalEdit) {
+        nextMatch = {
+          ...nextMatch,
+          submittedScoreA: localMatch.submittedScoreA ?? '',
+          submittedScoreB: localMatch.submittedScoreB ?? '',
+          submittedAt: localMatch.submittedAt ?? null,
+          refereeInProgress: localMatch.refereeInProgress ?? nextMatch.refereeInProgress ?? false,
+          matchInProgress: localMatch.matchInProgress ?? nextMatch.matchInProgress ?? false,
         };
       }
 
       if (!remoteInProgress && !remoteMatchInProgress && recentRelease) {
-        recentRefereeReleaseRef.current.delete(match.id);
+        recentRefereeReleaseRef.current.delete(localMatch.id);
+      }
+      if (recentLocalEdit) {
+        const remoteCaughtUpToLocalEdit =
+          String(remoteMatch.submittedScoreA ?? '') === String(localMatch.submittedScoreA ?? '')
+          && String(remoteMatch.submittedScoreB ?? '') === String(localMatch.submittedScoreB ?? '')
+          && remoteSubmittedAt >= localSubmittedAt;
+        if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !nextMatch.refereeInProgress) {
+          recentRefereeLocalEditsRef.current.delete(localMatch.id);
+        }
       }
 
-      const hasChanged =
-        (match.scoreA ?? '') !== (nextMatch.scoreA ?? '') ||
-        (match.scoreB ?? '') !== (nextMatch.scoreB ?? '') ||
-        (match.validatedAt ?? null) !== (nextMatch.validatedAt ?? null) ||
-        (match.submittedScoreA ?? '') !== (nextMatch.submittedScoreA ?? '') ||
-        (match.submittedScoreB ?? '') !== (nextMatch.submittedScoreB ?? '') ||
-        (match.submittedAt ?? null) !== (nextMatch.submittedAt ?? null) ||
-        Boolean(match.refereeInProgress) !== Boolean(nextMatch.refereeInProgress) ||
-        Boolean(match.matchInProgress) !== Boolean(nextMatch.matchInProgress);
-      if (!hasChanged) return match;
-      changed = true;
-      return nextMatch;
+      const hasChanged = JSON.stringify(localMatch) !== JSON.stringify(nextMatch);
+      if (hasChanged) changed = true;
+      return hasChanged ? nextMatch : localMatch;
+    };
+
+    const merged = safeRemoteMatches.map((remoteMatch) => {
+      const localBySameId = localById.get(remoteMatch.id) || null;
+      if (localBySameId) {
+        return mergeLocalIntoRemote(localBySameId, remoteMatch);
+      }
+
+      const remoteIdentityKey = matchIdentityKey(remoteMatch);
+      const localBySameIdentity = remoteIdentityKey ? localByIdentity.get(remoteIdentityKey) : null;
+      const sameTeams = Boolean(
+        localBySameIdentity
+        && String(localBySameIdentity.teamAId ?? '') === String(remoteMatch.teamAId ?? '')
+        && String(localBySameIdentity.teamBId ?? '') === String(remoteMatch.teamBId ?? '')
+      );
+
+      if (sameTeams) {
+        const mergedMatch = mergeLocalIntoRemote(localBySameIdentity, remoteMatch);
+        if (shouldPreserveLocalMatchIdentity(localBySameIdentity, remoteMatch)) {
+          return {
+            ...mergedMatch,
+            id: localBySameIdentity.id,
+            generatedAt: localBySameIdentity.generatedAt ?? mergedMatch.generatedAt,
+            court: localBySameIdentity.court ?? mergedMatch.court,
+            slot: localBySameIdentity.slot ?? mergedMatch.slot,
+            time: localBySameIdentity.time ?? mergedMatch.time,
+          };
+        }
+        return mergedMatch;
+      }
+
+      if (localBySameIdentity) {
+        changed = true;
+      }
+      return remoteMatch;
     });
 
-    const localIds = new Set(safeLocalMatches.map((match) => match.id));
-    const remoteOnlyMatches = safeRemoteMatches.filter((match) => !localIds.has(match.id));
-    if (remoteOnlyMatches.length) {
-      changed = true;
-      merged.push(...safeClone(remoteOnlyMatches, []));
-    }
+    return dedupeMatches(merged);
+  }
 
-    return changed ? dedupeMatches(merged) : safeLocalMatches;
+
+  function mergeRemoteLeagueState(currentState, remoteState) {
+    const normalizedCurrent = normalizeLeagueState(currentState || { pools: [], matches: [] });
+    const normalizedRemote = normalizeLeagueState(remoteState || { pools: [], matches: [] });
+    const remoteHasPools = Array.isArray(normalizedRemote.pools) && normalizedRemote.pools.length > 0;
+    return {
+      ...normalizedCurrent,
+      ...normalizedRemote,
+      pools: remoteHasPools ? normalizedRemote.pools : normalizedCurrent.pools,
+      matches: mergeRemoteMatches(normalizedCurrent.matches, normalizedRemote.matches),
+    };
+  }
+
+  function mergeRemoteMainStageState(currentState, remoteState) {
+    const normalizedCurrent = normalizeMainStageState(currentState || {});
+    const normalizedRemote = normalizeMainStageState(remoteState || {});
+    return {
+      ...normalizedCurrent,
+      ...normalizedRemote,
+      principalePools: normalizedRemote.principalePools?.length ? normalizedRemote.principalePools : normalizedCurrent.principalePools,
+      principaleMatches: mergeRemoteMatches(normalizedCurrent.principaleMatches, normalizedRemote.principaleMatches || []),
+      consolantePools: normalizedRemote.consolantePools?.length ? normalizedRemote.consolantePools : normalizedCurrent.consolantePools,
+      consolanteMatches: mergeRemoteMatches(normalizedCurrent.consolanteMatches, normalizedRemote.consolanteMatches || []),
+    };
+  }
+
+  function buildCurrentTeamContext() {
+    const currentTeams = normalizeTeamsList(teamsRef.current || []).filter((team) => (team.name || '').trim() !== '');
+    return {
+      teams: currentTeams,
+      teamMap: new Map(currentTeams.map((team) => [team.id, team])),
+      teamIds: currentTeams.map((team) => team.id),
+    };
   }
 
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
 
+    const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
+    const localSnapshotTimestamp = toTimestamp(latestPersistedStateRef.current?.meta?.lastSavedAt || latestPersistedStateRef.current?.meta?.remoteSavedAt || null);
+    if (remotePayloadTimestamp && localSnapshotTimestamp && remotePayloadTimestamp < localSnapshotTimestamp) {
+      return;
+    }
+
     const pendingFreshTournamentTimestamp = pendingFreshTournamentTimestampRef.current;
     if (pendingFreshTournamentTimestamp) {
-      const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
       const pendingResetTimestamp = toTimestamp(pendingFreshTournamentTimestamp);
       if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingResetTimestamp) {
         return;
@@ -1210,13 +1713,12 @@ export default function App() {
     const remoteMatchCount = countMatchesInPersistedState(payload);
     const localMatchCount = allCompetitionMatches.length;
     const remoteTeamCount = Array.isArray(payload?.teams) ? payload.teams.length : 0;
-    const shouldHydrateStructure = mode !== 'organizer' && (
+    const shouldHydrateStructure =
       (remoteMatchCount > 0 && localMatchCount === 0)
       || remoteMatchCount > localMatchCount
-      || (remoteTeamCount > 0 && teams.length < remoteTeamCount)
-    );
+      || (remoteTeamCount > 0 && teams.length < remoteTeamCount);
 
-    if (shouldHydrateStructure) {
+    if (shouldHydrateStructure && mode !== 'referee') {
       applyPersistedState(payload, { preserveSelection: true });
     }
 
@@ -1225,14 +1727,10 @@ export default function App() {
     if (payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt) {
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt)}`);
     }
-    if (payload.brassage1?.matches) setBrassage1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage1.matches) }));
-    if (payload.brassage2?.matches) setBrassage2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.brassage2.matches) }));
-    if (payload.mainStage?.principaleMatches || payload.mainStage?.consolanteMatches) {
-      setMainStage((current) => ({
-        ...current,
-        principaleMatches: mergeRemoteMatches(current.principaleMatches, payload.mainStage?.principaleMatches || []),
-        consolanteMatches: mergeRemoteMatches(current.consolanteMatches, payload.mainStage?.consolanteMatches || []),
-      }));
+    if (payload.brassage1) setBrassage1((current) => mergeRemoteLeagueState(current, payload.brassage1));
+    if (payload.brassage2) setBrassage2((current) => mergeRemoteLeagueState(current, payload.brassage2));
+    if (payload.mainStage) {
+      setMainStage((current) => mergeRemoteMainStageState(current, payload.mainStage));
     }
     if (payload.knockout) {
       setKnockout((current) => ({
@@ -1244,8 +1742,8 @@ export default function App() {
         consolanteFinals: mergeRemoteMatches(current.consolanteFinals, payload.knockout?.consolanteFinals || []),
       }));
     }
-    if (payload.championshipLeg1?.matches) setChampionshipLeg1((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg1.matches) }));
-    if (payload.championshipLeg2?.matches) setChampionshipLeg2((current) => ({ ...current, matches: mergeRemoteMatches(current.matches, payload.championshipLeg2.matches) }));
+    if (payload.championshipLeg1) setChampionshipLeg1((current) => mergeRemoteLeagueState(current, payload.championshipLeg1));
+    if (payload.championshipLeg2) setChampionshipLeg2((current) => mergeRemoteLeagueState(current, payload.championshipLeg2));
     if (payload.singleKnockout) {
       setSingleKnockout((current) => ({
         ...current,
@@ -1290,12 +1788,27 @@ export default function App() {
       }
       return false;
     }
-    const effectiveId = String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId(tournamentName);
-    if (!sharedTournamentId) setSharedTournamentId(effectiveId);
+
+    if (cloudSaveInFlightRef.current) {
+      queuedCloudSaveRequestRef.current = { showMessage, silent };
+      if (!silent) {
+        setRemoteSyncMessage('Sauvegarde Firebase en file d’attente...');
+      }
+      return true;
+    }
+
+    cloudSaveInFlightRef.current = true;
+    const effectiveId = String(sharedTournamentIdRef.current || '').trim() || buildDefaultSharedTournamentId(tournamentNameRef.current);
+    if (!sharedTournamentIdRef.current) {
+      sharedTournamentIdRef.current = effectiveId;
+      setSharedTournamentId(effectiveId);
+    }
     const savedAt = new Date().toISOString();
-    const payload = getPersistedState(savedAt);
-    payload.settings.sharedTournamentId = effectiveId;
-    payload.meta = { ...(payload.meta || {}), remoteSavedAt: savedAt };
+    const basePayload = getPersistedStateSnapshot(savedAt, { sharedTournamentId: effectiveId });
+    latestPersistedStateRef.current = basePayload;
+    const payload = safeClone(basePayload, {});
+    payload.settings = { ...(payload.settings || {}), sharedTournamentId: effectiveId };
+    payload.meta = { ...(payload.meta || {}), lastSavedAt: savedAt, remoteSavedAt: savedAt };
     if (!silent) {
       setIsRemoteSyncing(true);
       setRemoteSyncMessage('Sauvegarde Firebase en cours...');
@@ -1314,7 +1827,7 @@ export default function App() {
       setRemoteSavedAt(savedAt);
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(payload));
       }
       if (showMessage) window.alert('Tournoi partagé sauvegardé sur Firebase.');
       return true;
@@ -1323,24 +1836,52 @@ export default function App() {
       if (showMessage) window.alert(error.message || 'Échec de la sauvegarde Firebase.');
       return false;
     } finally {
+      cloudSaveInFlightRef.current = false;
       if (!silent) setIsRemoteSyncing(false);
+      const queuedRequest = queuedCloudSaveRequestRef.current;
+      if (queuedRequest) {
+        queuedCloudSaveRequestRef.current = null;
+        saveTournamentToCloud(queuedRequest.showMessage, queuedRequest.silent);
+      }
     }
   }
 
   function saveTournamentState(showMessage = true) {
     if (typeof window === 'undefined') return;
     const savedAt = new Date().toISOString();
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState(savedAt)));
+    const snapshot = getPersistedStateSnapshot(savedAt);
+    latestPersistedStateRef.current = snapshot;
+    safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(snapshot));
     setLastSavedAt(savedAt);
     if (showMessage) {
       window.alert('État du tournoi sauvegardé sur ce navigateur.');
     }
   }
 
+  useEffect(() => { refereeScoreDraftsRef.current = refereeScoreDrafts; }, [refereeScoreDrafts]);
+  useEffect(() => { refereeSelectedScoreDraftRef.current = refereeSelectedScoreDraft; }, [refereeSelectedScoreDraft]);
+  useEffect(() => { teamsRef.current = teams; }, [teams]);
+  useEffect(() => { startTimeRef.current = startTime; }, [startTime]);
+  useEffect(() => { slotDurationRef.current = slotDuration; }, [slotDuration]);
+  useEffect(() => { phaseRulesRef.current = phaseRules; }, [phaseRules]);
+  useEffect(() => { organizerPasswordRef.current = organizerPassword; }, [organizerPassword]);
+  useEffect(() => { tournamentNameRef.current = tournamentName; }, [tournamentName]);
+  useEffect(() => { tournamentLogoRef.current = tournamentLogo; }, [tournamentLogo]);
+  useEffect(() => { sharedTournamentIdRef.current = sharedTournamentId; }, [sharedTournamentId]);
+  useEffect(() => { remoteSavedAtRef.current = remoteSavedAt; }, [remoteSavedAt]);
+  useEffect(() => { brassage1Ref.current = brassage1; }, [brassage1]);
+  useEffect(() => { brassage2Ref.current = brassage2; }, [brassage2]);
+  useEffect(() => { mainStageRef.current = mainStage; }, [mainStage]);
+  useEffect(() => { knockoutRef.current = knockout; }, [knockout]);
+  useEffect(() => { championshipLeg1Ref.current = championshipLeg1; }, [championshipLeg1]);
+  useEffect(() => { championshipLeg2Ref.current = championshipLeg2; }, [championshipLeg2]);
+  useEffect(() => { singleKnockoutRef.current = singleKnockout; }, [singleKnockout]);
+
   useEffect(() => {
+    latestPersistedStateRef.current = getPersistedStateSnapshot();
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(getPersistedState()));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+    safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
@@ -1376,7 +1917,7 @@ export default function App() {
     if (!sharedTournamentId) return;
     let cancelled = false;
 
-    const pollRemoteRefereeState = async () => {
+    const pollRemoteLiveState = async () => {
       try {
         const payload = await fetchTournamentFromCloudRaw(sharedTournamentId);
         if (!cancelled) mergeRemoteRefereeState(payload);
@@ -1385,9 +1926,13 @@ export default function App() {
       }
     };
 
-    pollRemoteRefereeState();
-    const remotePollIntervalMs = mode === 'organizer' ? 300 : mode === 'public' ? 400 : 800;
-    const intervalId = window.setInterval(pollRemoteRefereeState, remotePollIntervalMs);
+    pollRemoteLiveState();
+    const remotePollIntervalMs = mode === 'public'
+      ? 400
+      : mode === 'organizer'
+        ? 350
+        : 800;
+    const intervalId = window.setInterval(pollRemoteLiveState, remotePollIntervalMs);
     return () => {
       cancelled = true;
       window.clearInterval(intervalId);
@@ -1470,6 +2015,7 @@ export default function App() {
   const currentMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
+      .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, MAX_ACTIVE_COURTS)
       .map((match) => ({
@@ -1478,12 +2024,13 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const upcomingMatches = useMemo(() => (
     allCompetitionMatches
       .filter((match) => {
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
+        if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
@@ -1494,22 +2041,118 @@ export default function App() {
         scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
       }))
-  ), [allCompetitionMatches, phaseRules, scheduleData]);
+  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
+
+  const publicPodiumLeaders = useMemo(() => {
+    const isResolvedPodiumTeam = (teamId) => {
+      if (!teamId) return false;
+      const teamName = String(resolveTeam(teamId)?.name || '').trim().toLowerCase();
+      return Boolean(teamName && teamName !== 'à définir');
+    };
+
+    const extractPodium = (matches) => {
+      const finalMatch = matches.find((match) => match.group === 'Finale');
+      const smallFinal = matches.find((match) => match.group === 'Petite finale');
+      const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
+      const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
+
+      const first = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
+        ? finalResult.winner
+        : null;
+      const second = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
+        ? finalResult.loser
+        : null;
+      const third = smallFinal && isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
+        ? smallResult.winner
+        : null;
+
+      return { first, second, third };
+    };
+
+    const principale = extractPodium(knockout.principalFinals);
+    const consolante = extractPodium(knockout.consolanteFinals);
+    const tournamentFinished = Boolean(
+      principale.first
+      && principale.second
+      && principale.third
+      && consolante.first
+      && consolante.second
+      && consolante.third
+    );
+
+    return { tournamentFinished, principale, consolante };
+  }, [knockout.principalFinals, knockout.consolanteFinals, phaseRules, resolveTeam]);
 
   const featuredPublicMatches = useMemo(() => {
-    const items = currentMatches.map((match, index) => ({
-      title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
-      match,
-    }));
-    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
-    upcomingMatches.slice(0, remainingSlots).forEach((match, index) => {
-      items.push({
-        title: `Prochain match ${index + 1}`,
+    if (publicPodiumLeaders.tournamentFinished) {
+      return [
+        {
+          type: 'podium',
+          title: '1res places',
+          principalTeamId: publicPodiumLeaders.principale.first,
+          consolanteTeamId: publicPodiumLeaders.consolante.first,
+        },
+        {
+          type: 'podium',
+          title: '2es places',
+          principalTeamId: publicPodiumLeaders.principale.second,
+          consolanteTeamId: publicPodiumLeaders.consolante.second,
+        },
+        {
+          type: 'podium',
+          title: '3es places',
+          principalTeamId: publicPodiumLeaders.principale.third,
+          consolanteTeamId: publicPodiumLeaders.consolante.third,
+        },
+      ];
+    }
+
+    const items = currentMatches
+      .map((match, index) => ({
+        type: 'match',
+        title: currentMatches.length > 1 ? `Match en cours ${index + 1}` : 'Match en cours',
         match,
+      }));
+    const currentIds = new Set(items.map((item) => item.match.id));
+    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
+    upcomingMatches
+      .filter((match) => !currentIds.has(match.id))
+      .slice(0, remainingSlots)
+      .forEach((match, index) => {
+        items.push({
+          type: 'match',
+          title: `Prochain match ${index + 1}`,
+          match,
+        });
       });
-    });
+
+    if (items.length === 0) {
+      allCompetitionMatches
+        .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
+        .filter((match) => !isMatchResultValid(match, phaseRules) || isMatchCurrentlyInProgress(match, phaseRules))
+        .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
+        .slice(0, MAX_ACTIVE_COURTS)
+        .forEach((match, index) => {
+          items.push({
+            type: 'match',
+            title: index === 0 ? 'Prochain match' : `Prochain match ${index + 1}`,
+            match: {
+              ...match,
+              time: scheduleData.scheduleMap[match.id]?.startText || match.time,
+              scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
+              scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
+            },
+          });
+        });
+    }
+
     return items;
-  }, [currentMatches, upcomingMatches]);
+  }, [allCompetitionMatches, currentMatches, upcomingMatches, publicPodiumLeaders, resolveTeam, phaseRules, scheduleData]);
+
+  const visibleBrassage1Matches = useMemo(() => filterMatchesToPools(brassage1.matches, brassage1.pools, 'Brassage 1'), [brassage1.matches, brassage1.pools]);
+  const visibleBrassage2Matches = useMemo(() => filterMatchesToPools(brassage2.matches, brassage2.pools, 'Brassage 2'), [brassage2.matches, brassage2.pools]);
+  const visiblePrincipaleMatches = useMemo(() => filterMatchesToPools(mainStage.principaleMatches, mainStage.principalePools, 'Principale'), [mainStage.principaleMatches, mainStage.principalePools]);
+  const visibleConsolanteMatches = useMemo(() => filterMatchesToPools(mainStage.consolanteMatches, mainStage.consolantePools, 'Consolante'), [mainStage.consolanteMatches, mainStage.consolantePools]);
 
   const completedMatchCounts = isSmallTournamentMode ? {
     championnatAller: championshipLeg1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
@@ -1518,10 +2161,10 @@ export default function App() {
     demi: singleKnockout.semis.filter((m) => isMatchResultValid(m, phaseRules)).length,
     finale: singleKnockout.finals.filter((m) => isMatchResultValid(m, phaseRules)).length,
   } : {
-    b1: brassage1.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    b2: brassage2.matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    principale: mainStage.principaleMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
-    consolante: mainStage.consolanteMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    b1: visibleBrassage1Matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    b2: visibleBrassage2Matches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    principale: visiblePrincipaleMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
+    consolante: visibleConsolanteMatches.filter((m) => isMatchResultValid(m, phaseRules)).length,
     ko: [...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals].filter((m) => isMatchResultValid(m, phaseRules)).length,
   };
 
@@ -1531,8 +2174,8 @@ export default function App() {
     quarterComplete: singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     semiComplete: singleKnockout.semis.length === 0 || singleKnockout.semis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }) : ({
-    brassage1Complete: brassage1.matches.length > 0 && brassage1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-    brassage2Complete: brassage2.matches.length > 0 && brassage2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage1Complete: visibleBrassage1Matches.length > 0 && visibleBrassage1Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage2Complete: visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolantePoolsComplete: mainStage.consolanteMatches.length > 0 && mainStage.consolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalQuartersComplete: knockout.principalQuarters.length > 0 && knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -1541,7 +2184,8 @@ export default function App() {
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
 
   const filterRefereeVisibleMatches = useCallback((matches) => (
-    matches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide')
+    dedupeMatches(Array.isArray(matches) ? matches : [])
+      .filter((match) => hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
   ), [phaseRules]);
 
   const refereeMatchGroups = useMemo(() => (isSmallTournamentMode ? [
@@ -1551,16 +2195,16 @@ export default function App() {
     { title: 'Demi-finales', scope: 'semis', matches: filterRefereeVisibleMatches(singleKnockout.semis), isUnlocked: stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete && (singleKnockout.quarters.length === 0 || stageValidation.quarterComplete), lockReason: singleKnockout.quarters.length ? 'Tous les scores des quarts de finale doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
     { title: 'Finale et petite finale', scope: 'finals', matches: filterRefereeVisibleMatches(singleKnockout.finals), isUnlocked: (singleKnockout.semis.length ? stageValidation.semiComplete : stageValidation.championnatAllerComplete && stageValidation.championnatRetourComplete), lockReason: singleKnockout.semis.length ? 'Tous les scores des demi-finales doivent être valides.' : 'Tous les scores du Championnat Aller et Retour doivent être valides.' },
   ] : [
-    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(brassage1.matches), isUnlocked: true, lockReason: '' },
-    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(brassage2.matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
-    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(mainStage.principaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
-    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(mainStage.consolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Brassage 1', scope: 'brassage1', matches: filterRefereeVisibleMatches(visibleBrassage1Matches), isUnlocked: true, lockReason: '' },
+    { title: 'Brassage 2', scope: 'brassage2', matches: filterRefereeVisibleMatches(visibleBrassage2Matches), isUnlocked: stageValidation.brassage1Complete, lockReason: 'Tous les scores du Brassage 1 doivent être valides.' },
+    { title: 'Principale', scope: 'principale', matches: filterRefereeVisibleMatches(visiblePrincipaleMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
+    { title: 'Consolante', scope: 'consolante', matches: filterRefereeVisibleMatches(visibleConsolanteMatches), isUnlocked: stageValidation.brassage2Complete, lockReason: 'Tous les scores du Brassage 2 doivent être valides.' },
     { title: 'Quarts principale', scope: 'principalQuarters', matches: filterRefereeVisibleMatches(knockout.principalQuarters), isUnlocked: stageValidation.principalePoolsComplete, lockReason: 'Tous les scores des poules principales doivent être valides.' },
     { title: 'Demi-finales principale', scope: 'principalSemis', matches: filterRefereeVisibleMatches(knockout.principalSemis), isUnlocked: stageValidation.principalQuartersComplete, lockReason: 'Tous les scores des quarts de finale principaux doivent être valides.' },
     { title: 'Finales principale', scope: 'principalFinals', matches: filterRefereeVisibleMatches(knockout.principalFinals), isUnlocked: stageValidation.principalSemisComplete, lockReason: 'Tous les scores des demi-finales principales doivent être valides.' },
     { title: 'Demi-finales consolante', scope: 'consolanteSemis', matches: filterRefereeVisibleMatches(knockout.consolanteSemis), isUnlocked: stageValidation.consolantePoolsComplete, lockReason: 'Tous les scores des poules de consolante doivent être valides.' },
     { title: 'Finales consolante', scope: 'consolanteFinals', matches: filterRefereeVisibleMatches(knockout.consolanteFinals), isUnlocked: stageValidation.consolanteSemisComplete, lockReason: 'Tous les scores des demi-finales de consolante doivent être valides.' },
-  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
+  ]), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, visibleBrassage1Matches, visibleBrassage2Matches, visiblePrincipaleMatches, visibleConsolanteMatches, knockout, stageValidation, filterRefereeVisibleMatches]);
 
   const refereeSelectedEntry = useMemo(() => {
     if (!refereeSelectedMatch) return null;
@@ -1570,12 +2214,158 @@ export default function App() {
     return match ? { ...group, match } : null;
   }, [refereeSelectedMatch, refereeMatchGroups]);
 
+  function getRecentProtectedRefereeEdit(matchId) {
+    if (!matchId) return null;
+    const recentEdit = recentRefereeLocalEditsRef.current.get(matchId);
+    if (!recentEdit) return null;
+    if (recentEdit.until <= Date.now()) {
+      recentRefereeLocalEditsRef.current.delete(matchId);
+      return null;
+    }
+    return recentEdit;
+  }
+
+  function getMatchesInScope(scope) {
+    if (scope === 'championshipLeg1') return championshipLeg1Ref.current?.matches || [];
+    if (scope === 'championshipLeg2') return championshipLeg2Ref.current?.matches || [];
+    if (scope === 'quarters') return singleKnockoutRef.current?.quarters || [];
+    if (scope === 'semis') return singleKnockoutRef.current?.semis || [];
+    if (scope === 'finals') return singleKnockoutRef.current?.finals || [];
+    if (scope === 'brassage1') return brassage1Ref.current?.matches || [];
+    if (scope === 'brassage2') return brassage2Ref.current?.matches || [];
+    if (scope === 'principale') return mainStageRef.current?.principaleMatches || [];
+    if (scope === 'consolante') return mainStageRef.current?.consolanteMatches || [];
+    if (scope === 'principalQuarters') return knockoutRef.current?.principalQuarters || [];
+    if (scope === 'principalSemis') return knockoutRef.current?.principalSemis || [];
+    if (scope === 'principalFinals') return knockoutRef.current?.principalFinals || [];
+    if (scope === 'consolanteSemis') return knockoutRef.current?.consolanteSemis || [];
+    return knockoutRef.current?.consolanteFinals || [];
+  }
+
+  function findMatchInScope(scope, matchId) {
+    return getMatchesInScope(scope).find((match) => match.id === matchId) || null;
+  }
+
+  function getPreferredRefereeDraft(match) {
+    if (!match) return null;
+    const candidates = [];
+    const selectedDraft = refereeSelectedScoreDraftRef.current;
+    if (selectedDraft?.matchId === match.id) {
+      candidates.push({ scoreA: selectedDraft.scoreA ?? '', scoreB: selectedDraft.scoreB ?? '', submittedAt: selectedDraft.submittedAt ?? null, priority: 4 });
+    }
+    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
+    if (protectedEdit) {
+      candidates.push({ scoreA: protectedEdit.submittedScoreA ?? '', scoreB: protectedEdit.submittedScoreB ?? '', submittedAt: protectedEdit.submittedAt ?? null, priority: 3 });
+    }
+    const storedDraft = refereeScoreDraftsRef.current?.[match.id];
+    if (storedDraft) {
+      candidates.push({ scoreA: storedDraft.scoreA ?? '', scoreB: storedDraft.scoreB ?? '', submittedAt: storedDraft.submittedAt ?? null, priority: 2 });
+    }
+    candidates.push({ scoreA: match.submittedScoreA ?? '', scoreB: match.submittedScoreB ?? '', submittedAt: match.submittedAt ?? null, priority: 1 });
+    return candidates.reduce((currentBest, candidate) => {
+      if (!currentBest) return candidate;
+      const currentTs = toTimestamp(currentBest.submittedAt);
+      const candidateTs = toTimestamp(candidate.submittedAt);
+      if (candidateTs !== currentTs) return candidateTs > currentTs ? candidate : currentBest;
+      return candidate.priority > currentBest.priority ? candidate : currentBest;
+    }, null);
+  }
+
+  function getRefereeDraftValue(match, field) {
+    const preferredDraft = getPreferredRefereeDraft(match);
+    if (!preferredDraft) return undefined;
+    return field === 'scoreA' ? preferredDraft.scoreA : preferredDraft.scoreB;
+  }
+
   useEffect(() => {
     if (refereeSelectedMatch && !refereeSelectedEntry) {
+      setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
     }
   }, [refereeSelectedMatch, refereeSelectedEntry]);
 
+  useEffect(() => {
+    if (!refereeSelectedEntry?.match) {
+      setRefereeSelectedScoreDraft(null);
+      return;
+    }
+    const match = refereeSelectedEntry.match;
+    const baseScoreA = match.submittedScoreA ?? '';
+    const baseScoreB = match.submittedScoreB ?? '';
+    setRefereeSelectedScoreDraft({
+      matchId: match.id,
+      scoreA: baseScoreA,
+      scoreB: baseScoreB,
+      submittedAt: match.submittedAt ?? null,
+    });
+    commitRefereeScoreDrafts((current) => {
+      if (current[match.id]) return current;
+      return {
+        ...current,
+        [match.id]: {
+          scoreA: baseScoreA,
+          scoreB: baseScoreB,
+          submittedAt: match.submittedAt ?? null,
+        },
+      };
+    });
+  }, [refereeSelectedEntry?.match?.id]);
+
+  useEffect(() => {
+    if (!refereeSelectedEntry?.match) return;
+    const match = refereeSelectedEntry.match;
+    const officialStatus = getMatchStatusLabel(match, phaseRules);
+    const remoteA = match.submittedScoreA ?? '';
+    const remoteB = match.submittedScoreB ?? '';
+    const remoteSubmittedAt = toTimestamp(match.submittedAt);
+    const protectedEdit = getRecentProtectedRefereeEdit(match.id);
+    const protectedStillPending = Boolean(
+      protectedEdit
+      && (
+        String(remoteA ?? '') !== String(protectedEdit.submittedScoreA ?? '')
+        || String(remoteB ?? '') !== String(protectedEdit.submittedScoreB ?? '')
+        || remoteSubmittedAt < toTimestamp(protectedEdit.submittedAt)
+      )
+    );
+    const shouldClear = officialStatus === 'Valide' || (!match.refereeInProgress && !match.matchInProgress && remoteA === '' && remoteB === '');
+    setRefereeSelectedScoreDraft((current) => {
+      if (!current || current.matchId !== match.id) return current;
+      if (shouldClear && !protectedStillPending) return null;
+      const draftMatchesRemote = String(current.scoreA ?? '') === String(remoteA ?? '') && String(current.scoreB ?? '') === String(remoteB ?? '');
+      const draftExpired = !match.refereeInProgress && !match.matchInProgress;
+      if ((draftMatchesRemote || draftExpired) && !protectedStillPending) {
+        return {
+          matchId: match.id,
+          scoreA: remoteA,
+          scoreB: remoteB,
+          submittedAt: match.submittedAt ?? null,
+        };
+      }
+      return current;
+    });
+    commitRefereeScoreDrafts((current) => {
+      const draft = current[match.id];
+      if (!draft) return current;
+      if (shouldClear && !protectedStillPending) {
+        const next = { ...current };
+        delete next[match.id];
+        return next;
+      }
+      const draftMatchesRemote = String(draft.scoreA ?? '') === String(remoteA ?? '') && String(draft.scoreB ?? '') === String(remoteB ?? '');
+      const draftExpired = !match.refereeInProgress && !match.matchInProgress;
+      if ((draftMatchesRemote || draftExpired) && !protectedStillPending) {
+        return {
+          ...current,
+          [match.id]: {
+            scoreA: remoteA,
+            scoreB: remoteB,
+            submittedAt: match.submittedAt ?? null,
+          },
+        };
+      }
+      return current;
+    });
+  }, [refereeSelectedEntry?.match?.id, refereeSelectedEntry?.match?.submittedScoreA, refereeSelectedEntry?.match?.submittedScoreB, refereeSelectedEntry?.match?.submittedAt, refereeSelectedEntry?.match?.refereeInProgress, refereeSelectedEntry?.match?.matchInProgress, refereeSelectedEntry?.match?.validatedAt, phaseRules]);
 
   useEffect(() => {
     const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
@@ -1608,6 +2398,7 @@ export default function App() {
     const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
     return teams.length >= TEAM_TARGET || firstPhaseGenerated;
   }, [isSmallTournamentMode, championshipLeg1.matches.length, brassage1.matches.length, teams.length]);
+  const generateBrassage1Locked = hasDuplicateTeamNames;
 
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
@@ -1635,19 +2426,27 @@ export default function App() {
       reason: 'Paramètre verrouillé dès qu’un match valide existe au Championnat Retour ou dans une phase finale.'
     },
     quart: {
-      locked: hasAnyValidMatch([...singleKnockout.quarters, ...singleKnockout.semis, ...singleKnockout.finals]),
-      reason: 'Paramètre verrouillé dès qu’un match valide existe en quart de finale ou après.'
+      locked: hasAnyValidMatch([...singleKnockout.quarters, ...singleKnockout.semis, ...singleKnockout.finals, ...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals]),
+      reason: 'Paramètre verrouillé dès qu’un quart de finale valide existe ou qu’une phase finale dépendante a commencé.'
     },
     demi: {
-      locked: hasAnyValidMatch([...singleKnockout.semis, ...singleKnockout.finals]),
-      reason: 'Paramètre verrouillé dès qu’un match valide existe en demi-finale ou après.'
+      locked: hasAnyValidMatch([...singleKnockout.semis, ...singleKnockout.finals, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals]),
+      reason: 'Paramètre verrouillé dès qu’une demi-finale valide existe ou qu’une finale dépendante a commencé.'
     },
     finale: {
-      locked: hasAnyValidMatch(singleKnockout.finals.filter((match) => match.group === 'Finale')),
+      locked: hasAnyValidMatch([
+        ...singleKnockout.finals.filter((match) => match.group === 'Finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Finale')
+      ]),
       reason: 'Paramètre verrouillé dès qu’une finale valide existe.'
     },
     petiteFinale: {
-      locked: hasAnyValidMatch(singleKnockout.finals.filter((match) => match.group === 'Petite finale')),
+      locked: hasAnyValidMatch([
+        ...singleKnockout.finals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Petite finale')
+      ]),
       reason: 'Paramètre verrouillé dès qu’une petite finale valide existe.'
     },
   }), [phaseRules, brassage1.matches, brassage2.matches, mainStage, knockout, championshipLeg1.matches, championshipLeg2.matches, singleKnockout]);
@@ -1659,6 +2458,22 @@ export default function App() {
 
   function countValidMatches(matches) {
     return countMatchesWithStatus(matches, 'Valide');
+  }
+
+  function matchHasEnteredScore(match) {
+    if (!match) return false;
+    const values = [match.scoreA, match.scoreB, match.submittedScoreA, match.submittedScoreB];
+    return values.some((value) => String(value ?? '').trim() !== '');
+  }
+
+  function countMatchesWithEnteredScores(matches) {
+    return (Array.isArray(matches) ? matches : []).filter(matchHasEnteredScore).length;
+  }
+
+  function confirmClearStageScores(matches, label) {
+    const scoredCount = countMatchesWithEnteredScores(matches);
+    if (!scoredCount) return true;
+    return window.confirm(`${scoredCount} match(s) dans ${label} contiennent déjà un score. Continuer effacera ces scores. Confirmer ?`);
   }
 
   function confirmOverwritePlayedMatches(matches, label) {
@@ -1743,10 +2558,11 @@ export default function App() {
   function buildFreshTournamentState(options = {}) {
     const preserveSharedId = options.preserveSharedId !== false;
     const preservePassword = options.preservePassword !== false;
+    const resetLevelsToL = options.resetLevelsToL === true;
     const nextSharedTournamentId = preserveSharedId ? (String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId('Tournoi de volley')) : buildDefaultSharedTournamentId('Tournoi de volley');
     const nextOrganizerPassword = preservePassword ? organizerPassword : 'Chuly0ne';
     return {
-      teams: defaultTeams(),
+      teams: resetLevelsToL ? defaultTeamsAllLevelL() : defaultTeams(),
       settings: {
         startTime: '09:00',
         slotDuration: 20,
@@ -1767,21 +2583,37 @@ export default function App() {
     };
   }
 
+  function restoreOrganizerFreshView() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      window.history.replaceState({}, '', url.toString());
+    }
+    setMode('organizer');
+    setIsOrganizerAuthenticated(true);
+    setShowOrganizerLogin(false);
+    setOrganizerAttempt('');
+    setLoginError('');
+    setActiveTab('dashboard');
+    setOrganizerMatchTeamFilter('');
+  }
+
   async function startNewTournament() {
     const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
     if (!confirmed) return;
     const resetStartedAt = new Date().toISOString();
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
     const freshState = {
-      ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: true }),
+      ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: true, resetLevelsToL: true }),
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(freshState));
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(freshState));
     }
     if (String(freshState.settings?.sharedTournamentId || '').trim()) {
       const savedAt = new Date().toISOString();
@@ -1801,10 +2633,11 @@ export default function App() {
         }
         pendingFreshTournamentTimestampRef.current = savedAt;
         applyPersistedState(cloudPayload);
+        restoreOrganizerFreshView();
         setRemoteSavedAt(savedAt);
         setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudPayload));
+          safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(cloudPayload));
         }
       } catch (error) {
         setRemoteSyncMessage(error.message || 'Échec de la réinitialisation Firebase.');
@@ -1840,8 +2673,27 @@ export default function App() {
     setTournamentLogo('');
   }
 
+  function regenerateBrassage1FromTeams(nextTeams) {
+    const readyTeams = normalizeTeamsList(nextTeams).filter((team) => (team.name || '').trim() !== '');
+    const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
+    const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
+    const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
+    setBrassage1({ pools, matches });
+    setBrassage2({ pools: [], matches: [] });
+    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
+    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    queueBackgroundCloudSave(250);
+  }
+
   function updateTeam(teamId, field, value) {
-    setTeams((current) => current.map((team) => (team.id === teamId ? { ...team, [field]: value } : team)));
+    setTeams((current) => {
+      const nextTeams = current.map((team) => (team.id === teamId ? { ...team, [field]: value } : team));
+      const shouldRegenerateBrassage1 = field === 'level' && !isSmallTournamentMode && brassage1.matches.length > 0;
+      if (shouldRegenerateBrassage1) {
+        regenerateBrassage1FromTeams(nextTeams);
+      }
+      return nextTeams;
+    });
   }
 
   function addTeam() {
@@ -1878,13 +2730,14 @@ export default function App() {
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
-    setRemoteStateInitialized(mode !== 'referee');
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
   }
 
   function generateBrassage1() {
-    if (!confirmOverwritePlayedMatches([
+    if (!confirmClearStageScores([
       ...brassage1.matches,
       ...brassage2.matches,
       ...mainStage.principaleMatches,
@@ -1901,6 +2754,10 @@ export default function App() {
       ...singleKnockout.finals,
     ], 'le tournoi en cours')) return;
     const readyTeams = activeTeams;
+    if (hasDuplicateTeamNames) {
+      window.alert('Impossible de générer le brassage 1 tant que des doublons de nom d’équipe sont présents.');
+      return;
+    }
     if (readyTeams.length < 2) {
       window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
       return;
@@ -1927,73 +2784,112 @@ export default function App() {
     const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
     const pools = createPools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
-    setBrassage1({ pools, matches });
-    setBrassage2({ pools: [], matches: [] });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
-    setChampionshipLeg1({ pools: [], matches: [] });
-    setChampionshipLeg2({ pools: [], matches: [] });
-    setSingleKnockout({ quarters: [], semis: [], finals: [] });
+    const nextBrassage1 = { pools, matches };
+    const nextBrassage2 = { pools: [], matches: [] };
+    const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    const nextChampionshipLeg1 = { pools: [], matches: [] };
+    const nextChampionshipLeg2 = { pools: [], matches: [] };
+    const nextSingleKnockout = { quarters: [], semis: [], finals: [] };
+    brassage1Ref.current = nextBrassage1;
+    brassage2Ref.current = nextBrassage2;
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    championshipLeg1Ref.current = nextChampionshipLeg1;
+    championshipLeg2Ref.current = nextChampionshipLeg2;
+    singleKnockoutRef.current = nextSingleKnockout;
+    setBrassage1(nextBrassage1);
+    setBrassage2(nextBrassage2);
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
+    setChampionshipLeg1(nextChampionshipLeg1);
+    setChampionshipLeg2(nextChampionshipLeg2);
+    setSingleKnockout(nextSingleKnockout);
     setActiveTab('brassage1');
     queueBackgroundCloudSave(250);
   }
 
   function generateBrassage2() {
-    if (!confirmOverwritePlayedMatches([
-      ...brassage2.matches,
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'le brassage 2 et les phases suivantes')) return;
     if (isSmallTournamentMode) {
-      if (championshipLeg1.matches.length === 0) {
+      const currentLeg1 = championshipLeg1Ref.current;
+      const currentLeg2 = championshipLeg2Ref.current;
+      if (currentLeg1.matches.length === 0) {
         window.alert('Génère d’abord le Championnat Aller.');
         return;
       }
-      if (!stageValidation.championnatAllerComplete) {
+      const championshipAllerComplete = currentLeg1.matches.length > 0 && currentLeg1.matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      if (!championshipAllerComplete) {
         window.alert('Tous les scores du Championnat Aller doivent être valides avant de générer le Championnat Retour.');
         return;
       }
-      if (!confirmOverwritePlayedMatches([
-        ...championshipLeg2.matches,
-        ...singleKnockout.quarters,
-        ...singleKnockout.semis,
-        ...singleKnockout.finals,
+      if (!confirmClearStageScores([
+        ...currentLeg2.matches,
+        ...singleKnockoutRef.current.finals,
+        ...singleKnockoutRef.current.semis,
+        ...singleKnockoutRef.current.quarters,
       ], 'le Championnat Retour et le tableau final')) return;
-      const teamIds = championshipLeg1.pools[0]?.teamIds || sortTeamsForSeeding(activeTeams).map((team) => team.id);
+      const { teams: currentTeams } = buildCurrentTeamContext();
+      const teamIds = currentLeg1.pools[0]?.teamIds || sortTeamsForSeeding(currentTeams).map((team) => team.id);
       const pools = createChampionshipPool(teamIds, CHAMPIONSHIP_RETOUR_POOL_NAME);
       const matches = createChampionshipMatches(teamIds, 'Championnat Retour', CHAMPIONSHIP_RETOUR_POOL_NAME, true);
-      setChampionshipLeg2({ pools, matches });
-      setSingleKnockout({ quarters: [], semis: [], finals: [] });
+      const nextChampionshipLeg2 = { pools, matches };
+      const nextSingleKnockout = { quarters: [], semis: [], finals: [] };
+      championshipLeg2Ref.current = nextChampionshipLeg2;
+      singleKnockoutRef.current = nextSingleKnockout;
+      setChampionshipLeg2(nextChampionshipLeg2);
+      setSingleKnockout(nextSingleKnockout);
       setActiveTab('championship');
       queueBackgroundCloudSave(250);
       return;
     }
-    if (brassage1.matches.length === 0) {
+    const currentBrassage1 = brassage1Ref.current;
+    const currentBrassage2 = brassage2Ref.current;
+    if (currentBrassage1.matches.length === 0) {
       window.alert('Génère d’abord le brassage 1.');
       return;
     }
-    if (!stageValidation.brassage1Complete) {
+    const currentVisibleBrassage1Matches = filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1');
+    const brassage1Complete = currentVisibleBrassage1Matches.length > 0 && currentVisibleBrassage1Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!brassage1Complete) {
       window.alert('Tous les scores du Brassage 1 doivent être valides avant de générer le Brassage 2.');
       return;
     }
-    const rankedIds = rankingAfterBrassage1.map((row) => row.teamId);
+    if (!confirmClearStageScores([
+      ...currentBrassage2.matches,
+      ...mainStageRef.current.principaleMatches,
+      ...mainStageRef.current.consolanteMatches,
+      ...knockoutRef.current.principalQuarters,
+      ...knockoutRef.current.principalSemis,
+      ...knockoutRef.current.principalFinals,
+      ...knockoutRef.current.consolanteSemis,
+      ...knockoutRef.current.consolanteFinals,
+    ], 'le brassage 2 et les phases suivantes')) return;
+    const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
+    const rankingSourceTeamIds = currentBrassage1.pools.flatMap((pool) => Array.isArray(pool?.teamIds) ? pool.teamIds : []).filter(Boolean);
+    const teamIdsForRanking = rankingSourceTeamIds.length ? Array.from(new Set(rankingSourceTeamIds)) : currentTeamIds;
+    const rankedIds = computeRanking(teamIdsForRanking, currentVisibleBrassage1Matches, currentTeamMap, phaseRulesRef.current).map((row) => row.teamId).filter(Boolean);
+    if (rankedIds.length < 2) {
+      window.alert('Impossible de générer le Brassage 2 : aucun classement exploitable n’a été trouvé à partir du Brassage 1.');
+      return;
+    }
     const pools = createPools(rankedIds, createNumberedNames('Brassage 2 - Poule', 6));
-    const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(brassage1.matches.length));
-    setBrassage2({ pools, matches });
-    setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(currentBrassage1.matches.length));
+    const nextBrassage2 = { pools, matches };
+    const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    brassage2Ref.current = nextBrassage2;
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    setBrassage2(nextBrassage2);
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
     setActiveTab('brassage2');
     queueBackgroundCloudSave(250);
   }
 
 
   function generateSmallKnockoutStage1() {
-    if (!confirmOverwritePlayedMatches([
+    if (!confirmClearStageScores([
       ...singleKnockout.quarters,
       ...singleKnockout.semis,
       ...singleKnockout.finals,
@@ -2025,7 +2921,7 @@ export default function App() {
   }
 
   function generateSmallKnockoutStage2() {
-    if (!confirmOverwritePlayedMatches([
+    if (!confirmClearStageScores([
       ...singleKnockout.semis,
       ...singleKnockout.finals,
     ], 'les demi-finales et finales du Championnat')) return;
@@ -2047,7 +2943,7 @@ export default function App() {
   }
 
   function generateSmallKnockoutStage3() {
-    if (!confirmOverwritePlayedMatches(singleKnockout.finals, 'la finale du Championnat')) return;
+    if (!confirmClearStageScores(singleKnockout.finals, 'la finale du Championnat')) return;
     if (singleKnockout.semis.length === 0) {
       window.alert('Génère d’abord les demi-finales.');
       return;
@@ -2079,158 +2975,331 @@ export default function App() {
   }
 
   function generateMainStage() {
-    if (!confirmOverwritePlayedMatches([
-      ...mainStage.principaleMatches,
-      ...mainStage.consolanteMatches,
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'la principale, la consolante et les phases finales')) return;
-    if (brassage2.matches.length === 0) {
+    const currentBrassage1 = brassage1Ref.current;
+    const currentBrassage2 = brassage2Ref.current;
+    const currentMainStage = mainStageRef.current;
+    if (currentBrassage2.matches.length === 0) {
       window.alert('Génère d’abord le brassage 2.');
       return;
     }
-    if (!stageValidation.brassage2Complete) {
+    const currentVisibleBrassage2Matches = filterMatchesToPools(currentBrassage2.matches, currentBrassage2.pools, 'Brassage 2');
+    const brassage2Complete = currentVisibleBrassage2Matches.length > 0 && currentVisibleBrassage2Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!brassage2Complete) {
       window.alert('Tous les scores du Brassage 2 doivent être valides avant de générer la phase suivante.');
       return;
     }
-    const rankedIds = rankingAfterBrassages.map((row) => row.teamId);
+    if (!confirmClearStageScores([
+      ...currentMainStage.principaleMatches,
+      ...currentMainStage.consolanteMatches,
+      ...knockoutRef.current.principalQuarters,
+      ...knockoutRef.current.principalSemis,
+      ...knockoutRef.current.principalFinals,
+      ...knockoutRef.current.consolanteSemis,
+      ...knockoutRef.current.consolanteFinals,
+    ], 'la principale / consolante et les phases finales')) return;
+    const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
+    const rankedIds = computeRanking(currentTeamIds, [...filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1'), ...currentVisibleBrassage2Matches], currentTeamMap, phaseRulesRef.current).map((row) => row.teamId);
     const principaleIds = rankedIds.slice(0, 12);
     const consolanteIds = rankedIds.slice(12, 18);
     const principalePools = createPools(principaleIds, PRINCIPALE_POOL_NAMES);
     const consolantePools = createPools(consolanteIds, CONSOLANTE_POOL_NAMES);
-    const scheduled = assignSchedule([
-      ...principalePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Principale', pool.name)),
-      ...consolantePools.flatMap((pool) => roundRobinMatches(pool.teamIds, 'Consolante', pool.name)),
-    ], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length));
+    const scheduled = scheduleMainStageMatches(
+      principalePools,
+      consolantePools,
+      stageSlotCount(currentBrassage1.matches.length) + stageSlotCount(currentBrassage2.matches.length),
+    );
 
-    setMainStage({
+    const nextMainStage = {
       principalePools,
       principaleMatches: scheduled.filter((match) => match.phase === 'Principale'),
       consolantePools,
       consolanteMatches: scheduled.filter((match) => match.phase === 'Consolante'),
-    });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    mainStageRef.current = nextMainStage;
+    knockoutRef.current = nextKnockout;
+    setMainStage(nextMainStage);
+    setKnockout(nextKnockout);
     setActiveTab('principale');
     queueBackgroundCloudSave(250);
   }
 
-  function generateKnockoutStage1() {
-    if (!confirmOverwritePlayedMatches([
-      ...knockout.principalQuarters,
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteSemis,
-      ...knockout.consolanteFinals,
-    ], 'les phases finales')) return;
-    if (!mainStage.principalePools.length || !mainStage.consolantePools.length) {
-      window.alert('Génère d’abord la principale et la consolante.');
+  function generatePrincipalQuarters() {
+    const currentMainStage = mainStageRef.current;
+    const currentKnockout = knockoutRef.current;
+    if (!currentMainStage.principalePools.length) {
+      window.alert('Génère d’abord la principale.');
       return;
     }
-    if (!stageValidation.principalePoolsComplete || !stageValidation.consolantePoolsComplete) {
-      window.alert('Tous les scores de la principale et de la consolante doivent être valides avant de générer les phases finales.');
+    const currentVisiblePrincipaleMatches = filterMatchesToPools(currentMainStage.principaleMatches, currentMainStage.principalePools, 'Principale');
+    const principalePoolsComplete = currentVisiblePrincipaleMatches.length > 0 && currentVisiblePrincipaleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!principalePoolsComplete) {
+      window.alert('Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
       return;
     }
-    const pMap = new Map(principaleStandings.map((entry) => [entry.pool.name, entry.rows]));
-    const cMap = new Map(consolanteStandings.map((entry) => [entry.pool.name, entry.rows]));
-    const principalQuartersRaw = [
-      makeKnockoutMatch('Tableau principal', 'Quart 1', pMap.get('Principale A')?.[0]?.teamId || null, pMap.get('Principale D')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 2', pMap.get('Principale B')?.[0]?.teamId || null, pMap.get('Principale C')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 3', pMap.get('Principale C')?.[0]?.teamId || null, pMap.get('Principale B')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau principal', 'Quart 4', pMap.get('Principale D')?.[0]?.teamId || null, pMap.get('Principale A')?.[1]?.teamId || null),
-    ];
-    const consolanteSemisRaw = [
-      makeKnockoutMatch('Tableau consolante', 'Demi 1', cMap.get('Consolante A')?.[0]?.teamId || null, cMap.get('Consolante B')?.[1]?.teamId || null),
-      makeKnockoutMatch('Tableau consolante', 'Demi 2', cMap.get('Consolante B')?.[0]?.teamId || null, cMap.get('Consolante A')?.[1]?.teamId || null),
-    ];
-    const combined = assignSchedule([...principalQuartersRaw, ...consolanteSemisRaw], stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length));
-    setKnockout((current) => ({
-      ...current,
-      principalQuarters: combined.filter((match) => match.phase === 'Tableau principal'),
-      consolanteSemis: combined.filter((match) => match.phase === 'Tableau consolante'),
+    if (!confirmClearStageScores([
+      ...currentKnockout.principalQuarters,
+      ...currentKnockout.principalSemis,
+      ...currentKnockout.principalFinals,
+    ], 'les quarts, demi-finales et finales principale')) return;
+    const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current);
+    const pA = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'A');
+    const pB = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'B');
+    const pC = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'C');
+    const pD = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'D');
+    const principalQuartersRaw = sanitizeKnockoutMatches([
+      makeKnockoutMatch('Tableau principal', 'Quart 1', pA[0]?.teamId || null, pD[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 2', pB[0]?.teamId || null, pC[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
+      makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pA[1]?.teamId || null),
+    ]);
+    const principalQuarters = stampGeneratedMatches(assignSchedule(
+      principalQuartersRaw,
+      stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length),
+    ));
+    const nextKnockout = {
+      ...currentKnockout,
+      principalQuarters: sanitizeKnockoutMatches(principalQuarters),
       principalSemis: [],
       principalFinals: [],
-      consolanteFinals: [],
-    }));
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
     setActiveTab('finales');
     queueBackgroundCloudSave(250);
   }
 
-  function generateKnockoutStage2() {
-    if (!confirmOverwritePlayedMatches([
-      ...knockout.principalSemis,
-      ...knockout.principalFinals,
-      ...knockout.consolanteFinals,
-    ], 'la suite des phases finales')) return;
-    if (knockout.principalQuarters.length === 0 || knockout.consolanteSemis.length === 0) {
-      window.alert('Génère d’abord les quarts et les demi-finales de consolante.');
+  function generateConsolanteSemis() {
+    const currentMainStage = mainStageRef.current;
+    const currentKnockout = knockoutRef.current;
+    if (!currentMainStage.consolantePools.length) {
+      window.alert('Génère d’abord la consolante.');
       return;
     }
-    const q1 = getWinnerLoser(knockout.principalQuarters[0], phaseRules);
-    const q2 = getWinnerLoser(knockout.principalQuarters[1], phaseRules);
-    const q3 = getWinnerLoser(knockout.principalQuarters[2], phaseRules);
-    const q4 = getWinnerLoser(knockout.principalQuarters[3], phaseRules);
-    const c1 = getWinnerLoser(knockout.consolanteSemis[0], phaseRules);
-    const c2 = getWinnerLoser(knockout.consolanteSemis[1], phaseRules);
-    if (!q1.winner || !q2.winner || !q3.winner || !q4.winner || !c1.winner || !c2.winner) {
-      window.alert('Renseigne d’abord des scores valides pour les quarts et les demi-finales de consolante.');
+    const currentVisibleConsolanteMatches = filterMatchesToPools(currentMainStage.consolanteMatches, currentMainStage.consolantePools, 'Consolante');
+    const consolantePoolsComplete = currentVisibleConsolanteMatches.length > 0 && currentVisibleConsolanteMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!consolantePoolsComplete) {
+      window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les demi-finales consolante.');
       return;
     }
+    if (!confirmClearStageScores([
+      ...currentKnockout.consolanteSemis,
+      ...currentKnockout.consolanteFinals,
+    ], 'les demi-finales et finales de consolante')) return;
+    const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+    const currentConsolanteStandings = computeGroupStandings(currentMainStage.consolantePools, currentVisibleConsolanteMatches, currentTeamMap, phaseRulesRef.current);
+    const cA = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'A');
+    const cB = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'B');
+    const consolanteSemisRaw = sanitizeKnockoutMatches([
+      makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
+      makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
+    ]);
+    const consolanteSemis = stampGeneratedMatches(assignSchedule(
+      consolanteSemisRaw,
+      stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length),
+    ));
+    const nextKnockout = {
+      ...currentKnockout,
+      consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
+      consolanteFinals: [],
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
+    setActiveTab('finales');
+    queueBackgroundCloudSave(250);
+  }
+
+  function generatePrincipalSemis() {
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    const canGeneratePrincipalSemis = currentKnockout.principalQuarters.length > 0 && currentKnockout.principalQuarters.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!canGeneratePrincipalSemis) {
+      window.alert('Tous les quarts de finale principaux doivent être valides avant de générer les demi-finales principale.');
+      return;
+    }
+    const q1 = getWinnerLoser(currentKnockout.principalQuarters[0], phaseRulesRef.current);
+    const q2 = getWinnerLoser(currentKnockout.principalQuarters[1], phaseRulesRef.current);
+    const q3 = getWinnerLoser(currentKnockout.principalQuarters[2], phaseRulesRef.current);
+    const q4 = getWinnerLoser(currentKnockout.principalQuarters[3], phaseRulesRef.current);
+    if (!q1.winner || !q2.winner || !q3.winner || !q4.winner) {
+      window.alert('Renseigne d’abord des scores valides pour les quarts principale.');
+      return;
+    }
+    if (!confirmClearStageScores([
+      ...currentKnockout.principalSemis,
+      ...currentKnockout.principalFinals,
+    ], 'les demi-finales et finales principale')) return;
     const principalSemisRaw = [
       makeKnockoutMatch('Tableau principal', 'Demi 1', q1.winner, q2.winner),
       makeKnockoutMatch('Tableau principal', 'Demi 2', q3.winner, q4.winner),
     ];
-    const consolanteFinalsRaw = [
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length);
+    const nextKnockout = {
+      ...currentKnockout,
+      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(principalSemisRaw, startSlot))),
+      principalFinals: [],
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
+    queueBackgroundCloudSave(250);
+  }
+
+  function generateConsolanteFinals() {
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    const currentConsolanteSemis = sanitizeKnockoutMatches(currentKnockout.consolanteSemis);
+    const canGenerateConsolanteFinals = currentConsolanteSemis.length === 2 && currentConsolanteSemis.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    if (!canGenerateConsolanteFinals) {
+      window.alert('Toutes les demi-finales de consolante doivent être valides avant de générer les finales de consolante.');
+      return;
+    }
+    const c1 = getWinnerLoser(currentConsolanteSemis[0], phaseRulesRef.current);
+    const c2 = getWinnerLoser(currentConsolanteSemis[1], phaseRulesRef.current);
+    if (!c1.winner || !c2.winner || !c1.loser || !c2.loser) {
+      window.alert('Renseigne d’abord des scores valides pour les demi-finales de consolante.');
+      return;
+    }
+    if (!confirmClearStageScores(currentKnockout.consolanteFinals, 'les finales de consolante')) return;
+    const consolanteFinalsRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau consolante', 'Petite finale', c1.loser, c2.loser),
       makeKnockoutMatch('Tableau consolante', 'Finale', c1.winner, c2.winner),
-    ];
-    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length);
-    const combined = assignSchedule([...principalSemisRaw, ...consolanteFinalsRaw], startSlot);
-    setKnockout((current) => ({
-      ...current,
-      principalSemis: combined.filter((match) => match.phase === 'Tableau principal'),
-      consolanteFinals: combined.filter((match) => match.phase === 'Tableau consolante'),
-      principalFinals: [],
-    }));
+    ]);
+    if (consolanteFinalsRaw.length !== 2) {
+      window.alert('Impossible de générer les finales de consolante tant que les 4 équipes qualifiées ne sont pas déterminées.');
+      return;
+    }
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length)
+      + stageSlotCount(brassage2Ref.current.matches.length)
+      + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length)
+      + stageSlotCount(currentKnockout.principalQuarters.length + currentConsolanteSemis.length + currentKnockout.principalSemis.length);
+    const nextKnockout = {
+      ...currentKnockout,
+      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignSchedule(consolanteFinalsRaw, startSlot))),
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
+    setActiveTab('finales');
+    queueBackgroundCloudSave(250);
   }
 
   function generatePrincipalFinals() {
-    if (!confirmOverwritePlayedMatches(knockout.principalFinals, 'la finale principale')) return;
-    if (knockout.principalSemis.length === 0) {
+    const currentKnockout = knockoutRef.current;
+    const currentMainStage = mainStageRef.current;
+    const currentPrincipalSemis = sanitizeKnockoutMatches(currentKnockout.principalSemis);
+    if (currentPrincipalSemis.length !== 2) {
       window.alert('Génère d’abord les demi-finales principales.');
       return;
     }
-    const s1 = getWinnerLoser(knockout.principalSemis[0], phaseRules);
-    const s2 = getWinnerLoser(knockout.principalSemis[1], phaseRules);
-    if (!s1.winner || !s2.winner) {
+    const s1 = getWinnerLoser(currentPrincipalSemis[0], phaseRulesRef.current);
+    const s2 = getWinnerLoser(currentPrincipalSemis[1], phaseRulesRef.current);
+    if (!s1.winner || !s2.winner || !s1.loser || !s2.loser) {
       window.alert('Renseigne d’abord des scores valides pour les demi-finales principales.');
       return;
     }
-    const finalsRaw = [
+    if (!confirmClearStageScores(currentKnockout.principalFinals, 'la finale principale')) return;
+    const finalsRaw = sanitizeKnockoutMatches([
       makeKnockoutMatch('Tableau principal', 'Petite finale', s1.loser, s2.loser),
       makeKnockoutMatch('Tableau principal', 'Finale', s1.winner, s2.winner),
-    ];
-    const startSlot = stageSlotCount(brassage1.matches.length) + stageSlotCount(brassage2.matches.length) + stageSlotCount(mainStage.principaleMatches.length + mainStage.consolanteMatches.length) + stageSlotCount(knockout.principalQuarters.length + knockout.consolanteSemis.length) + stageSlotCount(knockout.principalSemis.length + knockout.consolanteFinals.length);
-    setKnockout((current) => ({ ...current, principalFinals: assignSchedule(finalsRaw, startSlot) }));
+    ]);
+    if (finalsRaw.length !== 2) {
+      window.alert('Impossible de générer la finale principale tant que les 4 équipes qualifiées ne sont pas déterminées.');
+      return;
+    }
+    const startSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length) + stageSlotCount(currentKnockout.principalQuarters.length + currentKnockout.consolanteSemis.length) + stageSlotCount(currentKnockout.principalSemis.length + currentKnockout.consolanteFinals.length);
+    const nextKnockout = {
+      ...currentKnockout,
+      principalFinals: stampGeneratedMatches(assignSchedule(finalsRaw, startSlot)),
+    };
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
+    setActiveTab('finales');
+    queueBackgroundCloudSave(250);
   }
 
   function updateMatchesInScope(scope, updater) {
-    if (scope === 'championshipLeg1') return setChampionshipLeg1((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'championshipLeg2') return setChampionshipLeg2((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'quarters') return setSingleKnockout((current) => ({ ...current, quarters: updater(current.quarters) }));
-    if (scope === 'semis') return setSingleKnockout((current) => ({ ...current, semis: updater(current.semis) }));
-    if (scope === 'finals') return setSingleKnockout((current) => ({ ...current, finals: updater(current.finals) }));
-    if (scope === 'brassage1') return setBrassage1((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'brassage2') return setBrassage2((current) => ({ ...current, matches: updater(current.matches) }));
-    if (scope === 'principale') return setMainStage((current) => ({ ...current, principaleMatches: updater(current.principaleMatches) }));
-    if (scope === 'consolante') return setMainStage((current) => ({ ...current, consolanteMatches: updater(current.consolanteMatches) }));
-    if (scope === 'principalQuarters') return setKnockout((current) => ({ ...current, principalQuarters: updater(current.principalQuarters) }));
-    if (scope === 'principalSemis') return setKnockout((current) => ({ ...current, principalSemis: updater(current.principalSemis) }));
-    if (scope === 'principalFinals') return setKnockout((current) => ({ ...current, principalFinals: updater(current.principalFinals) }));
-    if (scope === 'consolanteSemis') return setKnockout((current) => ({ ...current, consolanteSemis: updater(current.consolanteSemis) }));
-    return setKnockout((current) => ({ ...current, consolanteFinals: updater(current.consolanteFinals) }));
+    const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
+    if (scope === 'championshipLeg1') {
+      const next = { ...championshipLeg1Ref.current, matches: applyUpdater(championshipLeg1Ref.current?.matches) };
+      championshipLeg1Ref.current = next;
+      setChampionshipLeg1(next);
+      return;
+    }
+    if (scope === 'championshipLeg2') {
+      const next = { ...championshipLeg2Ref.current, matches: applyUpdater(championshipLeg2Ref.current?.matches) };
+      championshipLeg2Ref.current = next;
+      setChampionshipLeg2(next);
+      return;
+    }
+    if (scope === 'quarters') {
+      const next = { ...singleKnockoutRef.current, quarters: applyUpdater(singleKnockoutRef.current?.quarters) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
+      return;
+    }
+    if (scope === 'semis') {
+      const next = { ...singleKnockoutRef.current, semis: applyUpdater(singleKnockoutRef.current?.semis) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
+      return;
+    }
+    if (scope === 'finals') {
+      const next = { ...singleKnockoutRef.current, finals: applyUpdater(singleKnockoutRef.current?.finals) };
+      singleKnockoutRef.current = next;
+      setSingleKnockout(next);
+      return;
+    }
+    if (scope === 'brassage1') {
+      const next = { ...brassage1Ref.current, matches: applyUpdater(brassage1Ref.current?.matches) };
+      brassage1Ref.current = next;
+      setBrassage1(next);
+      return;
+    }
+    if (scope === 'brassage2') {
+      const next = { ...brassage2Ref.current, matches: applyUpdater(brassage2Ref.current?.matches) };
+      brassage2Ref.current = next;
+      setBrassage2(next);
+      return;
+    }
+    if (scope === 'principale') {
+      const next = { ...mainStageRef.current, principaleMatches: applyUpdater(mainStageRef.current?.principaleMatches) };
+      mainStageRef.current = next;
+      setMainStage(next);
+      return;
+    }
+    if (scope === 'consolante') {
+      const next = { ...mainStageRef.current, consolanteMatches: applyUpdater(mainStageRef.current?.consolanteMatches) };
+      mainStageRef.current = next;
+      setMainStage(next);
+      return;
+    }
+    if (scope === 'principalQuarters') {
+      const next = { ...knockoutRef.current, principalQuarters: applyUpdater(knockoutRef.current?.principalQuarters) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      return;
+    }
+    if (scope === 'principalSemis') {
+      const next = { ...knockoutRef.current, principalSemis: applyUpdater(knockoutRef.current?.principalSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      return;
+    }
+    if (scope === 'principalFinals') {
+      const next = { ...knockoutRef.current, principalFinals: applyUpdater(knockoutRef.current?.principalFinals) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      return;
+    }
+    if (scope === 'consolanteSemis') {
+      const next = { ...knockoutRef.current, consolanteSemis: applyUpdater(knockoutRef.current?.consolanteSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      return;
+    }
+    const next = { ...knockoutRef.current, consolanteFinals: applyUpdater(knockoutRef.current?.consolanteFinals) };
+    knockoutRef.current = next;
+    setKnockout(next);
   }
 
   function getPendingMatchSnapshot(match) {
@@ -2255,6 +3324,7 @@ export default function App() {
     const normalized = value === '' ? '' : Math.max(0, Number(value));
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
+      const officialEditTimestamp = new Date().toISOString();
       const updated = {
         ...match,
         [field]: normalized,
@@ -2263,49 +3333,130 @@ export default function App() {
         submittedAt: null,
         refereeInProgress: false,
         matchInProgress: false,
+        manualOverrideAt: officialEditTimestamp,
       };
-      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? new Date().toISOString() : null;
+      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? officialEditTimestamp : null;
       return updated;
     }));
     queueBackgroundCloudSave();
   }
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const normalized = value === '' ? '' : Math.max(0, Number(value));
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+    const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
+    const editTimestamp = new Date().toISOString();
+    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
+    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
+    const nextScoreA = field === 'scoreA'
+      ? normalized
+      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const nextScoreB = field === 'scoreB'
+      ? normalized
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const nextDraft = {
+      matchId,
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
+      submittedAt: editTimestamp,
+    };
+    const localPendingSnapshot = {
+      submittedScoreA: String(nextScoreA ?? ''),
+      submittedScoreB: String(nextScoreB ?? ''),
+      submittedAt: editTimestamp,
+    };
+
+    refereeSelectedScoreDraftRef.current = nextDraft;
+    setRefereeSelectedScoreDraft(nextDraft);
+    commitRefereeScoreDrafts((current) => ({
+      ...current,
+      [matchId]: {
+        ...(current[matchId] || { scoreA: '', scoreB: '' }),
+        scoreA: nextScoreA,
+        scoreB: nextScoreB,
+        submittedAt: editTimestamp,
+      },
+    }));
+    recentRefereeLocalEditsRef.current.set(matchId, {
+      ...localPendingSnapshot,
+      until: Date.now() + 30000,
+    });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
+      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
       return {
         ...match,
-        [field]: match[field],
-        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: normalized,
-        submittedAt: new Date().toISOString(),
+        submittedScoreA: nextScoreA,
+        submittedScoreB: nextScoreB,
+        submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(0);
+    queueBackgroundCloudSave(120);
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
+    const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
+    const currentRawValue = field === 'scoreA'
+      ? (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA)
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB);
+    const currentValue = toNumber(currentRawValue) ?? 0;
+    const computedNextValue = String(Math.max(0, currentValue + delta));
+    const editTimestamp = new Date().toISOString();
+    const nextScoreA = field === 'scoreA'
+      ? computedNextValue
+      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const nextScoreB = field === 'scoreB'
+      ? computedNextValue
+      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const nextDraft = {
+      matchId,
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
+      submittedAt: editTimestamp,
+    };
+    const localPendingSnapshot = {
+      submittedScoreA: String(nextScoreA ?? ''),
+      submittedScoreB: String(nextScoreB ?? ''),
+      submittedAt: editTimestamp,
+    };
+
+    refereeSelectedScoreDraftRef.current = nextDraft;
+    setRefereeSelectedScoreDraft(nextDraft);
+    commitRefereeScoreDrafts((current) => ({
+      ...current,
+      [matchId]: {
+        ...(current[matchId] || { scoreA: '', scoreB: '' }),
+        scoreA: nextScoreA,
+        scoreB: nextScoreB,
+        submittedAt: editTimestamp,
+      },
+    }));
+    recentRefereeLocalEditsRef.current.set(matchId, {
+      ...localPendingSnapshot,
+      until: Date.now() + 30000,
+    });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      if (getMatchStatusLabel(match, phaseRules) === 'Valide') return match;
-      const currentValue = toNumber(field === 'scoreA' ? match.submittedScoreA : match.submittedScoreB) ?? 0;
-      const nextValue = Math.max(0, currentValue + delta);
+      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
       return {
         ...match,
-        [field]: match[field],
-        [field === 'scoreA' ? 'submittedScoreA' : 'submittedScoreB']: nextValue,
-        submittedAt: new Date().toISOString(),
+        submittedScoreA: nextScoreA,
+        submittedScoreB: nextScoreB,
+        submittedAt: editTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(0);
+    queueBackgroundCloudSave(120);
   }
 
   function approveRefereeScore(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
@@ -2318,6 +3469,7 @@ export default function App() {
         refereeInProgress: false,
         matchInProgress: false,
       };
+      approved.manualOverrideAt = null;
       approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
       return approved;
     }));
@@ -2325,6 +3477,7 @@ export default function App() {
   }
 
   function rejectRefereeScore(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
         ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), refereeInProgress: false, matchInProgress: false }
@@ -2334,6 +3487,7 @@ export default function App() {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -2344,12 +3498,14 @@ export default function App() {
         matchInProgress: true,
       };
     }));
+    setRefereeSelectedScoreDraft((current) => (current && current.matchId === matchId ? null : current));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
     queueBackgroundCloudSave(250);
   }
 
   function releaseRefereeSelectedMatch(entry) {
     if (!entry?.match) {
+      setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
       return;
     }
@@ -2364,6 +3520,7 @@ export default function App() {
       )));
       queueBackgroundCloudSave();
     }
+    setRefereeSelectedScoreDraft(null);
     setRefereeSelectedMatch(null);
   }
 
@@ -2409,12 +3566,20 @@ export default function App() {
   function renderStandings(cards) {
     if (!cards.length) return <div className="empty-state">Aucun classement disponible pour le moment.</div>;
     return (
-      <div className="cards-grid three-up">
+      <div className="cards-grid one-up standings-full-width-grid">
         {cards.map(({ pool, rows }) => (
           <div key={pool.id} className="mini-card">
             <div className="mini-card-head">{pool.name}</div>
             <div className="table-wrap">
-              <table>
+              <table className="standings-table">
+                <colgroup>
+                  <col className="col-rank" />
+                  <col className="col-team" />
+                  <col className="col-j" />
+                  <col className="col-v" />
+                  <col className="col-pts" />
+                  <col className="col-diff" />
+                </colgroup>
                 <thead>
                   <tr>
                     <th>#</th>
@@ -2446,93 +3611,126 @@ export default function App() {
   }
 
   function renderOrganizerMatches(matches, scope) {
-    if (!matches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
+    const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+    const availableTeamIds = new Set();
+    uniqueMatches.forEach((match) => {
+      if (match?.teamAId) availableTeamIds.add(match.teamAId);
+      if (match?.teamBId) availableTeamIds.add(match.teamBId);
+    });
+    const availableTeams = teams
+      .filter((team) => availableTeamIds.has(team.id))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+    const effectiveTeamFilter = availableTeamIds.has(organizerMatchTeamFilter) ? organizerMatchTeamFilter : '';
+    const filteredMatches = filterMatchesBySelectedTeam(uniqueMatches, effectiveTeamFilter);
+    if (!uniqueMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
     return (
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th className="column-time">Heure</th>
-              <th className="column-court">Terrain</th>
-              <th>Poule</th>
-              <th>Équipe A</th>
-              <th>Score officiel</th>
-              <th>Équipe B</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matches.map((match) => {
-              const status = getMatchStatusLabel(match, phaseRules);
-              const pendingStatus = getPendingStatus(match);
-              const pendingA = toNumber(match.submittedScoreA);
-              const pendingB = toNumber(match.submittedScoreB);
-              const isValid = status === 'Valide';
-              const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
-              const schedule = scheduleData.scheduleMap[match.id];
-              return (
-                <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
-                  <td className="cell-time">{schedule?.startText || match.time}</td>
-                  <td className="cell-court">Terrain {match.court}</td>
-                  <td>{match.group.replace(/^Brassage [12] - /, '').replace(/^Championnat (Aller|Retour) - /, '')}</td>
-                  <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
-                  <td>
-                    <div className="score-inputs">
-                      <input type="number" min="0" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
-                      <span>-</span>
-                      <input type="number" min="0" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
-                    </div>
-                  </td>
-                  <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
-                  <td>
-                    <div className="status-cell">
-                      <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                      {!isValid && pendingStatus === 'Match en cours' ? (
-                        <>
-                          <span className="badge badge-neutral">Match en cours</span>
-                          <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                          {canApprovePending ? (
-                            <div className="actions-row compact-actions">
-                              <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
-                              <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
-                            </div>
-                          ) : null}
-                        </>
-                      ) : null}
-                      {!isValid ? (
-                        <div className="actions-row compact-actions">
-                          <Button
-                            variant={match.refereeInProgress ? 'info' : 'secondary'}
-                            onClick={() => reassignRefereeWithoutReset(scope, match.id)}
-                            disabled={!match.refereeInProgress}
-                          >
-                            Changer l’arbitre
-                          </Button>
-                        </div>
-                      ) : null}
-                      {!isValid && schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <>
+        <div className="match-filter-row">
+          <label htmlFor={`match-team-filter-${scope}`}>Filtrer par équipe</label>
+          <select id={`match-team-filter-${scope}`} value={effectiveTeamFilter} onChange={(e) => setOrganizerMatchTeamFilter(e.target.value)}>
+            <option value="">Toutes les équipes</option>
+            {availableTeams.map((team) => (
+              <option key={team.id} value={team.id}>{team.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="table-wrap">
+          <table className="matches-table">
+            <thead>
+              <tr>
+                <th className="column-match">Match</th>
+                <th>Équipe A</th>
+                <th>Score officiel</th>
+                <th>Équipe B</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMatches.map((match) => {
+                const status = getMatchStatusLabel(match, phaseRules);
+                const originalMatchNumber = uniqueMatches.findIndex((item) => item.id === match.id) + 1;
+                const pendingStatus = getPendingStatus(match);
+                const pendingA = toNumber(match.submittedScoreA);
+                const pendingB = toNumber(match.submittedScoreB);
+                const isValid = status === 'Valide';
+                const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const schedule = scheduleData.scheduleMap[match.id];
+                return (
+                  <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
+                    <td className="match-meta-cell">
+                      <div className="match-meta-stack">
+                        <span className="match-meta-time">{schedule?.startText || match.time}</span>
+                        <span className="match-meta-line"><strong>Match {originalMatchNumber}</strong></span>
+                        <span className="match-meta-line">Terrain {match.court}</span>
+                        <span className="match-meta-line">{formatPoolLabel(match.group)}</span>
+                      </div>
+                    </td>
+                    <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
+                    <td>
+                      <div className="score-inputs">
+                        <input type="number" min="0" inputMode="numeric" value={match.scoreA} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                        <span>-</span>
+                        <input type="number" min="0" inputMode="numeric" value={match.scoreB} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                      </div>
+                    </td>
+                    <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
+                    <td>
+                      <div className="status-cell">
+                        <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                        {!isValid && pendingStatus === 'Match en cours' ? (
+                          <>
+                            <span className="badge badge-neutral">Match en cours</span>
+                            <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
+                            {canApprovePending ? (
+                              <div className="actions-row compact-actions">
+                                <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                                <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                              </div>
+                            ) : null}
+                          </>
+                        ) : null}
+                        {!isValid ? (
+                          <div className="actions-row compact-actions">
+                            <Button
+                              variant={match.refereeInProgress ? 'info' : 'secondary'}
+                              onClick={() => reassignRefereeWithoutReset(scope, match.id)}
+                              disabled={!match.refereeInProgress}
+                            >
+                              Changer l’arbitre
+                            </Button>
+                          </div>
+                        ) : null}
+                        {!isValid && schedule ? <span className="muted tiny">Fin prévue : {schedule.endText}</span> : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {!filteredMatches.length ? <div className="empty-state">Aucun match pour cette équipe dans cette phase.</div> : null}
+        </div>
+      </>
     );
   }
 
   function renderRefereeSelectedMatch(entry) {
     if (!entry?.match) return null;
-    const { scope, title, match } = entry;
+    const { scope, title, match: entryMatch } = entry;
+    const match = findMatchInScope(scope, entryMatch.id) || entryMatch;
     const schedule = scheduleData.scheduleMap[match.id];
     const pendingStatus = getPendingStatus(match);
     const officialStatus = getMatchStatusLabel(match, phaseRules);
     const isLocked = officialStatus === 'Valide';
-    const displayScoreA = isLocked ? (match.scoreA ?? '') : (match.submittedScoreA ?? '');
-    const displayScoreB = isLocked ? (match.scoreB ?? '') : (match.submittedScoreB ?? '');
-    const pendingA = toNumber(match.submittedScoreA);
-    const pendingB = toNumber(match.submittedScoreB);
+    const selectedDraft = refereeSelectedScoreDraft?.matchId === match.id ? refereeSelectedScoreDraft : null;
+    const preferredDraft = getPreferredRefereeDraft(match);
+    const liveStoredDraft = refereeScoreDraftsRef.current?.[match.id] || null;
+    const draftScoreA = selectedDraft?.scoreA ?? liveStoredDraft?.scoreA ?? preferredDraft?.scoreA ?? getRefereeDraftValue(match, 'scoreA');
+    const draftScoreB = selectedDraft?.scoreB ?? liveStoredDraft?.scoreB ?? preferredDraft?.scoreB ?? getRefereeDraftValue(match, 'scoreB');
+    const displayScoreA = isLocked ? (match.scoreA ?? '') : (draftScoreA !== undefined ? draftScoreA : (match.submittedScoreA ?? ''));
+    const displayScoreB = isLocked ? (match.scoreB ?? '') : (draftScoreB !== undefined ? draftScoreB : (match.submittedScoreB ?? ''));
+    const pendingA = toNumber(displayScoreA !== '' ? displayScoreA : match.submittedScoreA);
+    const pendingB = toNumber(displayScoreB !== '' ? displayScoreB : match.submittedScoreB);
     const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
     const canChooseAnotherMatch = !hasStarted;
     const badgeText = officialStatus === 'Valide'
@@ -2545,7 +3743,7 @@ export default function App() {
       : match.refereeInProgress
         ? 'badge-danger'
         : 'badge-neutral';
-    const phaseRule = getRuleForPhaseLabel(match.phase, phaseRules);
+    const phaseRule = getRuleForMatch(match, phaseRules);
     const winningScore = Number(phaseRule?.winningScore) || 21;
     const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
     const contextText = `${match.group} • Terrain ${match.court} • Début prévu : ${schedule?.startText || match.time}`;
@@ -2700,10 +3898,28 @@ export default function App() {
     return (
       <div className="mini-card">
         <div className="mini-card-head">{title}</div>
-        <div className="podium-grid">
-          <div className="podium-item"><strong>1er</strong>{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} /> : <span>À venir</span>}</div>
-          <div className="podium-item"><strong>2e</strong>{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} /> : <span>À venir</span>}</div>
-          <div className="podium-item"><strong>3e</strong>{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} /> : <span>À venir</span>}</div>
+        <div className="podium-steps podium-steps-model">
+          <div className="podium-lane podium-lane-second">
+            <div className="podium-team-label">{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-second">
+              <div className="podium-step-rank">2e</div>
+            </div>
+          </div>
+          <div className="podium-lane podium-lane-first">
+            <div className="podium-team-label">{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-first">
+              <div className="podium-step-rank">1er</div>
+            </div>
+          </div>
+          <div className="podium-lane podium-lane-third">
+            <div className="podium-team-label">{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-step podium-step-third">
+              <div className="podium-step-rank">3e</div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -2747,16 +3963,19 @@ export default function App() {
     return (
       <div className="public-page">
         <div className="container">
-          <header className="hero public-hero public-hero-light">
+          <header
+            className={`hero public-hero ${tournamentLogo ? 'public-hero-with-logo hero-organizer-banner-with-logo' : 'public-hero-light'}`.trim()}
+            style={tournamentLogo ? organizerBannerStyle : undefined}
+          >
             <div>
               <div className="hero-brand">
-                <div className="hero-tag hero-tag-dark">tournoidevolley.fr</div>
-                <div className="hero-version hero-version-dark">Version {APP_VERSION}</div>
+                <div className={`hero-tag ${tournamentLogo ? '' : 'hero-tag-dark'}`.trim()}>tournoidevolley.fr</div>
+                <div className={`hero-version ${tournamentLogo ? '' : 'hero-version-dark'}`.trim()}>Version {APP_VERSION}</div>
               </div>
               <h1>{tournamentName}</h1>
             </div>
             <div className="hero-controls">
-              <div className="hero-pill public-pill-light">
+              <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : 'public-pill-light'}`.trim()}>
                 <span>Fin estimée du tournoi</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
@@ -2770,8 +3989,18 @@ export default function App() {
           {showOrganizerLogin ? renderOrganizerLoginCard() : null}
 
           <div className="cards-grid three-up">
-            {featuredPublicMatches.map(({ title, match }) => (
-              <LargePublicMatch key={match.id} title={title} match={match} resolveTeam={resolveTeam} phaseRules={phaseRules} />
+            {featuredPublicMatches.map((item, index) => (
+              item.type === 'podium' ? (
+                <PublicPodiumHighlightCard
+                  key={`podium-${index}-${item.title}`}
+                  title={item.title}
+                  principalTeamId={item.principalTeamId}
+                  consolanteTeamId={item.consolanteTeamId}
+                  resolveTeam={resolveTeam}
+                />
+              ) : (
+                <LargePublicMatch key={item.match.id} title={item.title} match={item.match} resolveTeam={resolveTeam} phaseRules={phaseRules} />
+              )
             ))}
           </div>
 
@@ -2779,12 +4008,14 @@ export default function App() {
             <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
               {renderOverallRanking(overallRanking, false, activeInProgressTeamIds)}
             </Section>
-            <Section title="Podiums" subtitle="Les podiums s’affichent dès que les finales sont validées par l’organisateur.">
-              <div className="cards-grid two-up">
-                {renderPodium('Tableau principal', knockout.principalFinals)}
-                {renderPodium('Tableau consolante', knockout.consolanteFinals)}
-              </div>
-            </Section>
+            {publicPodiumLeaders.tournamentFinished ? (
+              <Section title="Podiums" subtitle="Les podiums s’affichent lorsque le tournoi est terminé.">
+                <div className="cards-grid two-up">
+                  {renderPodium('Tableau principal', knockout.principalFinals)}
+                  {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                </div>
+              </Section>
+            ) : null}
           </div>
         </div>
       </div>
@@ -2795,17 +4026,20 @@ export default function App() {
     return (
       <div className="referee-page">
         <div className="container">
-          <header className="hero referee-hero">
+          <header
+            className={`hero referee-hero ${tournamentLogo ? 'referee-hero-with-logo hero-organizer-banner-with-logo' : ''}`.trim()}
+            style={tournamentLogo ? organizerBannerStyle : undefined}
+          >
             <div>
               <div className="hero-brand">
-                <div className="hero-tag">tournoidevolley.fr</div>
-                <div className="hero-version">Version {APP_VERSION}</div>
+                <div className={`hero-tag ${tournamentLogo ? '' : 'hero-tag-dark'}`.trim()}>tournoidevolley.fr</div>
+                <div className={`hero-version ${tournamentLogo ? '' : 'hero-version-dark'}`.trim()}>Version {APP_VERSION}</div>
               </div>
               <h1>{tournamentName} — mode arbitres</h1>
               <p>{isSmallTournamentMode ? 'Sélectionne un match du Championnat ou du tableau final unique pour saisir les scores.' : 'Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.'}</p>
             </div>
             <div className="hero-controls">
-              <div className="hero-pill">
+              <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : ''}`.trim()}>
                 <span>Fin estimée du tournoi</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
@@ -2873,7 +4107,7 @@ export default function App() {
                             >
                               <div>
                                 <div className="referee-selector-teams"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /><span className="muted tiny">vs</span><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></div>
-                                <div className="muted tiny">{match.group} • Terrain {match.court} • {schedule?.startText || match.time}</div>
+                                <div className="muted tiny">{formatPoolLabel(match.group)} • Terrain {match.court} • {schedule?.startText || match.time}</div>
                               </div>
                               <span className={`badge ${group.isUnlocked ? badgeClass : 'badge-neutral'}`}>{group.isUnlocked ? statusText : 'Verrouillé'}</span>
                             </button>
@@ -2986,10 +4220,10 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${brassage1.matches.length || 0}`} subvalue="6 poules de 3" />
-                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${brassage2.matches.length || 0}`} subvalue="6 poules de 3" />
-                    <StatCard label="Principale" value={`${completedMatchCounts.principale}/${mainStage.principaleMatches.length || 0}`} subvalue="4 poules de 3" />
-                    <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${mainStage.consolanteMatches.length || 0}`} subvalue="2 poules de 3" />
+                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${visibleBrassage1Matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${visibleBrassage2Matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Principale" value={`${completedMatchCounts.principale}/${visiblePrincipaleMatches.length || 0}`} subvalue="4 poules de 3" />
+                    <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${visibleConsolanteMatches.length || 0}`} subvalue="2 poules de 3" />
                     <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
                   </>
                 )}
@@ -3056,22 +4290,32 @@ export default function App() {
                       <PhaseRuleEditor title="Brassage 2" value={phaseRules.brassage2} disabled={phaseRuleLocks.brassage2.locked} disabledReason={phaseRuleLocks.brassage2.reason} onScoreChange={(value) => updatePhaseRule('brassage2', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('brassage2', 'mode', value)} />
                       <PhaseRuleEditor title="Principale" value={phaseRules.principale} disabled={phaseRuleLocks.principale.locked} disabledReason={phaseRuleLocks.principale.reason} onScoreChange={(value) => updatePhaseRule('principale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('principale', 'mode', value)} />
                       <PhaseRuleEditor title="Consolante" value={phaseRules.consolante} disabled={phaseRuleLocks.consolante.locked} disabledReason={phaseRuleLocks.consolante.reason} onScoreChange={(value) => updatePhaseRule('consolante', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('consolante', 'mode', value)} />
+                      <PhaseRuleEditor title="Quart de finale" value={phaseRules.quart} disabled={phaseRuleLocks.quart.locked} disabledReason={phaseRuleLocks.quart.reason} onScoreChange={(value) => updatePhaseRule('quart', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('quart', 'mode', value)} />
+                      <PhaseRuleEditor title="Demi-finale" value={phaseRules.demi} disabled={phaseRuleLocks.demi.locked} disabledReason={phaseRuleLocks.demi.reason} onScoreChange={(value) => updatePhaseRule('demi', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('demi', 'mode', value)} />
+                      <PhaseRuleEditor title="Finale" value={phaseRules.finale} disabled={phaseRuleLocks.finale.locked} disabledReason={phaseRuleLocks.finale.reason} onScoreChange={(value) => updatePhaseRule('finale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('finale', 'mode', value)} />
+                      <PhaseRuleEditor title="Petite finale" value={phaseRules.petiteFinale} disabled={phaseRuleLocks.petiteFinale.locked} disabledReason={phaseRuleLocks.petiteFinale.reason} onScoreChange={(value) => updatePhaseRule('petiteFinale', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('petiteFinale', 'mode', value)} />
                     </>
                   )}
                 </div>
               </Section>
 
-              <Section title="Flux du tournoi" subtitle={isSmallTournamentMode ? 'Pour moins de 10 équipes : Championnat Aller, Championnat Retour puis tableau final sans huitièmes.' : 'Mode standard à 18 équipes avec brassages, principale, consolante et phases finales.'} right={isSmallTournamentMode ? <><Button onClick={generateBrassage1}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
-                <div className="cards-grid two-up">
-                  <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p></div>
-                  <div className="mini-card"><div className="mini-card-head">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
+              <Section title="Informations" subtitle="Explication du calcul des points et rappel du déroulé du tournoi." right={isSmallTournamentMode ? <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
+                <div className="cards-grid two-up info-grid">
+                  <div className="mini-card info-card">
+                    <div className="mini-card-head">Calcul des points</div>
+                    <p className="muted small">L’équipe gagnante marque le score gagnant multiplié par 2, puis on ajoute l’écart de points. L’équipe perdante conserve ses points marqués puis on retire cet écart.</p>
+                    <p className="muted small"><strong>Exemple :</strong> sur un match en 21, une victoire 21 à 17 donne <strong>46 points</strong> au vainqueur (2 × 21 + 4) et <strong>13 points</strong> au perdant (17 − 4).</p>
+                    <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
+                    {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
+                  </div>
+                  <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
             </>
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 s’appuie sur ce niveau pour faire les têtes de série." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -3086,9 +4330,9 @@ export default function App() {
                   </thead>
                   <tbody>
                     {teamsSortedByLevel.map((team, index) => (
-                      <tr key={team.id}>
-                        <td>{index + 1}</td>
-                        <td className="team-name-cell"><input className={`team-name-color-input ${getLevelClass(team.level)}`} value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} placeholder="Nom de l'équipe" /></td>
+                      <tr key={team.id} className={isDuplicateTeamName(team.name) ? "duplicate-team-row" : ""}>
+                        <td><span className={isDuplicateTeamName(team.name) ? "duplicate-team-index" : ""}>{index + 1}</span></td>
+                        <td className="team-name-cell"><input className={`team-name-color-input ${getLevelClass(team.level)} ${isDuplicateTeamName(team.name) ? "duplicate-team-name-input" : ""}`} value={team.name} onChange={(e) => updateTeam(team.id, 'name', e.target.value)} placeholder="Nom de l'équipe" /></td>
                         <td>
                           <select value={team.level} disabled={teamLevelLocked} onChange={(e) => updateTeam(team.id, 'level', e.target.value)}>
                             {LEVELS.map((level) => <option key={level} value={level}>{level}</option>)}
@@ -3104,6 +4348,7 @@ export default function App() {
               </div>
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
               <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
+              {hasDuplicateTeamNames ? <p className="helper-text danger-text">Les numéros en couleur signalent des doublons de nom d’équipe. Corrigez-les avant de générer le brassage 1.</p> : null}
               {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est officiellement validé.</p> : null}
             </Section>
           )}
@@ -3114,11 +4359,11 @@ export default function App() {
               <Section title="Championnat Aller" subtitle="Toutes les équipes se rencontrent une première fois pour construire le classement général." right={<Button onClick={generateBrassage2}>Générer le Championnat Retour</Button>}>
                 {renderStandings(championshipLeg1Standings)}
               </Section>
-              <Section title="Matchs du Championnat Aller">{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
+              <Section title={`Matchs du Championnat Aller : ${formatRemainingMatchesLabel(championshipLeg1.matches, phaseRules)}`}>{renderOrganizerMatches(championshipLeg1.matches, 'championshipLeg1')}</Section>
               <Section title="Championnat Retour" subtitle="Toutes les équipes se rencontrent une seconde fois. Le classement cumule l’aller et le retour." right={<Button onClick={generateSmallKnockoutStage1}>Générer tableau final</Button>}>
                 {renderStandings(championshipLeg2Standings)}
               </Section>
-              <Section title="Matchs du Championnat Retour">{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
+              <Section title={`Matchs du Championnat Retour : ${formatRemainingMatchesLabel(championshipLeg2.matches, phaseRules)}`}>{renderOrganizerMatches(championshipLeg2.matches, 'championshipLeg2')}</Section>
               <Section title="Classement général Aller + Retour" subtitle="Utilisé pour construire directement les quarts, les demi-finales ou la finale selon le nombre d’équipes.">
                 {renderOverallRanking(championshipRanking)}
               </Section>
@@ -3130,7 +4375,7 @@ export default function App() {
               <Section title="Brassage 1" subtitle="6 poules de 3 construites selon le niveau des équipes. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
-              <Section title="Matchs du brassage 1">{renderOrganizerMatches(brassage1.matches, 'brassage1')}</Section>
+              <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage1Matches, 'brassage1')}</Section>
               <Section title="Classement général du brassage 1" subtitle="Utilisé pour créer le brassage 2.">
                 {renderOverallRanking(rankingAfterBrassage1)}
               </Section>
@@ -3142,7 +4387,7 @@ export default function App() {
               <Section title="Brassage 2" subtitle="6 poules de 3 construites selon les points du brassage 1. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
-              <Section title="Matchs du brassage 2">{renderOrganizerMatches(brassage2.matches, 'brassage2')}</Section>
+              <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage2Matches, 'brassage2')}</Section>
               <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
@@ -3154,11 +4399,11 @@ export default function App() {
               <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
                 {renderStandings(principaleStandings)}
               </Section>
-              <Section title="Matchs de la principale">{renderOrganizerMatches(mainStage.principaleMatches, 'principale')}</Section>
-              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<Button variant="success" onClick={generateKnockoutStage1}>Générer quarts / demies</Button>}>
+              <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
+              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<><Button variant="success" onClick={generatePrincipalQuarters}>Générer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button></>}>
                 {renderStandings(consolanteStandings)}
               </Section>
-              <Section title="Matchs de la consolante">{renderOrganizerMatches(mainStage.consolanteMatches, 'consolante')}</Section>
+              <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(visibleConsolanteMatches, phaseRules)}`}>{renderOrganizerMatches(visibleConsolanteMatches, 'consolante')}</Section>
             </>
           )}
 
@@ -3166,15 +4411,15 @@ export default function App() {
             <>
               {isSmallTournamentMode ? (
                 <>
-                  <Section title="Quarts de finale" subtitle="Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
+                  <Section title={`Quarts de finale : ${formatRemainingMatchesLabel(singleKnockout.quarters, phaseRules)}`} subtitle="Générés uniquement si le nombre d’équipes classées est compris entre 5 et 8." right={<><Button onClick={generateSmallKnockoutStage1}>Regénérer le premier tour</Button><Button variant="success" onClick={generateSmallKnockoutStage2}>Générer les demi-finales</Button></>}>
                     {renderOrganizerMatches(singleKnockout.quarters, 'quarters')}
                   </Section>
 
-                  <Section title="Demi-finales" subtitle="Créées directement pour 3 ou 4 équipes, ou après les quarts pour 5 à 8 équipes." right={<Button variant="success" onClick={generateSmallKnockoutStage3}>Générer la finale et la petite finale</Button>}>
+                  <Section title={`Demi-finales : ${formatRemainingMatchesLabel(singleKnockout.semis, phaseRules)}`} subtitle="Créées directement pour 3 ou 4 équipes, ou après les quarts pour 5 à 8 équipes." right={<Button variant="success" onClick={generateSmallKnockoutStage3}>Générer la finale et la petite finale</Button>}>
                     {renderOrganizerMatches(singleKnockout.semis, 'semis')}
                   </Section>
 
-                  <Section title="Finale et petite finale" subtitle="Dernière étape du tournoi.">
+                  <Section title={`Finale et petite finale : ${formatRemainingMatchesLabel(singleKnockout.finals, phaseRules)}`} subtitle="Dernière étape du tournoi.">
                     {renderOrganizerMatches(singleKnockout.finals, 'finals')}
                   </Section>
 
@@ -3186,33 +4431,33 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generateKnockoutStage1}>Regénérer</Button><Button variant="success" onClick={generateKnockoutStage2}>Générer demies principale + finales consolante</Button></>}>
-                    <div className="cards-grid two-up">
-                      <div>
-                        <h3>Quarts de finale principale</h3>
+                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale. Consolante : demi-finales." right={<><Button onClick={generatePrincipalQuarters}>Regénérer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button><Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button><Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
+                    <div className="cards-grid one-up knockout-step-grid">
+                      <div className="knockout-panel">
+                        <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
                       </div>
-                      <div>
-                        <h3>Demi-finales consolante</h3>
+                      <div className="knockout-panel">
+                        <h3>{`Demi-finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
                       </div>
                     </div>
                   </Section>
 
                   <Section title="Étape 2 des tableaux finaux" subtitle="Principale : demi-finales. Consolante : finale et petite finale." right={<Button variant="success" onClick={generatePrincipalFinals}>Générer finale principale</Button>}>
-                    <div className="cards-grid two-up">
-                      <div>
-                        <h3>Demi-finales principale</h3>
+                    <div className="cards-grid one-up knockout-step-grid">
+                      <div className="knockout-panel">
+                        <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
                       </div>
-                      <div>
-                        <h3>Finales consolante</h3>
+                      <div className="knockout-panel">
+                        <h3>{`Finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteFinals, phaseRules)}`}</h3>
                         {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
                       </div>
                     </div>
                   </Section>
 
-                  <Section title="Étape 3 du tableau principal" subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
+                  <Section title={`Étape 3 du tableau principal : ${formatRemainingMatchesLabel(knockout.principalFinals, phaseRules)}`} subtitle="Finale et petite finale pour déterminer les 3 premières équipes du tournoi.">
                     {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
                   </Section>
 
