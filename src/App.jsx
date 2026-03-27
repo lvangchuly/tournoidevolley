@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20H';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20I';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20H';
+const APP_VERSION = 'V20I';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -370,24 +370,26 @@ function createPoolsFromAssignments(assignments, names) {
   }));
 }
 
-function createBrassage1Pools(teamIds, names) {
+function createBrassage1PoolsFromOrderedTeams(orderedTeams, names) {
   const poolCount = names.length;
+  const teamIds = (Array.isArray(orderedTeams) ? orderedTeams : []).map((team) => team?.id).filter(Boolean);
   const assignments = Array.from({ length: poolCount }, () => []);
-  const firstWave = teamIds.slice(0, poolCount);
-  const lastWave = teamIds.slice(Math.max(teamIds.length - poolCount, 0)).reverse();
-  const middleWave = teamIds.slice(poolCount, Math.max(teamIds.length - poolCount, poolCount));
 
-  firstWave.forEach((teamId, index) => {
-    assignments[index]?.push(teamId);
-  });
-  lastWave.forEach((teamId, index) => {
-    assignments[index]?.push(teamId);
-  });
-  middleWave.forEach((teamId, index) => {
-    assignments[index]?.push(teamId);
-  });
+  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
+    if (teamIds[poolIndex]) assignments[poolIndex].push(teamIds[poolIndex]);
+  }
 
-  const usedIds = new Set([...firstWave, ...lastWave, ...middleWave]);
+  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
+    const reverseIndex = teamIds.length - 1 - poolIndex;
+    if (reverseIndex >= poolCount && teamIds[reverseIndex]) assignments[poolIndex].push(teamIds[reverseIndex]);
+  }
+
+  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
+    const middleIndex = poolCount + poolIndex;
+    if (middleIndex < teamIds.length - poolCount && teamIds[middleIndex]) assignments[poolIndex].push(teamIds[middleIndex]);
+  }
+
+  const usedIds = new Set(assignments.flat());
   const leftovers = teamIds.filter((teamId) => !usedIds.has(teamId));
   leftovers.forEach((teamId, index) => {
     assignments[index % poolCount]?.push(teamId);
@@ -2748,8 +2750,8 @@ export default function App() {
 
   function regenerateBrassage1FromTeams(nextTeams) {
     const readyTeams = normalizeTeamsList(nextTeams).filter((team) => (team.name || '').trim() !== '');
-    const seededIds = getBrassage1OrderedTeamIds(readyTeams);
-    const pools = createBrassage1Pools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
+    const orderedTeams = sortTeamsForSeeding(readyTeams);
+    const pools = createBrassage1PoolsFromOrderedTeams(orderedTeams, createNumberedNames('Brassage 1 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
     setBrassage1({ pools, matches });
     setBrassage2({ pools: [], matches: [] });
@@ -2854,8 +2856,8 @@ export default function App() {
       window.alert(`Cette application attend ${TEAM_TARGET} équipes pour le mode standard. Actuellement : ${readyTeams.length}. Pour moins de 10 équipes, un mode Championnat Aller / Retour est utilisé automatiquement.`);
       return;
     }
-    const seededIds = getBrassage1OrderedTeamIds(readyTeams);
-    const pools = createBrassage1Pools(seededIds, createNumberedNames('Brassage 1 - Poule', 6));
+    const orderedTeams = sortTeamsForSeeding(readyTeams);
+    const pools = createBrassage1PoolsFromOrderedTeams(orderedTeams, createNumberedNames('Brassage 1 - Poule', 6));
     const matches = scheduleBrassageMatches(pools, 'Brassage 1', 0);
     const nextBrassage1 = { pools, matches };
     const nextBrassage2 = { pools: [], matches: [] };
@@ -4445,7 +4447,7 @@ export default function App() {
 
           {activeTab === 'brassage1' && !isSmallTournamentMode && (
             <>
-              <Section title="Brassage 1" subtitle="6 poules de 3 construites selon l’ordre actuel de la liste des équipes : équipe 1 = numéros 1 à 6, équipe 2 = numéros 18 à 13, équipe 3 = numéros 7 à 12. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
+              <Section title="Brassage 1" subtitle="6 poules de 3 construites selon la liste affichée des équipes triées par niveau : poule 1 = numéros 1 / 18 / 7, poule 2 = 2 / 17 / 8, poule 3 = 3 / 16 / 9, poule 4 = 4 / 15 / 10, poule 5 = 5 / 14 / 11, poule 6 = 6 / 13 / 12. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
               <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage1Matches, 'brassage1')}</Section>
