@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20N';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20O';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20N';
+const APP_VERSION = 'V20O';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1375,6 +1375,7 @@ export default function App() {
   const singleKnockoutRef = useRef(singleKnockout);
   const pendingFreshTournamentTimestampRef = useRef(null);
   const pendingStructureSyncTimestampRef = useRef(null);
+  const pendingLocalMutationTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -1546,10 +1547,18 @@ export default function App() {
 
   function markPendingStructureSync(timestamp = new Date().toISOString()) {
     pendingStructureSyncTimestampRef.current = timestamp;
+    pendingLocalMutationTimestampRef.current = timestamp;
     return timestamp;
   }
 
-  function queueBackgroundCloudSave(delay = 150) {
+  function markPendingLocalMutation(timestamp = new Date().toISOString()) {
+    pendingLocalMutationTimestampRef.current = timestamp;
+    return timestamp;
+  }
+
+  function queueBackgroundCloudSave(delay = 150, timestamp = null) {
+    const mutationTimestamp = timestamp || new Date().toISOString();
+    markPendingLocalMutation(mutationTimestamp);
     if (typeof window === 'undefined' || !sharedTournamentId) return;
     if (backgroundCloudSaveTimeoutRef.current) {
       window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
@@ -1842,6 +1851,15 @@ export default function App() {
       pendingFreshTournamentTimestampRef.current = null;
     }
 
+    const pendingLocalMutationTimestamp = pendingLocalMutationTimestampRef.current;
+    if (pendingLocalMutationTimestamp) {
+      const pendingLocalTimestamp = toTimestamp(pendingLocalMutationTimestamp);
+      if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingLocalTimestamp) {
+        return;
+      }
+      pendingLocalMutationTimestampRef.current = null;
+    }
+
     const remoteMatchCount = countMatchesInPersistedState(payload);
     const localMatchCount = allCompetitionMatches.length;
     const remoteTeamCount = Array.isArray(payload?.teams) ? payload.teams.length : 0;
@@ -1898,6 +1916,7 @@ export default function App() {
       const payload = await fetchTournamentFromCloudRaw(effectiveId);
       pendingFreshTournamentTimestampRef.current = null;
       pendingStructureSyncTimestampRef.current = null;
+      pendingLocalMutationTimestampRef.current = null;
       applyPersistedState(payload);
       setRemoteStateInitialized(true);
       setSharedTournamentId(effectiveId);
@@ -1957,6 +1976,7 @@ export default function App() {
         throw new Error(body?.error || 'Impossible de sauvegarder sur Firebase.');
       }
       pendingStructureSyncTimestampRef.current = null;
+      pendingLocalMutationTimestampRef.current = savedAt;
       setLastSavedAt(savedAt);
       setRemoteSavedAt(savedAt);
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
@@ -2737,6 +2757,7 @@ export default function App() {
     if (!confirmed) return;
     const resetStartedAt = new Date().toISOString();
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
+    markPendingLocalMutation(resetStartedAt);
     const freshState = {
       ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: true, resetLevelsToL: true }),
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
@@ -2860,6 +2881,7 @@ export default function App() {
   function resetTournament() {
     const resetStartedAt = new Date().toISOString();
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
+    markPendingLocalMutation(resetStartedAt);
     const freshState = {
       ...buildFreshTournamentState({ preserveSharedId: true, preservePassword: false }),
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
@@ -3513,7 +3535,7 @@ export default function App() {
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (!fallbackMatch) return;
     const normalized = value === '' ? '' : Math.max(0, Number(value));
-    const officialEditTimestamp = new Date().toISOString();
+    const officialEditTimestamp = markPendingLocalMutation(new Date().toISOString());
     const nextScoreA = field === 'scoreA' ? normalized : (fallbackMatch.scoreA ?? '');
     const nextScoreB = field === 'scoreB' ? normalized : (fallbackMatch.scoreB ?? '');
     const protectedSnapshot = {
@@ -3544,7 +3566,7 @@ export default function App() {
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
     const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
-    const editTimestamp = new Date().toISOString();
+    const editTimestamp = markPendingLocalMutation(new Date().toISOString());
     const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
     const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
     const nextScoreA = field === 'scoreA'
@@ -3605,7 +3627,7 @@ export default function App() {
       : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB);
     const currentValue = toNumber(currentRawValue) ?? 0;
     const computedNextValue = String(Math.max(0, currentValue + delta));
-    const editTimestamp = new Date().toISOString();
+    const editTimestamp = markPendingLocalMutation(new Date().toISOString());
     const nextScoreA = field === 'scoreA'
       ? computedNextValue
       : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
@@ -3656,7 +3678,7 @@ export default function App() {
 
   function approveRefereeScore(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
-    const approvalTimestamp = new Date().toISOString();
+    const approvalTimestamp = markPendingLocalMutation(new Date().toISOString());
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (fallbackMatch) {
       protectOrganizerLocalEdit(matchId, {
@@ -3686,29 +3708,31 @@ export default function App() {
 
   function rejectRefereeScore(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
+    const rejectionTimestamp = markPendingLocalMutation(new Date().toISOString());
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
       match.id === matchId
-        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), refereeInProgress: false, matchInProgress: false }
+        ? { ...match, submittedScoreA: '', submittedScoreB: '', submittedAt: rejectionTimestamp, refereeInProgress: false, matchInProgress: false }
         : match
     )));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(150, rejectionTimestamp);
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
+    const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
     recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       return {
         ...match,
-        submittedAt: new Date().toISOString(),
+        submittedAt: releaseTimestamp,
         refereeInProgress: false,
         matchInProgress: true,
       };
     }));
     setRefereeSelectedScoreDraft((current) => (current && current.matchId === matchId ? null : current));
     setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
-    queueBackgroundCloudSave(250);
+    queueBackgroundCloudSave(250, releaseTimestamp);
   }
 
   function releaseRefereeSelectedMatch(entry) {
