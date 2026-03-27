@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20I';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20J';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20I';
+const APP_VERSION = 'V20J';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1354,6 +1354,7 @@ export default function App() {
   const championshipLeg2Ref = useRef(championshipLeg2);
   const singleKnockoutRef = useRef(singleKnockout);
   const pendingFreshTournamentTimestampRef = useRef(null);
+  const pendingStructureSyncTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -1521,6 +1522,11 @@ export default function App() {
       recentRefereeReleaseRef.current = new Map();
     }
 
+  }
+
+  function markPendingStructureSync(timestamp = new Date().toISOString()) {
+    pendingStructureSyncTimestampRef.current = timestamp;
+    return timestamp;
   }
 
   function queueBackgroundCloudSave(delay = 150) {
@@ -1776,6 +1782,15 @@ export default function App() {
       return;
     }
 
+    const pendingStructureSyncTimestamp = pendingStructureSyncTimestampRef.current;
+    if (pendingStructureSyncTimestamp) {
+      const pendingStructureTimestamp = toTimestamp(pendingStructureSyncTimestamp);
+      if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingStructureTimestamp) {
+        return;
+      }
+      pendingStructureSyncTimestampRef.current = null;
+    }
+
     const pendingFreshTournamentTimestamp = pendingFreshTournamentTimestampRef.current;
     if (pendingFreshTournamentTimestamp) {
       const pendingResetTimestamp = toTimestamp(pendingFreshTournamentTimestamp);
@@ -1840,6 +1855,7 @@ export default function App() {
     try {
       const payload = await fetchTournamentFromCloudRaw(effectiveId);
       pendingFreshTournamentTimestampRef.current = null;
+      pendingStructureSyncTimestampRef.current = null;
       applyPersistedState(payload);
       setRemoteStateInitialized(true);
       setSharedTournamentId(effectiveId);
@@ -1898,6 +1914,7 @@ export default function App() {
       if (!response.ok) {
         throw new Error(body?.error || 'Impossible de sauvegarder sur Firebase.');
       }
+      pendingStructureSyncTimestampRef.current = null;
       setLastSavedAt(savedAt);
       setRemoteSavedAt(savedAt);
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
@@ -2757,6 +2774,7 @@ export default function App() {
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
     setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -2849,6 +2867,7 @@ export default function App() {
       setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
       setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
       setActiveTab('championship');
+      markPendingStructureSync();
       queueBackgroundCloudSave(250);
       return;
     }
@@ -2881,6 +2900,7 @@ export default function App() {
     setChampionshipLeg2(nextChampionshipLeg2);
     setSingleKnockout(nextSingleKnockout);
     setActiveTab('brassage1');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -2914,6 +2934,7 @@ export default function App() {
       setChampionshipLeg2(nextChampionshipLeg2);
       setSingleKnockout(nextSingleKnockout);
       setActiveTab('championship');
+      markPendingStructureSync();
       queueBackgroundCloudSave(250);
       return;
     }
@@ -2959,6 +2980,7 @@ export default function App() {
     setMainStage(nextMainStage);
     setKnockout(nextKnockout);
     setActiveTab('brassage2');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
