@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20J';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20K';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20J';
+const APP_VERSION = 'V20K';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1332,6 +1332,7 @@ export default function App() {
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const recentRefereeReleaseRef = useRef(new Map());
   const recentRefereeLocalEditsRef = useRef(new Map());
+  const recentOrganizerLocalEditsRef = useRef(new Map());
   const latestPersistedStateRef = useRef(null);
   const refereeSelectedScoreDraftRef = useRef(refereeSelectedScoreDraft);
   const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
@@ -1579,6 +1580,7 @@ export default function App() {
 
       const recentRelease = recentRefereeReleaseRef.current.get(localMatch.id);
       const recentLocalEdit = recentRefereeLocalEditsRef.current.get(localMatch.id);
+      const recentOrganizerEdit = recentOrganizerLocalEditsRef.current.get(localMatch.id);
       const remoteInProgress = Boolean(remoteMatch.refereeInProgress);
       const remoteMatchInProgress = Boolean(remoteMatch.matchInProgress || remoteMatch.refereeInProgress);
       const localMatchInProgress = Boolean(localMatch.matchInProgress || localMatch.refereeInProgress);
@@ -1594,10 +1596,26 @@ export default function App() {
       const localOfficialScoresDiffer =
         String(localMatch.scoreA ?? '') !== String(remoteMatch.scoreA ?? '') ||
         String(localMatch.scoreB ?? '') !== String(remoteMatch.scoreB ?? '');
+      const hasRecentProtectedOrganizerEdit = Boolean(
+        recentOrganizerEdit
+        && recentOrganizerEdit.until > now
+        && String(localMatch.scoreA ?? '') === String(recentOrganizerEdit.scoreA ?? '')
+        && String(localMatch.scoreB ?? '') === String(recentOrganizerEdit.scoreB ?? '')
+      );
+      const remoteOfficialCaughtUpToLocalEdit = Boolean(
+        recentOrganizerEdit
+        && String(remoteMatch.scoreA ?? '') === String(recentOrganizerEdit.scoreA ?? '')
+        && String(remoteMatch.scoreB ?? '') === String(recentOrganizerEdit.scoreB ?? '')
+        && remoteOfficialAt >= toTimestamp(recentOrganizerEdit.officialAt)
+      );
       const shouldKeepLocalOfficialEdit =
         localOfficialScoresDiffer &&
         localOfficialAt > remoteOfficialAt &&
         localOfficialAt >= remoteSubmittedAt;
+      const shouldIgnoreRemoteOfficialBecauseLocalEdit =
+        hasRecentProtectedOrganizerEdit
+        && !remoteOfficialCaughtUpToLocalEdit
+        && (localOfficialScoresDiffer || localOfficialAt >= remoteOfficialAt);
       const remoteIsValid = isMatchResultValid(remoteMatch, phaseRules);
       const localIsValid = isMatchResultValid(localMatch, phaseRules);
       const pendingScoresDiffer =
@@ -1627,7 +1645,7 @@ export default function App() {
 
       let nextMatch = { ...remoteMatch };
 
-      if (shouldKeepLocalOfficialEdit) {
+      if (shouldKeepLocalOfficialEdit || shouldIgnoreRemoteOfficialBecauseLocalEdit) {
         nextMatch = {
           ...nextMatch,
           scoreA: localMatch.scoreA ?? '',
@@ -1653,7 +1671,7 @@ export default function App() {
           refereeInProgress: false,
           matchInProgress: false,
         };
-      } else if (!shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
+      } else if (!shouldIgnoreRemoteOfficialBecauseLocalEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remoteMatch.submittedScoreA ?? '',
@@ -1692,6 +1710,11 @@ export default function App() {
           && remoteSubmittedAt >= localSubmittedAt;
         if (remoteCaughtUpToLocalEdit || recentLocalEdit.until <= now || !nextMatch.refereeInProgress) {
           recentRefereeLocalEditsRef.current.delete(localMatch.id);
+        }
+      }
+      if (recentOrganizerEdit) {
+        if (remoteOfficialCaughtUpToLocalEdit || recentOrganizerEdit.until <= now) {
+          recentOrganizerLocalEditsRef.current.delete(localMatch.id);
         }
       }
 
@@ -3417,11 +3440,30 @@ export default function App() {
     return 'À saisir';
   }
 
+  function protectOrganizerLocalEdit(matchId, snapshot) {
+    recentOrganizerLocalEditsRef.current.set(matchId, {
+      scoreA: String(snapshot.scoreA ?? ''),
+      scoreB: String(snapshot.scoreB ?? ''),
+      officialAt: snapshot.officialAt ?? new Date().toISOString(),
+      until: Date.now() + 30000,
+    });
+  }
+
   function updateOfficialMatchScore(scope, matchId, field, value) {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch) return;
     const normalized = value === '' ? '' : Math.max(0, Number(value));
+    const officialEditTimestamp = new Date().toISOString();
+    const nextScoreA = field === 'scoreA' ? normalized : (fallbackMatch.scoreA ?? '');
+    const nextScoreB = field === 'scoreB' ? normalized : (fallbackMatch.scoreB ?? '');
+    const protectedSnapshot = {
+      scoreA: nextScoreA,
+      scoreB: nextScoreB,
+      officialAt: officialEditTimestamp,
+    };
+    protectOrganizerLocalEdit(matchId, protectedSnapshot);
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-      const officialEditTimestamp = new Date().toISOString();
       const updated = {
         ...match,
         [field]: normalized,
@@ -3432,7 +3474,7 @@ export default function App() {
         matchInProgress: false,
         manualOverrideAt: officialEditTimestamp,
       };
-      updated.validatedAt = isMatchResultValid(updated, phaseRules) ? officialEditTimestamp : null;
+      updated.validatedAt = isMatchResultValid(updated, phaseRulesRef.current) ? officialEditTimestamp : null;
       return updated;
     }));
     queueBackgroundCloudSave();
@@ -3554,6 +3596,15 @@ export default function App() {
 
   function approveRefereeScore(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
+    const approvalTimestamp = new Date().toISOString();
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (fallbackMatch) {
+      protectOrganizerLocalEdit(matchId, {
+        scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
+        scoreB: fallbackMatch.submittedScoreB ?? fallbackMatch.scoreB ?? '',
+        officialAt: approvalTimestamp,
+      });
+    }
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
@@ -3566,8 +3617,8 @@ export default function App() {
         refereeInProgress: false,
         matchInProgress: false,
       };
-      approved.manualOverrideAt = null;
-      approved.validatedAt = isMatchResultValid(approved, phaseRules) ? new Date().toISOString() : null;
+      approved.manualOverrideAt = approvalTimestamp;
+      approved.validatedAt = isMatchResultValid(approved, phaseRulesRef.current) ? approvalTimestamp : null;
       return approved;
     }));
     queueBackgroundCloudSave();
