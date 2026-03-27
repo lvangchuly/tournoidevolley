@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20L';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20M';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20L';
+const APP_VERSION = 'V20M';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3025,18 +3025,25 @@ export default function App() {
     const rankedIds = championshipRanking.map((row) => row.teamId);
     if (rankedIds.length >= 5) {
       const quarters = assignSchedule(buildQuarterMatchesFromRanking(rankedIds), stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
-      setSingleKnockout({ quarters, semis: [], finals: [] });
+      const nextSingleKnockout = { quarters, semis: [], finals: [] };
+      singleKnockoutRef.current = nextSingleKnockout;
+      setSingleKnockout(nextSingleKnockout);
     } else if (rankedIds.length >= 3) {
       const semis = assignSchedule(buildSemisFromRanking(rankedIds), stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
-      setSingleKnockout({ quarters: [], semis, finals: [] });
+      const nextSingleKnockout = { quarters: [], semis, finals: [] };
+      singleKnockoutRef.current = nextSingleKnockout;
+      setSingleKnockout(nextSingleKnockout);
     } else if (rankedIds.length === 2) {
       const finals = assignSchedule([makeKnockoutMatch('Finale', 'Finale', rankedIds[0], rankedIds[1])], stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
-      setSingleKnockout({ quarters: [], semis: [], finals });
+      const nextSingleKnockout = { quarters: [], semis: [], finals };
+      singleKnockoutRef.current = nextSingleKnockout;
+      setSingleKnockout(nextSingleKnockout);
     } else {
       window.alert('Il faut au moins 2 équipes classées pour générer le tableau final.');
       return;
     }
     setActiveTab('finales');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3058,7 +3065,10 @@ export default function App() {
       buildSemisFromQuarters(rankedIds, singleKnockout.quarters, phaseRules),
       stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length) + stageSlotCount(singleKnockout.quarters.length)
     );
-    setSingleKnockout((current) => ({ ...current, semis, finals: [] }));
+    const nextSingleKnockout = { ...singleKnockoutRef.current, semis, finals: [] };
+    singleKnockoutRef.current = nextSingleKnockout;
+    setSingleKnockout(nextSingleKnockout);
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3090,7 +3100,10 @@ export default function App() {
       }
     }
     const finals = assignSchedule(finalsRaw, stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length) + stageSlotCount(singleKnockout.quarters.length) + stageSlotCount(singleKnockout.semis.length));
-    setSingleKnockout((current) => ({ ...current, finals }));
+    const nextSingleKnockout = { ...singleKnockoutRef.current, finals };
+    singleKnockoutRef.current = nextSingleKnockout;
+    setSingleKnockout(nextSingleKnockout);
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3141,6 +3154,7 @@ export default function App() {
     setMainStage(nextMainStage);
     setKnockout(nextKnockout);
     setActiveTab('principale');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3187,6 +3201,7 @@ export default function App() {
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
     setActiveTab('finales');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3227,6 +3242,7 @@ export default function App() {
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
     setActiveTab('finales');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3262,6 +3278,7 @@ export default function App() {
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3300,6 +3317,7 @@ export default function App() {
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
     setActiveTab('finales');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
@@ -3334,6 +3352,7 @@ export default function App() {
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
     setActiveTab('finales');
+    markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
 
