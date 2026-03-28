@@ -113,6 +113,22 @@ button, input, select { font: inherit; }
   line-height: 1.4;
 }
 
+.referee-qr-link {
+  width: 100%;
+  font-size: 11px;
+  color: #ffffff;
+  text-align: center;
+  line-height: 1.35;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.referee-qr-link:hover {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .hero-controls {
   display: grid;
   gap: 12px;
@@ -179,7 +195,7 @@ button, input, select { font: inherit; }
   z-index: 1;
   align-content: center;
   justify-items: stretch;
-  max-width: 420px;
+  max-width: 520px;
   margin: 0 auto;
   text-shadow: 0 1px 3px rgba(15, 23, 42, 0.55);
 }
@@ -637,6 +653,21 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .hero-pill strong { font-size: 28px; }
+.organizer-phase-pill { text-align: left; }
+.phase-estimate-panel { display: grid; gap: 8px; }
+.phase-estimate-heading { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+.phase-estimate-single { display: grid; gap: 4px; }
+.phase-estimate-phase-label { font-size: 12px; opacity: 0.82; }
+.phase-estimate-single-value { font-size: 28px; line-height: 1.1; }
+.phase-estimate-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.phase-estimate-column { display: grid; gap: 8px; align-content: start; }
+.phase-estimate-column-title { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.88; }
+.phase-estimate-row { display: grid; gap: 2px; }
+.phase-estimate-row-label { font-size: 11px; opacity: 0.8; }
+.phase-estimate-row-value { font-size: 18px; line-height: 1.15; }
+.phase-estimate-panel-compact .phase-estimate-single-value { font-size: 24px; }
+.phase-estimate-panel-compact .phase-estimate-columns { gap: 12px; }
+.phase-estimate-panel-compact .phase-estimate-row-value { font-size: 16px; }
 .actions-stack { display: grid; gap: 10px; }
 .helper-text { margin: 10px 0 0; }
 .status-cell { display: grid; gap: 6px; }
@@ -1689,4 +1720,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 .public-podium-badge {
   max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .phase-estimate-columns { grid-template-columns: 1fr; }
 }

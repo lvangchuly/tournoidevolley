@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20P';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20R1';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20P';
+const APP_VERSION = 'V20R1';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -801,6 +801,61 @@ function computeTournamentSchedule(stageGroups, startTime, phaseRules) {
   };
 }
 
+function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À générer') {
+  const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []).filter(Boolean);
+  if (!safeMatches.length) return emptyText;
+
+  const endMinutes = safeMatches.reduce((maxEnd, match) => {
+    const scheduledEnd = scheduleMap?.[match.id]?.endMinutes;
+    if (typeof scheduledEnd === 'number') return Math.max(maxEnd, scheduledEnd);
+    return maxEnd;
+  }, -Infinity);
+
+  return Number.isFinite(endMinutes) ? minutesToTime(endMinutes) : emptyText;
+}
+
+function OrganizerPhaseEstimateCard({ data, compact = false }) {
+  if (!data) return null;
+
+  if (data.mode === 'split') {
+    return (
+      <div className={`phase-estimate-panel ${compact ? 'phase-estimate-panel-compact' : ''}`.trim()}>
+        <div className="phase-estimate-heading">{data.heading}</div>
+        <div className="phase-estimate-columns">
+          <div className="phase-estimate-column">
+            <div className="phase-estimate-column-title">{data.leftTitle}</div>
+            {data.leftItems.map((item) => (
+              <div key={item.label} className="phase-estimate-row">
+                <span className="phase-estimate-row-label">{item.label}</span>
+                <strong className="phase-estimate-row-value">{item.value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="phase-estimate-column">
+            <div className="phase-estimate-column-title">{data.rightTitle}</div>
+            {data.rightItems.map((item) => (
+              <div key={item.label} className="phase-estimate-row">
+                <span className="phase-estimate-row-label">{item.label}</span>
+                <strong className="phase-estimate-row-value">{item.value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`phase-estimate-panel ${compact ? 'phase-estimate-panel-compact' : ''}`.trim()}>
+      <div className="phase-estimate-heading">{data.heading}</div>
+      <div className="phase-estimate-single">
+        <span className="phase-estimate-phase-label">{data.phaseLabel}</span>
+        <strong className="phase-estimate-single-value">{data.value}</strong>
+      </div>
+    </div>
+  );
+}
+
 function compareStandingRows(a, b) {
   if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
   if (b.wins !== a.wins) return b.wins - a.wins;
@@ -1305,6 +1360,7 @@ function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt }) {
       {topImageSrc ? <img className="referee-qr-top-image" src={topImageSrc} alt={topImageAlt || ''} /> : null}
       <img className="referee-qr-image" src={qrSrc} alt={alt} />
       <div className="referee-qr-caption">{caption}</div>
+      <a className="referee-qr-link" href={url} target="_blank" rel="noreferrer">{url}</a>
     </div>
   );
 }
@@ -2170,6 +2226,103 @@ export default function App() {
   ], startTime, phaseRules), [startTime, phaseRules, isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage, knockout]);
 
   const estimatedTournamentEnd = scheduleData.estimatedEndText;
+
+  const organizerPhaseEstimateData = useMemo(() => {
+    if (isSmallTournamentMode) {
+      const championshipAllerComplete = championshipLeg1.matches.length > 0 && championshipLeg1.matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+      const championshipRetourComplete = championshipLeg2.matches.length > 0 && championshipLeg2.matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+      const quarterComplete = singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+      const semiComplete = singleKnockout.semis.length === 0 || singleKnockout.semis.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+      const finalsComplete = singleKnockout.finals.length > 0 && singleKnockout.finals.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+
+      const currentStage = [
+        { phaseLabel: 'Championnat Aller', matches: championshipLeg1.matches, complete: championshipAllerComplete },
+        { phaseLabel: 'Championnat Retour', matches: championshipLeg2.matches, complete: championshipRetourComplete },
+        { phaseLabel: 'Quarts de finale', matches: singleKnockout.quarters, complete: quarterComplete },
+        { phaseLabel: 'Demi-finales', matches: singleKnockout.semis, complete: semiComplete },
+        { phaseLabel: 'Finale / petite finale', matches: singleKnockout.finals, complete: finalsComplete },
+      ].find((stage) => stage.matches.length > 0 && !stage.complete)
+        || [
+          { phaseLabel: 'Finale / petite finale', matches: singleKnockout.finals },
+          { phaseLabel: 'Demi-finales', matches: singleKnockout.semis },
+          { phaseLabel: 'Quarts de finale', matches: singleKnockout.quarters },
+          { phaseLabel: 'Championnat Retour', matches: championshipLeg2.matches },
+          { phaseLabel: 'Championnat Aller', matches: championshipLeg1.matches },
+        ].find((stage) => stage.matches.length > 0)
+        || { phaseLabel: 'Phase à venir', matches: [] };
+
+      return {
+        mode: 'single',
+        heading: 'Fin estimée de la phase',
+        phaseLabel: currentStage.phaseLabel,
+        value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--'),
+      };
+    }
+
+    const brassage1Complete = visibleBrassage1Matches.length > 0 && visibleBrassage1Matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+    const brassage2Complete = visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+
+    const hasMainStageOrFinals = mainStage.principaleMatches.length > 0
+      || mainStage.consolanteMatches.length > 0
+      || knockout.principalQuarters.length > 0
+      || knockout.principalSemis.length > 0
+      || knockout.principalFinals.length > 0
+      || knockout.consolanteSemis.length > 0
+      || knockout.consolanteFinals.length > 0;
+
+    if (hasMainStageOrFinals) {
+      return {
+        mode: 'split',
+        heading: 'Fin estimée des phases finales',
+        leftTitle: 'Tableau principal',
+        leftItems: [
+          { label: 'Quarts de finale principale', value: getEstimatedEndTextForMatches(knockout.principalQuarters, scheduleData.scheduleMap) },
+          { label: 'Demi-finales principale', value: getEstimatedEndTextForMatches(knockout.principalSemis, scheduleData.scheduleMap) },
+          { label: 'Finale / petite finale principale', value: getEstimatedEndTextForMatches(knockout.principalFinals, scheduleData.scheduleMap) },
+        ],
+        rightTitle: 'Tableau consolante',
+        rightItems: [
+          { label: 'Demi-finales consolante', value: getEstimatedEndTextForMatches(knockout.consolanteSemis, scheduleData.scheduleMap) },
+          { label: 'Finale / petite finale consolante', value: getEstimatedEndTextForMatches(knockout.consolanteFinals, scheduleData.scheduleMap) },
+        ],
+      };
+    }
+
+    const currentStage = [
+      { phaseLabel: 'Brassage 1', matches: visibleBrassage1Matches, complete: brassage1Complete },
+      { phaseLabel: 'Brassage 2', matches: visibleBrassage2Matches, complete: brassage2Complete },
+    ].find((stage) => stage.matches.length > 0 && !stage.complete)
+      || [
+        { phaseLabel: 'Brassage 2', matches: visibleBrassage2Matches },
+        { phaseLabel: 'Brassage 1', matches: visibleBrassage1Matches },
+      ].find((stage) => stage.matches.length > 0)
+      || { phaseLabel: 'Phase à venir', matches: [] };
+
+    return {
+      mode: 'single',
+      heading: 'Fin estimée de la phase',
+      phaseLabel: currentStage.phaseLabel,
+      value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--'),
+    };
+  }, [
+    isSmallTournamentMode,
+    championshipLeg1.matches,
+    championshipLeg2.matches,
+    singleKnockout.quarters,
+    singleKnockout.semis,
+    singleKnockout.finals,
+    visibleBrassage1Matches,
+    visibleBrassage2Matches,
+    mainStage.principaleMatches,
+    mainStage.consolanteMatches,
+    knockout.principalQuarters,
+    knockout.principalSemis,
+    knockout.principalFinals,
+    knockout.consolanteSemis,
+    knockout.consolanteFinals,
+    phaseRules,
+    scheduleData.scheduleMap,
+  ]);
 
   const currentMatches = useMemo(() => (
     allCompetitionMatches
@@ -4398,9 +4551,8 @@ export default function App() {
               <span>Début</span>
               <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
             </label>
-            <div className="hero-pill">
-              <span>Fin estimée du tournoi</span>
-              <strong>{estimatedTournamentEnd}</strong>
+            <div className="hero-pill organizer-phase-pill">
+              <OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} />
             </div>
             <div className="actions-stack hero-actions-centered">
               <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
@@ -4545,7 +4697,7 @@ export default function App() {
                     <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
                     {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
                   </div>
-                  <div className="mini-card"><div className="mini-card-head">Fin estimée du tournoi</div><p className="muted">{estimatedTournamentEnd}</p><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
+                  <div className="mini-card"><OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} compact /><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
             </>
