@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20O';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V20P';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
-const LEVELS = ['L', 'D', 'R', 'NP', 'N'];
-const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, NP: 4, N: 5 };
-const LEVEL_CLASS = { N: 'team-level-n', NP: 'team-level-np', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
+const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
+const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, PN: 4, NP: 4, N: 5 };
+const LEVEL_CLASS = { N: 'team-level-n', PN: 'team-level-pn', NP: 'team-level-pn', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
 
 function getPoolLevelTotal(pool, teamMap) {
   if (!pool || !Array.isArray(pool.teamIds)) return 0;
   return pool.teamIds.reduce((total, teamId) => {
-    const level = teamMap.get(teamId)?.level;
+    const level = normalizeLevelValue(teamMap.get(teamId)?.level, '');
     return total + (LEVEL_WEIGHT[level] || 0);
   }, 0);
 }
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20O';
+const APP_VERSION = 'V20P';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -112,6 +112,11 @@ function safeSetLocalStorageItem(key, value) {
   }
 }
 
+function normalizeLevelValue(level, fallback = 'D') {
+  const normalized = level === 'NP' ? 'PN' : level;
+  return LEVELS.includes(normalized) ? normalized : fallback;
+}
+
 function normalizeTeamsList(inputTeams) {
   if (!Array.isArray(inputTeams) || inputTeams.length === 0) return defaultTeams();
   return inputTeams
@@ -120,7 +125,7 @@ function normalizeTeamsList(inputTeams) {
     .map((team, index) => ({
       id: team?.id || uid('team'),
       name: team?.name || `Équipe ${index + 1}`,
-      level: LEVELS.includes(team?.level) ? team.level : 'D',
+      level: normalizeLevelValue(team?.level),
       club: team?.club || '',
       contact: team?.contact || '',
     }));
@@ -303,11 +308,11 @@ function loadState() {
 }
 
 function defaultTeams(defaultLevelMap = null, fallbackLevel = 'D') {
-  const defaults = Array.isArray(defaultLevelMap) ? defaultLevelMap : ['N', 'N', 'NP', 'NP', 'R', 'R', 'R', 'D', 'D', 'D', 'D', 'L', 'L', 'L', 'L', 'NP', 'R', 'D'];
+  const defaults = Array.isArray(defaultLevelMap) ? defaultLevelMap : ['N', 'N', 'PN', 'PN', 'R', 'R', 'R', 'D', 'D', 'D', 'D', 'L', 'L', 'L', 'L', 'PN', 'R', 'D'];
   return Array.from({ length: TEAM_TARGET }, (_, index) => ({
     id: uid('team'),
     name: `Équipe ${index + 1}`,
-    level: defaults[index] || fallbackLevel,
+    level: normalizeLevelValue(defaults[index], fallbackLevel),
     club: '',
     contact: '',
   }));
@@ -319,7 +324,7 @@ function defaultTeamsAllLevelL() {
 
 function sortTeamsForSeeding(teams) {
   return [...teams].sort((a, b) => {
-    const diff = (LEVEL_WEIGHT[b.level] || 0) - (LEVEL_WEIGHT[a.level] || 0);
+    const diff = (LEVEL_WEIGHT[normalizeLevelValue(b.level, '')] || 0) - (LEVEL_WEIGHT[normalizeLevelValue(a.level, '')] || 0);
     if (diff !== 0) return diff;
     return a.name.localeCompare(b.name, 'fr');
   });
@@ -809,7 +814,7 @@ function computeRanking(teamIds, matches, teamMap, phaseRules) {
   const rows = teamIds.map((teamId, index) => ({
     teamId,
     teamName: teamMap.get(teamId)?.name || teamId,
-    level: teamMap.get(teamId)?.level || '',
+    level: normalizeLevelValue(teamMap.get(teamId)?.level, ''),
     initialOrder: index,
     played: 0,
     wins: 0,
@@ -905,7 +910,7 @@ function downloadJson(filename, data) {
 }
 
 function getLevelClass(level) {
-  return LEVEL_CLASS[level] || 'team-level-default';
+  return LEVEL_CLASS[normalizeLevelValue(level, '')] || 'team-level-default';
 }
 
 function TeamBadge({ name, level, className = '', children = null }) {
@@ -2607,7 +2612,7 @@ export default function App() {
 
   function resolveTeam(teamId) {
     const team = teamMap.get(teamId);
-    return { name: team?.name || 'À définir', level: team?.level || 'L' };
+    return { name: team?.name || 'À définir', level: normalizeLevelValue(team?.level, 'L') };
   }
 
   function countValidMatches(matches) {
@@ -4547,7 +4552,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, NP = 4, R = 3, D = 2, L = 1. Le brassage 1 utilise les numéros de la liste affichée des équipes triées par niveau : 1 à 6 en équipe 1, 18 à 13 en équipe 2, puis 7 à 12 en équipe 3. En cas d'égalité complète avant saisie des scores, l'ordre affiché dans la poule suit cet ordre d'affectation." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, PN = 4, R = 3, D = 2, L = 1. Le brassage 1 utilise les numéros de la liste affichée des équipes triées par niveau : 1 à 6 en équipe 1, 18 à 13 en équipe 2, puis 7 à 12 en équipe 3. En cas d'égalité complète avant saisie des scores, l'ordre affiché dans la poule suit cet ordre d'affectation." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -4711,7 +4716,7 @@ export default function App() {
                 <div className="mini-card">
                   <div className="mini-card-head">Fonctions incluses</div>
                   <ul className="simple-list">
-                    <li>18 équipes et niveaux N / NP / R / D / L</li>
+                    <li>18 équipes et niveaux N / PN / R / D / L</li>
                     <li>2 brassages en 6 poules de 3</li>
                     <li>Principale à 12 et consolante à 6</li>
                     <li>Quarts, demi-finales, finales et petites finales</li>

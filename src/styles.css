@@ -990,7 +990,7 @@ tbody tr:last-child td { border-bottom: none; }
   flex-wrap: nowrap;
 }
 .team-level-n { background: #fecaca; }
-.team-level-np { background: #fed7aa; }
+.team-level-pn, .team-level-np { background: #fed7aa; }
 .team-level-r { background: #fde68a; }
 .team-level-d { background: #bae6fd; }
 .team-level-l { background: #bfdbfe; }
