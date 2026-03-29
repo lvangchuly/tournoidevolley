@@ -2265,6 +2265,7 @@ export default function App() {
   const showPublicPrincipalePoolRanking = hasPublicPoolRankingStarted && knockout.principalQuarters.length === 0 && principalePublicRanking.length > 0;
   const showPublicConsolantePoolRanking = hasPublicPoolRankingStarted && knockout.consolanteSemis.length === 0 && consolantePublicRanking.length > 0;
   const showSplitPublicPoolRankings = showPublicPrincipalePoolRanking || showPublicConsolantePoolRanking;
+  const hidePublicRankingSection = !showSplitPublicPoolRankings && knockout.principalQuarters.length > 0 && knockout.consolanteSemis.length > 0;
 
   const organizerPhaseEstimateData = useMemo(() => {
     if (isSmallTournamentMode) {
@@ -4450,7 +4451,7 @@ export default function App() {
                   ) : null}
                 </div>
               </Section>
-            ) : (
+            ) : hidePublicRankingSection ? null : (
               <Section title="Classement cumulé" subtitle="Tous les matchs officiels valides sont pris en compte.">
                 {renderOverallRanking(overallRanking, false, activeInProgressTeamIds)}
               </Section>
