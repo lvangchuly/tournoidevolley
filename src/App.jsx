@@ -1492,7 +1492,7 @@ export default function App() {
     return !!normalizedName && (duplicateTeamNameMap.get(normalizedName) || 0) > 1;
   }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
-  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 10;
+  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length <= 12;
 
   const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
   const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
@@ -3116,7 +3116,7 @@ export default function App() {
       window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
       return;
     }
-    if (readyTeams.length < 10) {
+    if (readyTeams.length <= 12) {
       const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
       const pools = createChampionshipPool(seededIds, CHAMPIONSHIP_ALLER_POOL_NAME);
       const matches = createChampionshipMatches(seededIds, 'Championnat Aller', CHAMPIONSHIP_ALLER_POOL_NAME, false);
