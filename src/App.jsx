@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V21';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21A';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V21';
+const APP_VERSION = 'V21A';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2769,7 +2769,22 @@ export default function App() {
   }
 
   const teamLevelLocked = useMemo(() => isSmallTournamentMode ? hasAnyValidMatch(championshipLeg1.matches) : hasAnyValidMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
-  const teamDeletionLocked = useMemo(() => isSmallTournamentMode ? hasAnyOfficiallyValidatedMatch(championshipLeg1.matches) : hasAnyOfficiallyValidatedMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
+  const teamDeletionLocked = useMemo(() => hasAnyOfficiallyValidatedMatch([
+    ...brassage1.matches,
+    ...brassage2.matches,
+    ...mainStage.principaleMatches,
+    ...mainStage.consolanteMatches,
+    ...knockout.principalQuarters,
+    ...knockout.principalSemis,
+    ...knockout.principalFinals,
+    ...knockout.consolanteSemis,
+    ...knockout.consolanteFinals,
+    ...championshipLeg1.matches,
+    ...championshipLeg2.matches,
+    ...singleKnockout.quarters,
+    ...singleKnockout.semis,
+    ...singleKnockout.finals,
+  ]), [brassage1.matches, brassage2.matches, mainStage, knockout, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, phaseRules]);
   const teamAdditionLocked = useMemo(() => {
     const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
     return teams.length >= TEAM_TARGET || firstPhaseGenerated;
@@ -2978,6 +2993,11 @@ export default function App() {
     const confirmed = window.confirm('Créer un nouveau tournoi ? Toutes les données du tournoi en cours seront réinitialisées.');
     if (!confirmed) return;
     const resetStartedAt = new Date().toISOString();
+    recentRefereeLocalEditsRef.current = new Map();
+    recentOrganizerLocalEditsRef.current = new Map();
+    recentRefereeReleaseRef.current = new Map();
+    pendingStructureSyncTimestampRef.current = null;
+    pendingLocalMutationTimestampRef.current = resetStartedAt;
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
@@ -2990,6 +3010,9 @@ export default function App() {
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
     if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {}
       safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(freshState));
     }
     if (String(freshState.settings?.sharedTournamentId || '').trim()) {
@@ -3102,6 +3125,10 @@ export default function App() {
 
   function resetTournament() {
     const resetStartedAt = new Date().toISOString();
+    recentRefereeLocalEditsRef.current = new Map();
+    recentOrganizerLocalEditsRef.current = new Map();
+    recentRefereeReleaseRef.current = new Map();
+    pendingStructureSyncTimestampRef.current = null;
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
@@ -3113,6 +3140,12 @@ export default function App() {
     setRemoteStateInitialized(true);
     setRemoteSyncMessage('');
     setIsRemoteSyncing(false);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {}
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(freshState));
+    }
   }
 
   function generateBrassage1() {
@@ -4828,7 +4861,7 @@ export default function App() {
               {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
               <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
               {hasDuplicateTeamNames ? <p className="helper-text danger-text">Les numéros en couleur signalent des doublons de nom d’équipe. Corrigez-les avant de générer le brassage 1.</p> : null}
-              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un premier match de la phase 1 est officiellement validé.</p> : null}
+              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un match du tournoi est officiellement validé.</p> : null}
             </Section>
           )}
 
