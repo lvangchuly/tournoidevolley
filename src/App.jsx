@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V20R7';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V20R7';
+const APP_VERSION = 'V21';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -39,6 +39,12 @@ const DEFAULT_PHASE_RULES = {
 };
 const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', 'Principale D'];
 const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
+
+function getMainStageDistribution(teamCount) {
+  if (teamCount >= 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false };
+  if (teamCount >= 13) return { principaleCount: 8, consolanteCount: Math.max(0, teamCount - 8), normalizedRanking: true };
+  return { principaleCount: 0, consolanteCount: 0, normalizedRanking: false };
+}
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
 const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
@@ -877,8 +883,17 @@ function OrganizerPhaseEstimateCard({ data, compact = false }) {
   );
 }
 
-function compareStandingRows(a, b) {
-  if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
+function compareStandingRows(a, b, options = {}) {
+  const normalizeByMatches = Boolean(options?.normalizeByMatches);
+
+  if (normalizeByMatches) {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.avgTournamentPoints !== a.avgTournamentPoints) return b.avgTournamentPoints - a.avgTournamentPoints;
+    if (b.avgPointDiff !== a.avgPointDiff) return b.avgPointDiff - a.avgPointDiff;
+    if (b.avgPointsFor !== a.avgPointsFor) return b.avgPointsFor - a.avgPointsFor;
+    if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
+  } else if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
+
   if (b.wins !== a.wins) return b.wins - a.wins;
   if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
   if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
@@ -886,7 +901,8 @@ function compareStandingRows(a, b) {
   return a.teamName.localeCompare(b.teamName, 'fr');
 }
 
-function computeRanking(teamIds, matches, teamMap, phaseRules) {
+function computeRanking(teamIds, matches, teamMap, phaseRules, options = {}) {
+  const normalizeByMatches = Boolean(options?.normalizeByMatches);
   const rows = teamIds.map((teamId, index) => ({
     teamId,
     teamName: teamMap.get(teamId)?.name || teamId,
@@ -899,6 +915,9 @@ function computeRanking(teamIds, matches, teamMap, phaseRules) {
     pointsAgainst: 0,
     pointDiff: 0,
     tournamentPoints: 0,
+    avgTournamentPoints: 0,
+    avgPointDiff: 0,
+    avgPointsFor: 0,
   }));
 
   const rowMap = new Map(rows.map((row) => [row.teamId, row]));
@@ -935,19 +954,23 @@ function computeRanking(teamIds, matches, teamMap, phaseRules) {
 
   rows.forEach((row) => {
     row.pointDiff = row.pointsFor - row.pointsAgainst;
+    row.avgTournamentPoints = row.played > 0 ? row.tournamentPoints / row.played : 0;
+    row.avgPointDiff = row.played > 0 ? row.pointDiff / row.played : 0;
+    row.avgPointsFor = row.played > 0 ? row.pointsFor / row.played : 0;
   });
 
-  return rows.sort(compareStandingRows);
+  return rows.sort((a, b) => compareStandingRows(a, b, { normalizeByMatches }));
 }
 
-function computeGroupStandings(pools, matches, teamMap, phaseRules) {
+function computeGroupStandings(pools, matches, teamMap, phaseRules, options = {}) {
   return pools.map((pool) => ({
     pool,
     rows: computeRanking(
       pool.teamIds,
       matches.filter((match) => pool.teamIds.includes(match.teamAId) && pool.teamIds.includes(match.teamBId)),
       teamMap,
-      phaseRules
+      phaseRules,
+      options,
     ),
   }));
 }
@@ -1493,21 +1516,23 @@ export default function App() {
   }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length <= 12;
+  const mainStageDistribution = useMemo(() => getMainStageDistribution(activeTeams.length), [activeTeams.length]);
+  const useNormalizedPoolRanking = !isSmallTournamentMode && mainStageDistribution.normalizedRanking;
 
-  const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules), [brassage1, teamMap, phaseRules]);
-  const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules), [brassage2, teamMap, phaseRules]);
-  const principaleStandings = useMemo(() => computeGroupStandings(mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules), [mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules]);
-  const consolanteStandings = useMemo(() => computeGroupStandings(mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules), [mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules]);
+  const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [brassage1, teamMap, phaseRules, useNormalizedPoolRanking]);
+  const brassage2Standings = useMemo(() => computeGroupStandings(brassage2.pools, brassage2.matches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [brassage2, teamMap, phaseRules, useNormalizedPoolRanking]);
+  const principaleStandings = useMemo(() => computeGroupStandings(mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [mainStage.principalePools, mainStage.principaleMatches, teamMap, phaseRules, useNormalizedPoolRanking]);
+  const consolanteStandings = useMemo(() => computeGroupStandings(mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules, useNormalizedPoolRanking]);
 
-  const rankingAfterBrassage1 = useMemo(() => computeRanking(allTeamIds, brassage1.matches, teamMap, phaseRules), [allTeamIds, brassage1.matches, teamMap, phaseRules]);
-  const rankingAfterBrassages = useMemo(() => computeRanking(allTeamIds, [...brassage1.matches, ...brassage2.matches], teamMap, phaseRules), [allTeamIds, brassage1.matches, brassage2.matches, teamMap, phaseRules]);
+  const rankingAfterBrassage1 = useMemo(() => computeRanking(allTeamIds, brassage1.matches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [allTeamIds, brassage1.matches, teamMap, phaseRules, useNormalizedPoolRanking]);
+  const rankingAfterBrassages = useMemo(() => computeRanking(allTeamIds, [...brassage1.matches, ...brassage2.matches], teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [allTeamIds, brassage1.matches, brassage2.matches, teamMap, phaseRules, useNormalizedPoolRanking]);
   const championshipLeg1Standings = useMemo(() => computeGroupStandings(championshipLeg1.pools, championshipLeg1.matches, teamMap, phaseRules), [championshipLeg1, teamMap, phaseRules]);
   const championshipLeg2Standings = useMemo(() => computeGroupStandings(championshipLeg2.pools, championshipLeg2.matches, teamMap, phaseRules), [championshipLeg2, teamMap, phaseRules]);
   const championshipRanking = useMemo(() => computeRanking(allTeamIds, [...championshipLeg1.matches, ...championshipLeg2.matches], teamMap, phaseRules), [allTeamIds, championshipLeg1.matches, championshipLeg2.matches, teamMap, phaseRules]);
   const principalePoolTeamIds = useMemo(() => collectUniquePoolTeamIds(mainStage.principalePools), [mainStage.principalePools]);
   const consolantePoolTeamIds = useMemo(() => collectUniquePoolTeamIds(mainStage.consolantePools), [mainStage.consolantePools]);
-  const principalePublicRanking = useMemo(() => computeRanking(principalePoolTeamIds, mainStage.principaleMatches, teamMap, phaseRules), [principalePoolTeamIds, mainStage.principaleMatches, teamMap, phaseRules]);
-  const consolantePublicRanking = useMemo(() => computeRanking(consolantePoolTeamIds, mainStage.consolanteMatches, teamMap, phaseRules), [consolantePoolTeamIds, mainStage.consolanteMatches, teamMap, phaseRules]);
+  const principalePublicRanking = useMemo(() => computeRanking(principalePoolTeamIds, mainStage.principaleMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [principalePoolTeamIds, mainStage.principaleMatches, teamMap, phaseRules, useNormalizedPoolRanking]);
+  const consolantePublicRanking = useMemo(() => computeRanking(consolantePoolTeamIds, mainStage.consolanteMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [consolantePoolTeamIds, mainStage.consolanteMatches, teamMap, phaseRules, useNormalizedPoolRanking]);
 
   const overallRanking = useMemo(() => computeRanking(allTeamIds, isSmallTournamentMode ? [
     ...championshipLeg1.matches,
@@ -3369,9 +3394,16 @@ export default function App() {
       ...knockoutRef.current.consolanteFinals,
     ], 'la principale / consolante et les phases finales')) return;
     const { teamMap: currentTeamMap, teamIds: currentTeamIds } = buildCurrentTeamContext();
-    const rankedIds = computeRanking(currentTeamIds, [...filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1'), ...currentVisibleBrassage2Matches], currentTeamMap, phaseRulesRef.current).map((row) => row.teamId);
-    const principaleIds = rankedIds.slice(0, 12);
-    const consolanteIds = rankedIds.slice(12, 18);
+    const distribution = getMainStageDistribution(currentTeamIds.length);
+    const rankedIds = computeRanking(
+      currentTeamIds,
+      [...filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1'), ...currentVisibleBrassage2Matches],
+      currentTeamMap,
+      phaseRulesRef.current,
+      { normalizeByMatches: distribution.normalizedRanking },
+    ).map((row) => row.teamId);
+    const principaleIds = rankedIds.slice(0, distribution.principaleCount);
+    const consolanteIds = rankedIds.slice(distribution.principaleCount, distribution.principaleCount + distribution.consolanteCount);
     const principalePools = createPools(principaleIds, PRINCIPALE_POOL_NAMES);
     const consolantePools = createPools(consolanteIds, CONSOLANTE_POOL_NAMES);
     const scheduled = scheduleMainStageMatches(
@@ -3415,7 +3447,7 @@ export default function App() {
       ...currentKnockout.principalFinals,
     ], 'les quarts, demi-finales et finales principale')) return;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
-    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current);
+    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length).normalizedRanking });
     const pA = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'A');
     const pB = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'B');
     const pC = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'C');
@@ -3463,7 +3495,7 @@ export default function App() {
       ...currentKnockout.consolanteFinals,
     ], 'les demi-finales et finales de consolante')) return;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
-    const currentConsolanteStandings = computeGroupStandings(currentMainStage.consolantePools, currentVisibleConsolanteMatches, currentTeamMap, phaseRulesRef.current);
+    const currentConsolanteStandings = computeGroupStandings(currentMainStage.consolantePools, currentVisibleConsolanteMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length).normalizedRanking });
     const cA = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'A');
     const cB = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'B');
     const consolanteSemisRaw = sanitizeKnockoutMatches([
