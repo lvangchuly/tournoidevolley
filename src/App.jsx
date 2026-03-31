@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V21E';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21F';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V21E';
+const APP_VERSION = 'V21F';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3291,11 +3291,26 @@ export default function App() {
       ...knockoutRef.current.consolanteFinals,
     ], 'le brassage 2 et les phases suivantes')) return;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
-    const standings = computeGroupStandings(currentBrassage1.pools, currentVisibleBrassage1Matches, currentTeamMap, phaseRulesRef.current);
-    const orderedByPool = currentBrassage1.pools.map((pool) => getOrderedPoolTeamIds(pool, standings));
-    const hasCompletePoolResults = currentBrassage1.pools.every((pool, index) => orderedByPool[index].length >= (pool?.teamIds?.length || 0));
-    if (!hasCompletePoolResults) {
-      window.alert('Impossible de générer le Brassage 2 : au moins une poule du Brassage 1 ne possède pas encore toutes ses équipes classées.');
+    const normalizeBrassageRanking = activeTeamsRef.current.length >= 13 && activeTeamsRef.current.length <= 17;
+    const standings = computeGroupStandings(
+      currentBrassage1.pools,
+      currentVisibleBrassage1Matches,
+      currentTeamMap,
+      phaseRulesRef.current,
+      { normalizeByMatches: normalizeBrassageRanking },
+    );
+    const poolsWithMissingTeams = currentBrassage1.pools.filter((pool) => {
+      const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
+      if (teamIds.length <= 1) return false;
+      const expectedMatchCount = (teamIds.length * (teamIds.length - 1)) / 2;
+      const validMatchCount = currentVisibleBrassage1Matches.filter((match) => {
+        if (!teamIds.includes(match.teamAId) || !teamIds.includes(match.teamBId)) return false;
+        return getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide';
+      }).length;
+      return validMatchCount < expectedMatchCount;
+    });
+    if (poolsWithMissingTeams.length > 0) {
+      window.alert('Impossible de générer le Brassage 2 : au moins une poule du Brassage 1 n’a pas encore tous ses matchs valides.');
       return;
     }
     const pools = createBrassage2PoolsFromBrassage1(currentBrassage1.pools, standings, createNumberedNames('Brassage 2 - Poule', 6));
@@ -4743,8 +4758,8 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${visibleBrassage1Matches.length || 0}`} subvalue="6 poules de 3" />
-                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${visibleBrassage2Matches.length || 0}`} subvalue="6 poules de 3" />
+                    <StatCard label="Brassage 1" value={`${completedMatchCounts.b1}/${visibleBrassage1Matches.length || 0}`} subvalue={activeTeams.length >= 13 && activeTeams.length <= 17 ? "6 poules de 2 ou 3" : "6 poules de 3"} />
+                    <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${visibleBrassage2Matches.length || 0}`} subvalue={activeTeams.length >= 13 && activeTeams.length <= 17 ? "6 poules de 2 ou 3" : "6 poules de 3"} />
                     <StatCard label="Principale" value={`${completedMatchCounts.principale}/${visiblePrincipaleMatches.length || 0}`} subvalue="4 poules de 3" />
                     <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${visibleConsolanteMatches.length || 0}`} subvalue="2 poules de 3" />
                     <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
@@ -4895,7 +4910,7 @@ export default function App() {
 
           {activeTab === 'brassage1' && !isSmallTournamentMode && (
             <>
-              <Section title="Brassage 1" subtitle="6 poules de 3 construites selon la liste affichée des équipes triées par niveau : poule 1 = numéros 1 / 18 / 7, poule 2 = 2 / 17 / 8, poule 3 = 3 / 16 / 9, poule 4 = 4 / 15 / 10, poule 5 = 5 / 14 / 11, poule 6 = 6 / 13 / 12. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
+              <Section title="Brassage 1" subtitle={activeTeams.length >= 13 && activeTeams.length <= 17 ? "6 poules adaptées automatiquement avec 2 ou 3 équipes selon le nombre total. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." : "6 poules de 3 construites selon la liste affichée des équipes triées par niveau : poule 1 = numéros 1 / 18 / 7, poule 2 = 2 / 17 / 8, poule 3 = 3 / 16 / 9, poule 4 = 4 / 15 / 10, poule 5 = 5 / 14 / 11, poule 6 = 6 / 13 / 12. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match."} right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderStandings(brassage1Standings)}
               </Section>
               <Section title={`Matchs du brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage1Matches, 'brassage1')}</Section>
@@ -4907,7 +4922,7 @@ export default function App() {
 
           {activeTab === 'brassage2' && !isSmallTournamentMode && (
             <>
-              <Section title="Brassage 2" subtitle="6 poules de 3 reconstruites à partir du classement de chaque poule du Brassage 1 : 1er conservé dans sa poule, 2e déplacé en équipe 2 de la poule suivante, 3e déplacé en équipe 3 de la poule précédente. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match." right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
+              <Section title="Brassage 2" subtitle={activeTeams.length >= 13 && activeTeams.length <= 17 ? "6 poules adaptées automatiquement avec 2 ou 3 équipes, reconstruites à partir du classement de chaque poule du Brassage 1. Le classement utilise des moyennes par match pour rester équitable quand toutes les poules n’ont pas la même taille." : "6 poules de 3 reconstruites à partir du classement de chaque poule du Brassage 1 : 1er conservé dans sa poule, 2e déplacé en équipe 2 de la poule suivante, 3e déplacé en équipe 3 de la poule précédente. Poules 1-2 sur le terrain 1, 3-4 sur le terrain 2, 5-6 sur le terrain 3, avec alternance des matchs pour réduire l’attente avant le deuxième match."} right={<Button onClick={generateMainStage}>Générer principale / consolante</Button>}>
                 {renderStandings(brassage2Standings)}
               </Section>
               <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage2Matches, 'brassage2')}</Section>
