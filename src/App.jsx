@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V21H';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21I';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V21H';
+const APP_VERSION = 'V21I';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -419,11 +419,43 @@ function getOrderedPoolTeamIds(pool, standings) {
 function createBrassage2PoolsFromBrassage1(sourcePools, standings, names) {
   const poolCount = names.length;
   const orderedByPool = names.map((_, index) => getOrderedPoolTeamIds(sourcePools[index], standings));
-  const assignments = names.map((_, index) => ([
-    orderedByPool[index]?.[0] || null,
-    orderedByPool[(index + 1) % poolCount]?.[1] || null,
-    orderedByPool[(index - 1 + poolCount) % poolCount]?.[2] || null,
-  ].filter(Boolean)));
+  const targetSizes = names.map((_, index) => {
+    const currentPool = sourcePools[index];
+    const currentSize = Array.isArray(currentPool?.teamIds) ? currentPool.teamIds.filter(Boolean).length : 0;
+    return Math.max(0, currentSize);
+  });
+  const assignments = names.map(() => []);
+  const leftovers = [];
+
+  const tryAssign = (targetIndex, teamId) => {
+    if (!teamId) return;
+    const safeIndex = ((targetIndex % poolCount) + poolCount) % poolCount;
+    if (assignments[safeIndex].includes(teamId)) return;
+    if (assignments[safeIndex].length < targetSizes[safeIndex]) {
+      assignments[safeIndex].push(teamId);
+    } else {
+      leftovers.push(teamId);
+    }
+  };
+
+  orderedByPool.forEach((rows, index) => {
+    tryAssign(index, rows?.[0] || null);
+  });
+
+  orderedByPool.forEach((rows, index) => {
+    tryAssign(index - 1, rows?.[1] || null);
+  });
+
+  orderedByPool.forEach((rows, index) => {
+    tryAssign(index + 1, rows?.[2] || null);
+  });
+
+  const orderedLeftovers = Array.from(new Set(leftovers.filter(Boolean)));
+  orderedLeftovers.forEach((teamId) => {
+    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < targetSizes[index] && !teamIds.includes(teamId));
+    if (targetIndex >= 0) assignments[targetIndex].push(teamId);
+  });
+
   return createPoolsFromAssignments(assignments, names);
 }
 
@@ -3321,18 +3353,14 @@ export default function App() {
       phaseRulesRef.current,
       { normalizeByMatches: normalizeBrassageRanking },
     );
-    const poolsWithMissingTeams = currentBrassage1.pools.filter((pool) => {
-      const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
-      if (teamIds.length <= 1) return false;
-      const expectedMatchCount = (teamIds.length * (teamIds.length - 1)) / 2;
-      const validMatchCount = currentVisibleBrassage1Matches.filter((match) => {
-        if (!teamIds.includes(match.teamAId) || !teamIds.includes(match.teamBId)) return false;
-        return getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide';
-      }).length;
-      return validMatchCount < expectedMatchCount;
+    const standingsReady = standings.every((entry) => {
+      const teamIds = Array.isArray(entry?.pool?.teamIds) ? entry.pool.teamIds.filter(Boolean) : [];
+      const rankedIds = Array.isArray(entry?.rows) ? entry.rows.map((row) => row?.teamId).filter(Boolean) : [];
+      if (teamIds.length <= 1) return true;
+      return rankedIds.length === teamIds.length;
     });
-    if (poolsWithMissingTeams.length > 0) {
-      window.alert('Impossible de générer le Brassage 2 : au moins une poule du Brassage 1 n’a pas encore tous ses matchs valides.');
+    if (!standingsReady) {
+      window.alert('Impossible de générer le Brassage 2 : au moins une poule du Brassage 1 n’est pas encore classée correctement.');
       return;
     }
     const pools = createBrassage2PoolsFromBrassage1(currentBrassage1.pools, standings, createNumberedNames('Brassage 2 - Poule', 6));
