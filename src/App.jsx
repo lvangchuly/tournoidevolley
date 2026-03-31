@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V21D';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21E';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V21D';
+const APP_VERSION = 'V21E';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1695,7 +1695,7 @@ export default function App() {
     return payload;
   }
 
-  function mergeRemoteMatches(localMatches, remoteMatches = []) {
+  function mergeRemoteMatches(localMatches, remoteMatches = [], replaceOnExplicitEmpty = false) {
     const remoteArrayProvided = Array.isArray(remoteMatches);
     const safeLocalMatches = dedupeMatches(Array.isArray(localMatches) ? localMatches : []);
     const safeRemoteMatches = dedupeMatches(remoteArrayProvided ? remoteMatches : []);
@@ -1703,7 +1703,7 @@ export default function App() {
       return safeLocalMatches;
     }
     if (!safeRemoteMatches.length) {
-      return safeLocalMatches;
+      return replaceOnExplicitEmpty ? [] : safeLocalMatches;
     }
 
     const localById = new Map(safeLocalMatches.map((match) => [match.id, match]));
@@ -1906,24 +1906,27 @@ export default function App() {
     const normalizedCurrent = normalizeLeagueState(currentState || { pools: [], matches: [] });
     const normalizedRemote = normalizeLeagueState(remoteState || { pools: [], matches: [] });
     const remoteHasPools = Array.isArray(normalizedRemote.pools) && normalizedRemote.pools.length > 0;
+    const remoteExplicitlyEmpty = Array.isArray(remoteState?.matches) && remoteState.matches.length === 0 && Array.isArray(remoteState?.pools) && remoteState.pools.length === 0;
     return {
       ...normalizedCurrent,
       ...normalizedRemote,
-      pools: remoteHasPools ? normalizedRemote.pools : normalizedCurrent.pools,
-      matches: mergeRemoteMatches(normalizedCurrent.matches, normalizedRemote.matches),
+      pools: remoteHasPools ? normalizedRemote.pools : (remoteExplicitlyEmpty ? [] : normalizedCurrent.pools),
+      matches: mergeRemoteMatches(normalizedCurrent.matches, normalizedRemote.matches, remoteExplicitlyEmpty),
     };
   }
 
   function mergeRemoteMainStageState(currentState, remoteState) {
     const normalizedCurrent = normalizeMainStageState(currentState || {});
     const normalizedRemote = normalizeMainStageState(remoteState || {});
+    const principaleExplicitlyEmpty = Array.isArray(remoteState?.principaleMatches) && remoteState.principaleMatches.length === 0 && Array.isArray(remoteState?.principalePools) && remoteState.principalePools.length === 0;
+    const consolanteExplicitlyEmpty = Array.isArray(remoteState?.consolanteMatches) && remoteState.consolanteMatches.length === 0 && Array.isArray(remoteState?.consolantePools) && remoteState.consolantePools.length === 0;
     return {
       ...normalizedCurrent,
       ...normalizedRemote,
-      principalePools: normalizedRemote.principalePools?.length ? normalizedRemote.principalePools : normalizedCurrent.principalePools,
-      principaleMatches: mergeRemoteMatches(normalizedCurrent.principaleMatches, normalizedRemote.principaleMatches || []),
-      consolantePools: normalizedRemote.consolantePools?.length ? normalizedRemote.consolantePools : normalizedCurrent.consolantePools,
-      consolanteMatches: mergeRemoteMatches(normalizedCurrent.consolanteMatches, normalizedRemote.consolanteMatches || []),
+      principalePools: normalizedRemote.principalePools?.length ? normalizedRemote.principalePools : (principaleExplicitlyEmpty ? [] : normalizedCurrent.principalePools),
+      principaleMatches: mergeRemoteMatches(normalizedCurrent.principaleMatches, normalizedRemote.principaleMatches || [], principaleExplicitlyEmpty),
+      consolantePools: normalizedRemote.consolantePools?.length ? normalizedRemote.consolantePools : (consolanteExplicitlyEmpty ? [] : normalizedCurrent.consolantePools),
+      consolanteMatches: mergeRemoteMatches(normalizedCurrent.consolanteMatches, normalizedRemote.consolanteMatches || [], consolanteExplicitlyEmpty),
     };
   }
 
@@ -1997,11 +2000,11 @@ export default function App() {
     if (payload.knockout) {
       setKnockout((current) => ({
         ...current,
-        principalQuarters: mergeRemoteMatches(current.principalQuarters, payload.knockout?.principalQuarters || []),
-        principalSemis: mergeRemoteMatches(current.principalSemis, payload.knockout?.principalSemis || []),
-        principalFinals: mergeRemoteMatches(current.principalFinals, payload.knockout?.principalFinals || []),
-        consolanteSemis: mergeRemoteMatches(current.consolanteSemis, payload.knockout?.consolanteSemis || []),
-        consolanteFinals: mergeRemoteMatches(current.consolanteFinals, payload.knockout?.consolanteFinals || []),
+        principalQuarters: Array.isArray(payload.knockout?.principalQuarters) ? mergeRemoteMatches(current.principalQuarters, payload.knockout.principalQuarters, payload.knockout.principalQuarters.length === 0) : current.principalQuarters,
+        principalSemis: Array.isArray(payload.knockout?.principalSemis) ? mergeRemoteMatches(current.principalSemis, payload.knockout.principalSemis, payload.knockout.principalSemis.length === 0) : current.principalSemis,
+        principalFinals: Array.isArray(payload.knockout?.principalFinals) ? mergeRemoteMatches(current.principalFinals, payload.knockout.principalFinals, payload.knockout.principalFinals.length === 0) : current.principalFinals,
+        consolanteSemis: Array.isArray(payload.knockout?.consolanteSemis) ? mergeRemoteMatches(current.consolanteSemis, payload.knockout.consolanteSemis, payload.knockout.consolanteSemis.length === 0) : current.consolanteSemis,
+        consolanteFinals: Array.isArray(payload.knockout?.consolanteFinals) ? mergeRemoteMatches(current.consolanteFinals, payload.knockout.consolanteFinals, payload.knockout.consolanteFinals.length === 0) : current.consolanteFinals,
       }));
     }
     if (payload.championshipLeg1) setChampionshipLeg1((current) => mergeRemoteLeagueState(current, payload.championshipLeg1));
@@ -2009,9 +2012,9 @@ export default function App() {
     if (payload.singleKnockout) {
       setSingleKnockout((current) => ({
         ...current,
-        quarters: mergeRemoteMatches(current.quarters, payload.singleKnockout?.quarters || []),
-        semis: mergeRemoteMatches(current.semis, payload.singleKnockout?.semis || []),
-        finals: mergeRemoteMatches(current.finals, payload.singleKnockout?.finals || []),
+        quarters: Array.isArray(payload.singleKnockout?.quarters) ? mergeRemoteMatches(current.quarters, payload.singleKnockout.quarters, payload.singleKnockout.quarters.length === 0) : current.quarters,
+        semis: Array.isArray(payload.singleKnockout?.semis) ? mergeRemoteMatches(current.semis, payload.singleKnockout.semis, payload.singleKnockout.semis.length === 0) : current.semis,
+        finals: Array.isArray(payload.singleKnockout?.finals) ? mergeRemoteMatches(current.finals, payload.singleKnockout.finals, payload.singleKnockout.finals.length === 0) : current.finals,
       }));
     }
   }
@@ -2770,6 +2773,8 @@ export default function App() {
 
   const teamLevelLocked = useMemo(() => isSmallTournamentMode ? hasAnyValidMatch(championshipLeg1.matches) : hasAnyValidMatch(brassage1.matches), [isSmallTournamentMode, championshipLeg1.matches, brassage1.matches, phaseRules]);
   const teamDeletionLocked = useMemo(() => {
+    const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
+    if (!firstPhaseGenerated) return false;
     const allTournamentMatches = [
       ...brassage1.matches,
       ...brassage2.matches,
@@ -2788,7 +2793,7 @@ export default function App() {
     ];
     if (allTournamentMatches.length === 0) return false;
     return hasAnyOfficiallyValidatedMatch(allTournamentMatches);
-  }, [brassage1.matches, brassage2.matches, mainStage, knockout, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, phaseRules]);
+  }, [isSmallTournamentMode, brassage1.matches, brassage2.matches, mainStage, knockout, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, phaseRules]);
   const teamAdditionLocked = useMemo(() => {
     const firstPhaseGenerated = isSmallTournamentMode ? championshipLeg1.matches.length > 0 : brassage1.matches.length > 0;
     return teams.length >= TEAM_TARGET || firstPhaseGenerated;
@@ -3117,6 +3122,7 @@ export default function App() {
   }
 
   function removeTeam(teamId) {
+    const mutationTimestamp = markPendingLocalMutation(new Date().toISOString());
     setTeams((current) => current.filter((team) => team.id !== teamId));
     setBrassage1({ pools: [], matches: [] });
     setBrassage2({ pools: [], matches: [] });
@@ -3125,6 +3131,7 @@ export default function App() {
     setChampionshipLeg1({ pools: [], matches: [] });
     setChampionshipLeg2({ pools: [], matches: [] });
     setSingleKnockout({ quarters: [], semis: [], finals: [] });
+    if (sharedTournamentId) queueBackgroundCloudSave(250, mutationTimestamp);
   }
 
   function resetTournament() {
