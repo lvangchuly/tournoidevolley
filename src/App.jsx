@@ -418,91 +418,66 @@ function getOrderedPoolTeamIds(pool, standings) {
 
 function createBrassage2PoolsFromBrassage1(sourcePools, standings, names) {
   const poolCount = Array.isArray(names) ? names.length : 0;
-  const safeSourcePools = Array.isArray(sourcePools) ? sourcePools.filter(Boolean) : [];
+  const safeSourcePools = Array.isArray(sourcePools) ? sourcePools : [];
   const orderedByPool = Array.from({ length: poolCount }, (_, index) => getOrderedPoolTeamIds(safeSourcePools[index], standings));
   const targetSizes = Array.from({ length: poolCount }, (_, index) => {
     const teamIds = Array.isArray(safeSourcePools[index]?.teamIds) ? safeSourcePools[index].teamIds.filter(Boolean) : [];
     return Math.max(0, teamIds.length);
   });
   const totalTeams = targetSizes.reduce((sum, size) => sum + size, 0);
-  const normalizeByMatches = totalTeams >= 13 && totalTeams <= 17;
 
-  const standingsRows = (Array.isArray(standings) ? standings : []).flatMap((entry, entryIndex) =>
-    (Array.isArray(entry?.rows) ? entry.rows : []).map((row, rowIndex) => ({
-      ...row,
-      __entryIndex: entryIndex,
-      __rowIndex: rowIndex,
-    })),
-  );
-
-  const globallyRankedTeamIds = [];
-  standingsRows
-    .sort((a, b) => {
-      const comparison = compareStandingRows(a, b, { normalizeByMatches });
-      if (comparison !== 0) return comparison;
-      if ((a.__entryIndex || 0) !== (b.__entryIndex || 0)) return (a.__entryIndex || 0) - (b.__entryIndex || 0);
-      return (a.__rowIndex || 0) - (b.__rowIndex || 0);
-    })
-    .forEach((row) => {
-      if (row?.teamId && !globallyRankedTeamIds.includes(row.teamId)) globallyRankedTeamIds.push(row.teamId);
+  if (totalTeams >= 13 && totalTeams <= 17) {
+    const rankedTeamIds = [];
+    orderedByPool.forEach((teamIds) => {
+      teamIds.forEach((teamId) => {
+        if (teamId && !rankedTeamIds.includes(teamId)) rankedTeamIds.push(teamId);
+      });
     });
 
-  orderedByPool.flat().forEach((teamId) => {
-    if (teamId && !globallyRankedTeamIds.includes(teamId)) globallyRankedTeamIds.push(teamId);
-  });
+    const assignments = Array.from({ length: poolCount }, () => []);
+    let cursor = 0;
+    targetSizes.forEach((size, poolIndex) => {
+      for (let slot = 0; slot < size; slot += 1) {
+        const teamId = rankedTeamIds[cursor] || null;
+        if (teamId) assignments[poolIndex].push(teamId);
+        cursor += 1;
+      }
+    });
 
-  const assignments = Array.from({ length: poolCount }, () => []);
+    return createPoolsFromAssignments(assignments, names);
+  }
+
+  const assignments = names.map(() => []);
   const assignedIds = new Set();
 
   const tryAssign = (targetIndex, teamId) => {
-    if (!teamId && teamId !== 0) return false;
-    if (targetIndex < 0 || targetIndex >= assignments.length) return false;
-    if (assignedIds.has(teamId)) return false;
-    if (assignments[targetIndex].length >= (targetSizes[targetIndex] || 0)) return false;
+    if (!teamId) return;
+    if (assignedIds.has(teamId)) return;
+    if (assignments[targetIndex].length >= targetSizes[targetIndex]) return;
     assignments[targetIndex].push(teamId);
     assignedIds.add(teamId);
-    return true;
   };
 
-  const canUseClassicRotation = poolCount === 6 && targetSizes.every((size) => size === 3) && orderedByPool.every((teamIds) => teamIds.length >= 3);
-
-  if (canUseClassicRotation) {
-    for (let index = 0; index < poolCount; index += 1) {
-      tryAssign(index, orderedByPool[index]?.[0] || null);
-    }
-
-    for (let index = 0; index < poolCount; index += 1) {
-      tryAssign(index, orderedByPool[(index + 1) % poolCount]?.[1] || null);
-    }
-
-    for (let index = 0; index < poolCount; index += 1) {
-      tryAssign(index, orderedByPool[(index - 1 + poolCount) % poolCount]?.[2] || null);
-    }
+  for (let index = 0; index < poolCount; index += 1) {
+    tryAssign(index, orderedByPool[index]?.[0] || null);
   }
 
-  globallyRankedTeamIds.forEach((teamId) => {
-    if (assignedIds.has(teamId)) return;
-    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < (targetSizes[index] || 0));
+  for (let index = 0; index < poolCount; index += 1) {
+    tryAssign(index, orderedByPool[(index + 1) % poolCount]?.[1] || null);
+  }
+
+  for (let index = 0; index < poolCount; index += 1) {
+    tryAssign(index, orderedByPool[(index - 1 + poolCount) % poolCount]?.[2] || null);
+  }
+
+  const leftovers = orderedByPool.flat().filter((teamId) => teamId && !assignedIds.has(teamId));
+  leftovers.forEach((teamId) => {
+    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < targetSizes[index]);
     if (targetIndex >= 0) {
       assignments[targetIndex].push(teamId);
       assignedIds.add(teamId);
     }
   });
-
-  const missingSourceIds = safeSourcePools.flatMap((pool) => (Array.isArray(pool?.teamIds) ? pool.teamIds : [])).filter(Boolean);
-  missingSourceIds.forEach((teamId) => {
-    if (assignedIds.has(teamId)) return;
-    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < (targetSizes[index] || 0));
-    if (targetIndex >= 0) {
-      assignments[targetIndex].push(teamId);
-      assignedIds.add(teamId);
-    }
-  });
-
-  const assignedCount = assignments.reduce((sum, teamIds) => sum + teamIds.length, 0);
-  if (assignedCount !== totalTeams || assignments.some((teamIds, index) => teamIds.length !== (targetSizes[index] || 0))) {
-    throw new Error(`Répartition Brassage 2 incomplète (${assignedCount}/${totalTeams})`);
-  }
 
   return createPoolsFromAssignments(assignments, names);
 }
@@ -3418,8 +3393,7 @@ export default function App() {
     queueBackgroundCloudSave(250);
     } catch (error) {
       console.error('Erreur lors de la génération du Brassage 2', error);
-      const details = error?.message ? ` Détail : ${error.message}` : '';
-      window.alert(`Impossible de générer le Brassage 2 à cause d’une erreur interne.${details}`);
+      window.alert(`Impossible de générer le Brassage 2 : ${error?.message || 'erreur interne inconnue'}.`);
     }
   }
 
