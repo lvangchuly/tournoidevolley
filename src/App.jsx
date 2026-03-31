@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V21J';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V21K';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V21J';
+const APP_VERSION = 'V21K';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -419,43 +419,11 @@ function getOrderedPoolTeamIds(pool, standings) {
 function createBrassage2PoolsFromBrassage1(sourcePools, standings, names) {
   const poolCount = names.length;
   const orderedByPool = names.map((_, index) => getOrderedPoolTeamIds(sourcePools[index], standings));
-  const targetSizes = names.map((_, index) => {
-    const currentPool = sourcePools[index];
-    const currentSize = Array.isArray(currentPool?.teamIds) ? currentPool.teamIds.filter(Boolean).length : 0;
-    return Math.max(0, currentSize);
-  });
-  const assignments = names.map(() => []);
-  const leftovers = [];
-
-  const tryAssign = (targetIndex, teamId) => {
-    if (!teamId) return;
-    const safeIndex = ((targetIndex % poolCount) + poolCount) % poolCount;
-    if (assignments[safeIndex].includes(teamId)) return;
-    if (assignments[safeIndex].length < targetSizes[safeIndex]) {
-      assignments[safeIndex].push(teamId);
-    } else {
-      leftovers.push(teamId);
-    }
-  };
-
-  orderedByPool.forEach((rows, index) => {
-    tryAssign(index, rows?.[0] || null);
-  });
-
-  orderedByPool.forEach((rows, index) => {
-    tryAssign(index - 1, rows?.[1] || null);
-  });
-
-  orderedByPool.forEach((rows, index) => {
-    tryAssign(index + 1, rows?.[2] || null);
-  });
-
-  const orderedLeftovers = Array.from(new Set(leftovers.filter(Boolean)));
-  orderedLeftovers.forEach((teamId) => {
-    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < targetSizes[index] && !teamIds.includes(teamId));
-    if (targetIndex >= 0) assignments[targetIndex].push(teamId);
-  });
-
+  const assignments = names.map((_, index) => ([
+    orderedByPool[index]?.[0] || null,
+    orderedByPool[(index + 1) % poolCount]?.[1] || null,
+    orderedByPool[(index - 1 + poolCount) % poolCount]?.[2] || null,
+  ].filter(Boolean)));
   return createPoolsFromAssignments(assignments, names);
 }
 
@@ -994,33 +962,6 @@ function computeRanking(teamIds, matches, teamMap, phaseRules, options = {}) {
   return rows.sort((a, b) => compareStandingRows(a, b, { normalizeByMatches }));
 }
 
-
-function getExpectedPoolMatchCount(pool) {
-  const teamCount = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean).length : 0;
-  if (teamCount < 2) return 0;
-  return (teamCount * (teamCount - 1)) / 2;
-}
-
-function getValidatedPoolMatches(pool, matches, phaseRules) {
-  const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
-  if (teamIds.length < 2) return [];
-  return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => {
-    if (!match) return false;
-    if (!teamIds.includes(match.teamAId) || !teamIds.includes(match.teamBId)) return false;
-    return isMatchResultValid(match, phaseRules);
-  });
-}
-
-function areAllPoolsReadyForBrassage2(pools, matches, phaseRules) {
-  const safePools = Array.isArray(pools) ? pools : [];
-  if (!safePools.length) return false;
-  return safePools.every((pool) => {
-    const expectedMatchCount = getExpectedPoolMatchCount(pool);
-    if (expectedMatchCount === 0) return true;
-    return getValidatedPoolMatches(pool, matches, phaseRules).length >= expectedMatchCount;
-  });
-}
-
 function computeGroupStandings(pools, matches, teamMap, phaseRules, options = {}) {
   return pools.map((pool) => ({
     pool,
@@ -1191,28 +1132,6 @@ function Section({ title, subtitle, right, children }) {
       </div>
       {children}
     </section>
-  );
-}
-
-function PointsCalculationExplainer({ showDuplicateWarning = false, hasDuplicateTeamNames = false }) {
-  return (
-    <div className="mini-card info-card points-explainer-card">
-      <div className="mini-card-head">Calcul des points</div>
-      <p className="muted small">Les points sont attribués après chaque match selon le score obtenu.</p>
-      <div className="points-rule-list">
-        <div className="points-rule-item">
-          <strong>Équipe gagnante :</strong> <span>(2 × score) + écart de points</span>
-        </div>
-        <div className="points-rule-item">
-          <strong>Équipe perdante :</strong> <span>score − écart de points</span>
-        </div>
-      </div>
-      <p className="muted small"><strong>Exemple :</strong> sur un match gagné <strong>21 à 17</strong>, l’écart est de <strong>4</strong>. L’équipe gagnante marque donc <strong>46 points</strong> (2 × 21 + 4) et l’équipe perdante marque <strong>13 points</strong> (17 − 4).</p>
-      <p className="muted small">En format standard à <strong>18 équipes</strong>, les classements de poules utilisent le <strong>total des points</strong>, puis la différence de points et les points marqués.</p>
-      <p className="muted small">Pour les tournois à <strong>13 à 17 équipes</strong>, certaines poules n’ont pas toutes le même nombre de matchs. Les équipes sont donc classées de manière équitable avec : <strong>victoires</strong>, puis <strong>moyenne de points par match</strong>, puis <strong>moyenne de différence de points</strong>, puis <strong>moyenne de points marqués</strong>.</p>
-      <p className="muted small points-note">ℹ️ Le mode de calcul s’adapte automatiquement selon le nombre d’équipes.</p>
-      {showDuplicateWarning && hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
-    </div>
   );
 }
 
@@ -3356,7 +3275,23 @@ export default function App() {
       return;
     }
     const currentVisibleBrassage1Matches = filterMatchesToPools(currentBrassage1.matches, currentBrassage1.pools, 'Brassage 1');
-    const brassage1Complete = areAllPoolsReadyForBrassage2(currentBrassage1.pools, currentBrassage1.matches, phaseRulesRef.current);
+    const brassage1PoolChecks = currentBrassage1.pools.map((pool) => {
+      const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
+      const expectedMatchCount = teamIds.length >= 2 ? (teamIds.length * (teamIds.length - 1)) / 2 : 0;
+      const poolMatches = dedupeMatches(currentBrassage1.matches.filter((match) => {
+        if (match?.phase !== 'Brassage 1') return false;
+        return teamIds.includes(match.teamAId) && teamIds.includes(match.teamBId);
+      }));
+      const validMatches = poolMatches.filter((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      return {
+        pool,
+        teamIds,
+        expectedMatchCount,
+        validMatchCount: validMatches.length,
+        isReady: expectedMatchCount === 0 || validMatches.length >= expectedMatchCount,
+      };
+    });
+    const brassage1Complete = brassage1PoolChecks.length > 0 && brassage1PoolChecks.every((entry) => entry.isReady);
     if (!brassage1Complete) {
       window.alert('Tous les matchs attendus du Brassage 1 doivent être valides avant de générer le Brassage 2.');
       return;
@@ -3380,14 +3315,10 @@ export default function App() {
       phaseRulesRef.current,
       { normalizeByMatches: normalizeBrassageRanking },
     );
-    const standingsReady = standings.every((entry) => {
-      const teamIds = Array.isArray(entry?.pool?.teamIds) ? entry.pool.teamIds.filter(Boolean) : [];
-      const rankedIds = Array.isArray(entry?.rows) ? entry.rows.map((row) => row?.teamId).filter(Boolean) : [];
-      if (teamIds.length <= 1) return true;
-      return rankedIds.length === teamIds.length;
-    });
-    if (!standingsReady) {
-      window.alert('Impossible de générer le Brassage 2 : le classement du Brassage 1 est incomplet.');
+    const incompletePools = brassage1PoolChecks.filter((entry) => !entry.isReady);
+    if (incompletePools.length > 0) {
+      const details = incompletePools.map((entry) => `${entry.pool?.name || 'Poule'} (${entry.validMatchCount}/${entry.expectedMatchCount})`).join(', ');
+      window.alert(`Impossible de générer le Brassage 2 : il manque encore des matchs valides dans ${details}.`);
       return;
     }
     const pools = createBrassage2PoolsFromBrassage1(currentBrassage1.pools, standings, createNumberedNames('Brassage 2 - Poule', 6));
@@ -4624,9 +4555,6 @@ export default function App() {
                 {renderOverallRanking(overallRanking, false, activeInProgressTeamIds)}
               </Section>
             )}
-            <Section title="Calcul des points" subtitle="Cette explication reste affichée en permanence sous les classements.">
-              <PointsCalculationExplainer />
-            </Section>
             {publicPodiumLeaders.tournamentFinished ? (
               <Section title="Podiums" subtitle="Les podiums s’affichent lorsque le tournoi est terminé.">
                 <div className="cards-grid two-up">
@@ -4919,7 +4847,13 @@ export default function App() {
 
               <Section title="Informations" subtitle="Explication du calcul des points et rappel du déroulé du tournoi." right={isSmallTournamentMode ? <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer brassage 1</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button><Button variant="success" onClick={generateMainStage}>3. Générer principale / consolante</Button></>}>
                 <div className="cards-grid two-up info-grid">
-<PointsCalculationExplainer showDuplicateWarning hasDuplicateTeamNames={hasDuplicateTeamNames} />
+                  <div className="mini-card info-card">
+                    <div className="mini-card-head">Calcul des points</div>
+                    <p className="muted small">L’équipe gagnante marque le score gagnant multiplié par 2, puis on ajoute l’écart de points. L’équipe perdante conserve ses points marqués puis on retire cet écart.</p>
+                    <p className="muted small"><strong>Exemple :</strong> sur un match en 21, une victoire 21 à 17 donne <strong>46 points</strong> au vainqueur (2 × 21 + 4) et <strong>13 points</strong> au perdant (17 − 4).</p>
+                    <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
+                    {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
+                  </div>
                   <div className="mini-card"><OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} compact /><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
