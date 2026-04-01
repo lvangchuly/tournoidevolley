@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V22C';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V22D';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V22C';
+const APP_VERSION = 'V22D';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -48,6 +48,40 @@ function getMainStageDistribution(teamCount) {
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
 const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
+
+const RANDOM_TEAM_NAMES = ['Atlas', 'Blitz', 'Comete', 'Cyclone', 'Dynamo', 'Eclair', 'Falcon', 'Fusion', 'Galaxy', 'Helios', 'Horizon', 'Impact', 'Jaguar', 'Krypton', 'Laser', 'Meteor', 'Mirage', 'Nova', 'Orion', 'Phenix', 'Pixel', 'Quartz', 'Raptor', 'Rocket', 'Shadow', 'Silver', 'Solstice', 'Sonic', 'Storm', 'Titan', 'Turbo', 'Vega', 'Vector', 'Volt', 'Zenith', 'Aigle', 'Boreal', 'Cobalt', 'Cosmos', 'Dragon', 'Echo', 'Foudre', 'Globe', 'Inferno', 'Iris', 'Lynx', 'Magma', 'Nimbus', 'Onyx', 'Pegase', 'Pulsar', 'Ruby', 'Saphir', 'Saturne', 'Spectrum', 'Tornado', 'Vortex', 'Ymir', 'Zephyr'];
+
+function randomInt(min, max) {
+  const safeMin = Math.ceil(Math.min(min, max));
+  const safeMax = Math.floor(Math.max(min, max));
+  return Math.floor(Math.random() * (safeMax - safeMin + 1)) + safeMin;
+}
+
+function shuffleArray(items) {
+  const copy = Array.isArray(items) ? [...items] : [];
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(0, index);
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+}
+
+function buildRandomValidScore(rule) {
+  const target = Math.max(1, Number(rule?.winningScore) || 21);
+  const mode = rule?.mode || 'sec';
+  const winnerIsA = Math.random() < 0.5;
+  let winnerScore = target;
+  let loserScore = randomInt(0, Math.max(0, target - 2));
+
+  if (mode !== 'sec') {
+    loserScore = randomInt(Math.max(0, target - 6), Math.max(0, target - 2));
+    winnerScore = Math.max(target, loserScore + randomInt(2, 6));
+  }
+
+  return winnerIsA
+    ? { scoreA: winnerScore, scoreB: loserScore }
+    : { scoreA: loserScore, scoreB: winnerScore };
+}
 
 function uid(prefix = 'id') {
   return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
@@ -3163,15 +3197,131 @@ export default function App() {
 
   function updateTeam(teamId, field, value) {
     const mutationTimestamp = markPendingLocalMutation(new Date().toISOString());
+    let nextTeamsSnapshot = null;
     setTeams((current) => {
       const nextTeams = current.map((team) => (team.id === teamId ? { ...team, [field]: value } : team));
-      const shouldRegenerateBrassage1 = field === 'level' && !isSmallTournamentMode && brassage1.matches.length > 0;
-      if (shouldRegenerateBrassage1) {
-        regenerateBrassage1FromTeams(nextTeams);
-      }
+      nextTeamsSnapshot = nextTeams;
       return nextTeams;
     });
+    const shouldRegenerateBrassage1 = field === 'level' && !isSmallTournamentMode && brassage1Ref.current.matches.length > 0;
+    if (shouldRegenerateBrassage1 && nextTeamsSnapshot) {
+      regenerateBrassage1FromTeams(nextTeamsSnapshot);
+      return;
+    }
     queueBackgroundCloudSave(250, mutationTimestamp);
+  }
+
+  function randomizeTeamsAndLevels() {
+    const mutationTimestamp = markPendingLocalMutation(new Date().toISOString());
+    let nextTeamsSnapshot = null;
+    setTeams((current) => {
+      const shuffledNames = shuffleArray(RANDOM_TEAM_NAMES);
+      const usedNames = new Set();
+      nextTeamsSnapshot = normalizeTeamsList(current).map((team, index) => {
+        let nextName = shuffledNames[index] || `Equipe${index + 1}`;
+        while (usedNames.has(nextName)) {
+          nextName = `${nextName}${index + 1}`;
+        }
+        usedNames.add(nextName);
+        return {
+          ...team,
+          name: nextName,
+          level: LEVELS[randomInt(0, LEVELS.length - 1)],
+        };
+      });
+      return nextTeamsSnapshot;
+    });
+
+    if (!nextTeamsSnapshot) return;
+
+    if (!isSmallTournamentMode && brassage1Ref.current.matches.length > 0) {
+      regenerateBrassage1FromTeams(nextTeamsSnapshot);
+      window.alert('Noms et niveaux des équipes générés aléatoirement. Le Brassage 1 a été régénéré pour rester cohérent.');
+      return;
+    }
+
+    queueBackgroundCloudSave(250, mutationTimestamp);
+    window.alert('Noms et niveaux des équipes générés aléatoirement.');
+  }
+
+  function getCurrentRandomScoreScopes() {
+    const hasPending = (matches) => (Array.isArray(matches) ? matches : []).some((match) => getMatchStatusLabel(match, phaseRulesRef.current) !== 'Valide');
+
+    if (isSmallTournamentMode) {
+      if (championshipLeg1Ref.current.matches.length > 0 && hasPending(championshipLeg1Ref.current.matches)) return ['championshipLeg1'];
+      if (championshipLeg2Ref.current.matches.length > 0 && hasPending(championshipLeg2Ref.current.matches)) return ['championshipLeg2'];
+      if (singleKnockoutRef.current.quarters.length > 0 && hasPending(singleKnockoutRef.current.quarters)) return ['quarters'];
+      if (singleKnockoutRef.current.semis.length > 0 && hasPending(singleKnockoutRef.current.semis)) return ['semis'];
+      if (singleKnockoutRef.current.finals.length > 0 && hasPending(singleKnockoutRef.current.finals)) return ['finals'];
+      return [];
+    }
+
+    if (brassage1Ref.current.matches.length > 0 && hasPending(brassage1Ref.current.matches)) return ['brassage1'];
+    if (brassage2Ref.current.matches.length > 0 && hasPending(brassage2Ref.current.matches)) return ['brassage2'];
+
+    const poolScopes = [];
+    if (mainStageRef.current.principaleMatches.length > 0 && hasPending(mainStageRef.current.principaleMatches)) poolScopes.push('principale');
+    if (mainStageRef.current.consolanteMatches.length > 0 && hasPending(mainStageRef.current.consolanteMatches)) poolScopes.push('consolante');
+    if (poolScopes.length) return poolScopes;
+
+    const stageOneScopes = [];
+    if (knockoutRef.current.principalQuarters.length > 0 && hasPending(knockoutRef.current.principalQuarters)) stageOneScopes.push('principalQuarters');
+    if (knockoutRef.current.consolanteSemis.length > 0 && hasPending(knockoutRef.current.consolanteSemis)) stageOneScopes.push('consolanteSemis');
+    if (stageOneScopes.length) return stageOneScopes;
+
+    const stageTwoScopes = [];
+    if (knockoutRef.current.principalSemis.length > 0 && hasPending(knockoutRef.current.principalSemis)) stageTwoScopes.push('principalSemis');
+    if (knockoutRef.current.consolanteFinals.length > 0 && hasPending(knockoutRef.current.consolanteFinals)) stageTwoScopes.push('consolanteFinals');
+    if (stageTwoScopes.length) return stageTwoScopes;
+
+    if (knockoutRef.current.principalFinals.length > 0 && hasPending(knockoutRef.current.principalFinals)) return ['principalFinals'];
+    return [];
+  }
+
+  function randomizeCurrentPhaseScores() {
+    const scopes = getCurrentRandomScoreScopes();
+    if (!scopes.length) {
+      window.alert('Aucune phase en cours à compléter automatiquement.');
+      return;
+    }
+
+    const updatedAt = new Date().toISOString();
+    const mutationTimestamp = markPendingLocalMutation(updatedAt);
+    let updatedCount = 0;
+
+    scopes.forEach((scope) => {
+      updateMatchesInScope(scope, (matches) => matches.map((match) => {
+        const isEditable = getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir'
+          && !match.refereeInProgress
+          && !match.matchInProgress
+          && hasBothTeamsDefined(match);
+
+        if (!isEditable) return match;
+
+        const { scoreA, scoreB } = buildRandomValidScore(getRuleForMatch(match, phaseRulesRef.current));
+        updatedCount += 1;
+        return {
+          ...match,
+          scoreA: String(scoreA),
+          scoreB: String(scoreB),
+          submittedScoreA: '',
+          submittedScoreB: '',
+          submittedAt: null,
+          validatedAt: updatedAt,
+          manualOverrideAt: updatedAt,
+          refereeInProgress: false,
+          matchInProgress: false,
+        };
+      }));
+    });
+
+    if (!updatedCount) {
+      window.alert('Aucun match À saisir et non sélectionné par un arbitre n’a été trouvé dans la phase en cours.');
+      return;
+    }
+
+    queueBackgroundCloudSave(250, mutationTimestamp);
+    window.alert(`${updatedCount} match(s) de la phase en cours ont reçu un score aléatoire.`);
   }
 
   function addTeam() {
@@ -5130,7 +5280,7 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage Firebase du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur Firebase</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger Firebase</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
+            <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage Firebase du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button><Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur Firebase</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger Firebase</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up">
                 <div className="mini-card">
