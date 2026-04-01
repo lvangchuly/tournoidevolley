@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V23B';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V23C';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V23B';
+const APP_VERSION = 'V23C';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -64,6 +64,15 @@ function getMainStageDistribution(teamCount) {
     consolanteCount: 8,
     normalizedRanking: true,
     consolanteMode: 'pools',
+    principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2),
+    consolantePoolNames: CONSOLANTE_POOL_NAMES,
+    directPrincipalSemis: true,
+  };
+  if (teamCount === 15) return {
+    principaleCount: 8,
+    consolanteCount: 7,
+    normalizedRanking: true,
+    consolanteMode: 'mixed43',
     principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2),
     consolantePoolNames: CONSOLANTE_POOL_NAMES,
     directPrincipalSemis: true,
@@ -3931,12 +3940,25 @@ export default function App() {
         makeKnockoutMatch('Tableau consolante', 'Demi 2', ranking[1]?.teamId || null, ranking[2]?.teamId || null),
       ]);
     } else {
+      const distribution = getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length);
       const cA = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'A');
       const cB = getStandingsRowsForPool(currentConsolanteStandings, currentMainStage.consolantePools, 'B');
-      consolanteSemisRaw = sanitizeKnockoutMatches([
-        makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
-        makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
-      ]);
+      const cALen = currentMainStage.consolantePools.find((pool) => /A$/i.test(pool.name))?.teamIds?.length || cA.length;
+      const cBLen = currentMainStage.consolantePools.find((pool) => /B$/i.test(pool.name))?.teamIds?.length || cB.length;
+      const isMixed43Consolante = distribution.consolanteMode === 'mixed43' && ((cALen === 4 && cBLen === 3) || (cALen === 3 && cBLen === 4));
+      if (isMixed43Consolante) {
+        const pool4 = cALen >= cBLen ? cA : cB;
+        const pool3 = cALen >= cBLen ? cB : cA;
+        consolanteSemisRaw = sanitizeKnockoutMatches([
+          makeKnockoutMatch('Tableau consolante', 'Demi 1', pool4[0]?.teamId || null, pool4[2]?.teamId || null),
+          makeKnockoutMatch('Tableau consolante', 'Demi 2', pool4[1]?.teamId || null, pool3[0]?.teamId || null),
+        ]);
+      } else {
+        consolanteSemisRaw = sanitizeKnockoutMatches([
+          makeKnockoutMatch('Tableau consolante', 'Demi 1', cA[0]?.teamId || null, cB[1]?.teamId || null),
+          makeKnockoutMatch('Tableau consolante', 'Demi 2', cB[0]?.teamId || null, cA[1]?.teamId || null),
+        ]);
+      }
     }
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const consolanteSemis = stampGeneratedMatches(assignScheduleWithCourts(
@@ -5316,7 +5338,7 @@ export default function App() {
 
           {activeTab === 'principale' && !isSmallTournamentMode && (
             <>
-              <Section title="Poules principale" subtitle={mainStageDistribution.directPrincipalSemis ? "2 poules de 4 issues des 8 meilleures équipes, avec méthode serpent. Les 2 meilleures de chaque poule iront directement en demi-finales principale." : "4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent."}>
+              <Section title="Poules principale" subtitle={activeTeams.length === 15 ? "2 poules de 4 issues des 8 meilleures équipes, avec méthode serpent. Les 2 meilleures de chaque poule iront directement en demi-finales principale." : mainStageDistribution.directPrincipalSemis ? "2 poules de 4 issues des 8 meilleures équipes, avec méthode serpent. Les 2 meilleures de chaque poule iront directement en demi-finales principale." : "4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent."}>
                 {renderStandings(principaleStandings)}
               </Section>
               <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
@@ -5351,7 +5373,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Section title="Étape 1 des tableaux finaux" subtitle={mainStageDistribution.directPrincipalSemis ? "Principale : demi-finales directes sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3." : "Principale : quarts de finale sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3."} right={<><Button onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Régénérer demies principale' : 'Regénérer quarts principale'}</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button>{!mainStageDistribution.directPrincipalSemis && <Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button>}<Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
+                  <Section title="Étape 1 des tableaux finaux" subtitle={activeTeams.length === 15 ? "Principale : demi-finales directes sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3 à partir de 1 poule de 4 et 1 poule de 3." : mainStageDistribution.directPrincipalSemis ? "Principale : demi-finales directes sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3." : "Principale : quarts de finale sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3."} right={<><Button onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Régénérer demies principale' : 'Regénérer quarts principale'}</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button>{!mainStageDistribution.directPrincipalSemis && <Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button>}<Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
                     <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
                         <h3>{mainStageDistribution.directPrincipalSemis ? `Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}` : `Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
