@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V23';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V23A';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -21,7 +21,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V23';
+const APP_VERSION = 'V23A';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -41,10 +41,51 @@ const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', '
 const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 
 function getMainStageDistribution(teamCount) {
-  if (teamCount >= 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false, consolanteMode: 'pools' };
-  if (teamCount === 17) return { principaleCount: 12, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship' };
-  if (teamCount >= 13) return { principaleCount: 8, consolanteCount: Math.max(0, teamCount - 8), normalizedRanking: true, consolanteMode: 'pools' };
-  return { principaleCount: 0, consolanteCount: 0, normalizedRanking: false, consolanteMode: 'pools' };
+  if (teamCount >= 18) return {
+    principaleCount: 12,
+    consolanteCount: 6,
+    normalizedRanking: false,
+    consolanteMode: 'pools',
+    principalePoolNames: PRINCIPALE_POOL_NAMES,
+    consolantePoolNames: CONSOLANTE_POOL_NAMES,
+    directPrincipalSemis: false,
+  };
+  if (teamCount === 17) return {
+    principaleCount: 12,
+    consolanteCount: 5,
+    normalizedRanking: true,
+    consolanteMode: 'championship',
+    principalePoolNames: PRINCIPALE_POOL_NAMES,
+    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
+    directPrincipalSemis: false,
+  };
+  if (teamCount === 16) return {
+    principaleCount: 8,
+    consolanteCount: 8,
+    normalizedRanking: true,
+    consolanteMode: 'pools',
+    principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2),
+    consolantePoolNames: CONSOLANTE_POOL_NAMES,
+    directPrincipalSemis: true,
+  };
+  if (teamCount >= 13) return {
+    principaleCount: 8,
+    consolanteCount: Math.max(0, teamCount - 8),
+    normalizedRanking: true,
+    consolanteMode: 'pools',
+    principalePoolNames: PRINCIPALE_POOL_NAMES,
+    consolantePoolNames: CONSOLANTE_POOL_NAMES,
+    directPrincipalSemis: false,
+  };
+  return {
+    principaleCount: 0,
+    consolanteCount: 0,
+    normalizedRanking: false,
+    consolanteMode: 'pools',
+    principalePoolNames: PRINCIPALE_POOL_NAMES,
+    consolantePoolNames: CONSOLANTE_POOL_NAMES,
+    directPrincipalSemis: false,
+  };
 }
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
@@ -2687,7 +2728,7 @@ export default function App() {
     brassage2Complete: visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolantePoolsComplete: mainStage.consolanteMatches.length > 0 && mainStage.consolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-    principalQuartersComplete: knockout.principalQuarters.length > 0 && knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    principalQuartersComplete: knockout.principalQuarters.length === 0 || knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalSemisComplete: knockout.principalSemis.length > 0 && knockout.principalSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }), [isSmallTournamentMode, championshipLeg1.matches, championshipLeg2.matches, singleKnockout, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout, phaseRules]);
@@ -3756,10 +3797,10 @@ export default function App() {
     ).map((row) => row.teamId);
     const principaleIds = rankedIds.slice(0, distribution.principaleCount);
     const consolanteIds = rankedIds.slice(distribution.principaleCount, distribution.principaleCount + distribution.consolanteCount);
-    const principalePools = createPools(principaleIds, PRINCIPALE_POOL_NAMES);
+    const principalePools = createPools(principaleIds, distribution.principalePoolNames || PRINCIPALE_POOL_NAMES);
     const consolantePools = distribution.consolanteMode === 'championship'
-      ? createChampionshipPool(consolanteIds, CONSOLANTE_POOL_NAMES[0])
-      : createPools(consolanteIds, CONSOLANTE_POOL_NAMES);
+      ? createChampionshipPool(consolanteIds, (distribution.consolantePoolNames || CONSOLANTE_POOL_NAMES)[0] || CONSOLANTE_POOL_NAMES[0])
+      : createPools(consolanteIds, distribution.consolantePoolNames || CONSOLANTE_POOL_NAMES);
     const scheduled = scheduleMainStageMatches(
       principalePools,
       consolantePools,
@@ -3790,20 +3831,52 @@ export default function App() {
       return;
     }
     const currentVisiblePrincipaleMatches = filterMatchesToPools(currentMainStage.principaleMatches, currentMainStage.principalePools, 'Principale');
+    const currentDistribution = getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length);
     const principalePoolsComplete = currentVisiblePrincipaleMatches.length > 0 && currentVisiblePrincipaleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!principalePoolsComplete) {
-      window.alert('Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
+      window.alert(currentDistribution.directPrincipalSemis
+        ? 'Tous les scores des poules principales doivent être valides avant de générer les demi-finales principale.'
+        : 'Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
       return;
     }
+    const clearLabel = currentDistribution.directPrincipalSemis
+      ? 'les demi-finales et finales principale'
+      : 'les quarts, demi-finales et finales principale';
     if (!confirmClearStageScores([
       ...currentKnockout.principalQuarters,
       ...currentKnockout.principalSemis,
       ...currentKnockout.principalFinals,
-    ], 'les quarts, demi-finales et finales principale')) return;
+    ], clearLabel)) return;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
-    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length).normalizedRanking });
+    const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: currentDistribution.normalizedRanking });
     const pA = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'A');
     const pB = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'B');
+    const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
+
+    if (currentDistribution.directPrincipalSemis) {
+      const principalSemisRaw = sanitizeKnockoutMatches([
+        makeKnockoutMatch('Tableau principal', 'Demi 1', pA[0]?.teamId || null, pB[1]?.teamId || null),
+        makeKnockoutMatch('Tableau principal', 'Demi 2', pB[0]?.teamId || null, pA[1]?.teamId || null),
+      ]);
+      const principalSemis = stampGeneratedMatches(assignScheduleWithCourts(
+        principalSemisRaw,
+        stage1StartSlot,
+        [1, 2],
+      ));
+      const nextKnockout = {
+        ...currentKnockout,
+        principalQuarters: [],
+        principalSemis: sanitizeKnockoutMatches(principalSemis),
+        principalFinals: [],
+      };
+      knockoutRef.current = nextKnockout;
+      setKnockout(nextKnockout);
+      setActiveTab('finales');
+      markPendingStructureSync();
+      queueBackgroundCloudSave(250);
+      return;
+    }
+
     const pC = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'C');
     const pD = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'D');
     const principalQuartersRaw = sanitizeKnockoutMatches([
@@ -3812,7 +3885,6 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pC[1]?.teamId || null),
     ]);
-    const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
       principalQuartersRaw,
       stage1StartSlot,
@@ -3887,6 +3959,11 @@ export default function App() {
   function generatePrincipalSemis() {
     const currentKnockout = knockoutRef.current;
     const currentMainStage = mainStageRef.current;
+    const currentDistribution = getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length);
+    if (currentDistribution.directPrincipalSemis) {
+      window.alert('Avec 16 équipes, les demi-finales principale sont générées directement à partir des 2 poules de 4 via le bouton de première étape.');
+      return;
+    }
     const canGeneratePrincipalSemis = currentKnockout.principalQuarters.length > 0 && currentKnockout.principalQuarters.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!canGeneratePrincipalSemis) {
       window.alert('Tous les quarts de finale principaux doivent être valides avant de générer les demi-finales principale.');
@@ -5231,7 +5308,7 @@ export default function App() {
                 {renderStandings(brassage2Standings)}
               </Section>
               <Section title={`Matchs du brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`}>{renderOrganizerMatches(visibleBrassage2Matches, 'brassage2')}</Section>
-              <Section title="Classement cumulé brassage 1 + brassage 2" subtitle="Les 12 premiers vont en principale, les 6 autres en consolante.">
+              <Section title="Classement cumulé brassage 1 + brassage 2" subtitle={activeTeams.length === 17 ? "Les 12 premiers vont en principale, les 5 autres en consolante." : activeTeams.length === 16 ? "Les 8 premiers vont en principale (2 poules de 4), les 8 autres en consolante (2 poules de 4)." : "Les 12 premiers vont en principale, les 6 autres en consolante."}>
                 {renderOverallRanking(rankingAfterBrassages, true)}
               </Section>
             </>
@@ -5239,11 +5316,11 @@ export default function App() {
 
           {activeTab === 'principale' && !isSmallTournamentMode && (
             <>
-              <Section title="Poules principale" subtitle="4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent.">
+              <Section title="Poules principale" subtitle={mainStageDistribution.directPrincipalSemis ? "2 poules de 4 issues des 8 meilleures équipes, avec méthode serpent. Les 2 meilleures de chaque poule iront directement en demi-finales principale." : "4 poules de 3 issues des 12 meilleures équipes, avec méthode serpent."}>
                 {renderStandings(principaleStandings)}
               </Section>
               <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
-              <Section title="Poules consolante" subtitle="2 poules de 3 issues des 6 équipes restantes, avec méthode serpent." right={<><Button variant="success" onClick={generatePrincipalQuarters}>Générer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button></>}>
+              <Section title="Poules consolante" subtitle={activeTeams.length === 17 ? "Championnat à 5 équipes : les 4 meilleures iront en demi-finales consolante." : mainStageDistribution.directPrincipalSemis ? "2 poules de 4 issues des 8 équipes restantes, avec méthode serpent. Les 2 meilleures de chaque poule iront en demi-finales consolante." : "2 poules de 3 issues des 6 équipes restantes, avec méthode serpent."} right={<><Button variant="success" onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Générer demies principale' : 'Générer quarts principale'}</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button></>}>
                 {renderStandings(consolanteStandings)}
               </Section>
               <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(visibleConsolanteMatches, phaseRules)}`}>{renderOrganizerMatches(visibleConsolanteMatches, 'consolante')}</Section>
@@ -5274,11 +5351,11 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <Section title="Étape 1 des tableaux finaux" subtitle="Principale : quarts de finale sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3." right={<><Button onClick={generatePrincipalQuarters}>Regénérer quarts principale</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button><Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button><Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
+                  <Section title="Étape 1 des tableaux finaux" subtitle={mainStageDistribution.directPrincipalSemis ? "Principale : demi-finales directes sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3." : "Principale : quarts de finale sur les terrains 1 et 2. Consolante : demi-finales sur le terrain 3."} right={<><Button onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Régénérer demies principale' : 'Regénérer quarts principale'}</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Régénérer demies consolante</Button>{!mainStageDistribution.directPrincipalSemis && <Button variant="success" onClick={generatePrincipalSemis}>Générer demies principale</Button>}<Button variant="success" onClick={generateConsolanteFinals}>Générer finales consolante</Button></>}>
                     <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
-                        <h3>{`Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
-                        {renderOrganizerMatches(knockout.principalQuarters, 'principalQuarters')}
+                        <h3>{mainStageDistribution.directPrincipalSemis ? `Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}` : `Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
+                        {renderOrganizerMatches(mainStageDistribution.directPrincipalSemis ? knockout.principalSemis : knockout.principalQuarters, mainStageDistribution.directPrincipalSemis ? 'principalSemis' : 'principalQuarters')}
                       </div>
                       <div className="knockout-panel">
                         <h3>{`Demi-finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteSemis, phaseRules)}`}</h3>
