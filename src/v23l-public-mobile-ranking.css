@@ -1,0 +1,23 @@
+/* V23L: force l'affichage des classements dans le mode Public sur smartphone */
+.public-ranking,
+.public-standings,
+.ranking-section,
+.standings-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+  .public-ranking,
+  .public-standings,
+  .ranking-section,
+  .standings-section,
+  .hidden-on-mobile-ranking {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
