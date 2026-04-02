@@ -1,1 +1,1 @@
-V23I: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
+V23J: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
