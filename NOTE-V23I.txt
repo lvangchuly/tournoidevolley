@@ -1,1 +1,1 @@
-V23J: synchronisation renforcée du tournoi partagé. Même identifiant = même liste d'équipes et même tournoi sur tous les appareils.
+V23K: synchronisation renforcée du tournoi partagé. Même identifiant = même liste d'équipes et même tournoi sur tous les appareils.

@@ -17,7 +17,7 @@ button, input, select { font: inherit; }
 }
 
 .app-shell { min-height: 100vh; padding: 24px 0 40px; }
-.public-page { min-height: 100vh; padding: 24px 0 40px; background: #f8fafc; color: #0f172a; }
+.public-page { min-height: 100vh; padding: 24px 0 40px; background: #1f2430; color: #0f172a; }
 
 .hero {
   background: linear-gradient(135deg, #0f172a, #1e293b);
@@ -116,7 +116,7 @@ button, input, select { font: inherit; }
 .referee-qr-link {
   width: 100%;
   font-size: 11px;
-  color: #ffffff;
+  color: #f7f7f7;
   text-align: center;
   line-height: 1.35;
   word-break: break-all;
@@ -380,7 +380,7 @@ table {
   background: white;
 }
 
-thead { background: #f8fafc; }
+thead { background: #1f2430; }
 th, td {
   border-bottom: 1px solid #e2e8f0;
   padding: 10px 12px;
@@ -420,7 +420,7 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 10px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 14px;
-  background: #f8fafc;
+  background: #1f2430;
   color: #0f172a;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -701,7 +701,7 @@ tbody tr:last-child td { border-bottom: none; }
   background: rgba(255,255,255,0.82);
 }
 .public-hero-light {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe 55%, #f8fafc);
+  background: linear-gradient(135deg, #eff6ff, #dbeafe 55%, #1f2430);
   color: #0f172a;
 }
 .public-hero-light h1,
@@ -738,7 +738,7 @@ tbody tr:last-child td { border-bottom: none; }
   border-color: #bfdbfe;
   box-shadow: 0 10px 26px rgba(37, 99, 235, 0.10);
 }
-.referee-page { min-height: 100vh; padding: 24px 0 40px; background: #f8fafc; }
+.referee-page { min-height: 100vh; padding: 24px 0 40px; background: #1f2430; }
 .referee-hero { background: linear-gradient(135deg, #065f46, #0f766e); }
 .referee-hero-with-logo {
   background: linear-gradient(135deg, #0f172a, #1e293b);
@@ -759,7 +759,7 @@ tbody tr:last-child td { border-bottom: none; }
   border-color: rgba(255,255,255,0.32);
 }
 .hero-pill-inline {
-  background: #f8fafc;
+  background: #1f2430;
   border: 1px solid #e2e8f0;
   color: #0f172a;
 }
@@ -794,7 +794,7 @@ tbody tr:last-child td { border-bottom: none; }
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 14px;
-  background: #f8fafc;
+  background: #1f2430;
   cursor: pointer;
 }
 
@@ -851,7 +851,7 @@ tbody tr:last-child td { border-bottom: none; }
   border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 18px;
-  background: #f8fafc;
+  background: #1f2430;
   display: grid;
   gap: 10px;
 }
@@ -955,12 +955,12 @@ tbody tr:last-child td { border-bottom: none; }
 .referee-selector-item-disabled {
   cursor: not-allowed;
   opacity: 0.72;
-  background: #f8fafc;
+  background: #1f2430;
 }
 
 .referee-selector-item-disabled:hover {
   border-color: #e2e8f0;
-  background: #f8fafc;
+  background: #1f2430;
 }
 
 .field-stack { display: grid; gap: 10px; margin-bottom: 12px; }
@@ -1037,7 +1037,7 @@ tbody tr:last-child td { border-bottom: none; }
 .cell-court {
   font-weight: 700;
   color: #0f172a;
-  background: #f8fafc;
+  background: #1f2430;
 }
 .cell-time,
 .cell-court { white-space: nowrap; }
@@ -1441,7 +1441,7 @@ tbody tr:last-child td { border-bottom: none; }
 .match-meta-cell {
   width: 112px;
   min-width: 112px;
-  background: #f8fafc;
+  background: #1f2430;
 }
 
 .match-meta-stack {
@@ -1699,7 +1699,7 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 12px 14px;
   border: 1px solid #e2e8f0;
   border-radius: 18px;
-  background: #f8fafc;
+  background: #1f2430;
 }
 
 .public-podium-team-label {
