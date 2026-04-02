@@ -1,1 +1,1 @@
-V23M: synchronisation renforcée du tournoi partagé. Même identifiant = même liste d'équipes et même tournoi sur tous les appareils.
+V23N: synchronisation renforcée du tournoi partagé. Même identifiant = même liste d'équipes et même tournoi sur tous les appareils.
