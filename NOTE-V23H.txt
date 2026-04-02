@@ -1,1 +1,1 @@
-V23L: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
+V23M: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
