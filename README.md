@@ -104,3 +104,6 @@ Le zip `dist` reste un build **statique**. La sauvegarde Firebase fonctionne lor
 
 Cette version v16b utilise Firebase Realtime Database via l'URL configurée dans `src/firebaseConfig.js`.
 Pour fonctionner, la base doit autoriser temporairement la lecture/écriture REST, ou une couche d'authentification Firebase devra être ajoutée ensuite pour des règles sécurisées.
+
+
+- V23I : identifiant du tournoi = nom du tournoi + code aléatoire, modifiable par l'organisateur.
