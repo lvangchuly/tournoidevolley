@@ -1,1 +1,1 @@
-V23N: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
+V23O: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.

@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { FIREBASE_DATABASE_URL } from './firebaseConfig';
 import './v23k-dark-background.css';
 import './v23l-public-mobile-ranking.css';
+import './v23o-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V23N';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23N', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23N', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V23O';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23O', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23O', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -23,7 +24,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V23N';
+const APP_VERSION = 'V23O';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -169,7 +170,16 @@ function addMinutesToTime(time, minutesToAdd) {
 
 function parseTimeToMinutes(time) {
   const [hours, minutes] = String(time || '09:00').split(':').map(Number);
-  return (hours * 60) + minutes;
+  
+  // V23O_PUBLIC_RANKING_FIX
+  useEffect(() => {
+    if (mode === 'public') {
+      try { setPublicView?.('default'); } catch (e) {}
+      try { setShowPublicRanking?.(true); } catch (e) {}
+    }
+  }, [mode]);
+
+return (hours * 60) + minutes;
 }
 
 function minutesToTime(value) {
@@ -4614,7 +4624,7 @@ export default function App() {
     return (
       <div className="cards-grid one-up standings-full-width-grid">
         {cards.map(({ pool, rows }) => (
-          <div key={pool.id} className="mini-card">
+          <div key={pool.id} className="mini-card public-ranking-card">
             <div className="mini-card-head">{formatPoolNameWithLevel(pool, teamMap)}</div>
             <div className="table-wrap">
               <table className="standings-table">
@@ -4942,7 +4952,7 @@ export default function App() {
     const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
     const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
     return (
-      <div className="mini-card">
+      <div className="mini-card public-ranking-card">
         <div className="mini-card-head">{title}</div>
         <div className="podium-steps podium-steps-model">
           <div className="podium-lane podium-lane-second">
@@ -5022,7 +5032,7 @@ export default function App() {
             </div>
             <div className="hero-controls">
               <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : 'public-pill-light'}`.trim()}>
-                <span>Fin estimée du tournoi</span>
+                <span>Fin estimée de la phase</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
               <div className="actions-stack">
@@ -5053,15 +5063,15 @@ export default function App() {
           <div className="stack-gap">
             {showSplitPublicPoolRankings ? (
               <Section title="Classements des poules" subtitle="Affichage par poule pour visualiser directement les équipes qualifiées. Les points du brassage ne sont pas repris dans ces classements.">
-                <div className="cards-grid two-up">
+                <div className="cards-grid two-up public-rankings-grid">
                   {showPublicPrincipalePoolRanking ? (
-                    <div className="mini-card">
+                    <div className="mini-card public-ranking-card">
                       <div className="mini-card-head">Poules principale</div>
                       {renderStandings(principaleStandings)}
                     </div>
                   ) : null}
                   {showPublicConsolantePoolRanking ? (
-                    <div className="mini-card">
+                    <div className="mini-card public-ranking-card">
                       <div className="mini-card-head">Poules consolante</div>
                       {renderStandings(consolanteStandings)}
                     </div>
@@ -5075,7 +5085,7 @@ export default function App() {
             )}
             {publicPodiumLeaders.tournamentFinished ? (
               <Section title="Podiums">
-                <div className="cards-grid two-up">
+                <div className="cards-grid two-up public-rankings-grid">
                   {renderPodium('Tableau principal', knockout.principalFinals)}
                   {renderPodium('Tableau consolante', knockout.consolanteFinals)}
                 </div>
@@ -5105,7 +5115,7 @@ export default function App() {
             </div>
             <div className="hero-controls">
               <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : ''}`.trim()}>
-                <span>Fin estimée du tournoi</span>
+                <span>Fin estimée de la phase</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
               <div className="actions-stack">
@@ -5127,7 +5137,7 @@ export default function App() {
               <Section title="Choisir un match" subtitle="Sélectionne le match à saisir. Les autres matchs seront masqués tant qu’un match est ouvert.">
                 <div className="referee-selector-grid">
                   {refereeMatchGroups.filter((group) => group.matches.length > 0).map((group) => (
-                    <div key={group.scope} className="mini-card">
+                    <div key={group.scope} className="mini-card public-ranking-card">
                       <div className="mini-card-head">{group.title}</div>
                       {!group.isUnlocked ? <div className="referee-lock-note">{group.lockReason}</div> : null}
                       <div className="referee-selector-list">
@@ -5338,7 +5348,7 @@ export default function App() {
               </Section>
 
               <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation.">
-                <div className="cards-grid two-up">
+                <div className="cards-grid two-up public-rankings-grid">
                   {isSmallTournamentMode ? (
                     <>
                       <PhaseRuleEditor title="Championnat Aller" value={phaseRules.championnatAller} disabled={phaseRuleLocks.championnatAller.locked} disabledReason={phaseRuleLocks.championnatAller.reason} onScoreChange={(value) => updatePhaseRule('championnatAller', 'winningScore', value)} onModeChange={(value) => updatePhaseRule('championnatAller', 'mode', value)} />
@@ -5372,7 +5382,7 @@ export default function App() {
                     <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
                     {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
                   </div>
-                  <div className="mini-card"><OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} compact /><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
+                  <div className="mini-card public-ranking-card"><OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} compact /><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
             </>
@@ -5488,7 +5498,7 @@ export default function App() {
                   </Section>
 
                   <Section title="Podium" subtitle="Le podium s’affiche dès que la finale est validée.">
-                    <div className="cards-grid two-up">
+                    <div className="cards-grid two-up public-rankings-grid">
                       {renderPodium('Tournoi', singleKnockout.finals)}
                     </div>
                   </Section>
@@ -5528,7 +5538,7 @@ export default function App() {
                   </Section>
 
                   <Section title="Podiums">
-                    <div className="cards-grid two-up">
+                    <div className="cards-grid two-up public-rankings-grid">
                       {renderPodium('Tableau principal', knockout.principalFinals)}
                       {renderPodium('Tableau consolante', knockout.consolanteFinals)}
                     </div>
@@ -5541,8 +5551,8 @@ export default function App() {
           {activeTab === 'export' && (
             <Section title="Sauvegarde" subtitle="Export, import, sauvegarde locale et partage Firebase du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button><Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => saveTournamentToCloud(true)}>Sauvegarder sur Firebase</Button><Button variant="secondary" onClick={() => loadTournamentFromCloud(sharedTournamentId, true)}>Charger Firebase</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
-              <div className="cards-grid two-up">
-                <div className="mini-card">
+              <div className="cards-grid two-up public-rankings-grid">
+                <div className="mini-card public-ranking-card">
                   <div className="mini-card-head">Fonctions incluses</div>
                   <ul className="simple-list">
                     <li>13 à 18 équipes en mode tournoi, ou championnat aller-retour jusqu’à 12 équipes. Avec 17 équipes : 12 en principale et 5 en consolante avec une première phase de championnat avant les demi-finales.</li>
@@ -5552,7 +5562,7 @@ export default function App() {
                     <li>Modes public, arbitres et organisateur</li>
                   </ul>
                 </div>
-                <div className="mini-card">
+                <div className="mini-card public-ranking-card">
                   <div className="mini-card-head">Sauvegarde et export</div>
                   <div className="field-stack">
                     <label>
