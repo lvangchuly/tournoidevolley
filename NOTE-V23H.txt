@@ -1,1 +1,1 @@
-V23R: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
+V23S: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
