@@ -1,1 +1,1 @@
-V23V: l'accès Public affiche le classement cumulé de brassage comme l'accès Organisateur tant que Principale et Consolante ne sont pas encore générées.
+V23W: l'accès Public affiche le classement cumulé de brassage comme l'accès Organisateur tant que Principale et Consolante ne sont pas encore générées.
