@@ -1,1 +1,1 @@
-V23W: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
+V23X: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
