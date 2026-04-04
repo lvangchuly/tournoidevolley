@@ -106,4 +106,4 @@ Cette version v16b utilise Firebase Realtime Database via l'URL configurée dans
 Pour fonctionner, la base doit autoriser temporairement la lecture/écriture REST, ou une couche d'authentification Firebase devra être ajoutée ensuite pour des règles sécurisées.
 
 
-- V23S : identifiant du tournoi = nom du tournoi + code aléatoire, modifiable par l'organisateur.
+- V23T : identifiant du tournoi = nom du tournoi + code aléatoire, modifiable par l'organisateur.
