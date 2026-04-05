@@ -2524,3 +2524,99 @@ tbody tr:last-child td { border-bottom: none; }
     height: auto;
   }
 }
+
+
+.compact-brassage-columns-v24c {
+  grid-template-columns: 190px minmax(0, 1fr) 170px;
+}
+
+.compact-match-cards-grid-v24c {
+  grid-template-columns: repeat(3, minmax(145px, 1fr));
+  gap: 6px;
+}
+
+.compact-match-card-v24c.compact-match-card-v24e {
+  gap: 5px;
+  padding: 5px;
+  width: 75%;
+  min-width: 145px;
+  justify-self: start;
+}
+
+.compact-match-header-v24c.compact-match-header-wide-v24e {
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  gap: 3px;
+}
+
+.compact-match-chip-v24c {
+  min-height: 24px;
+  min-width: 30px;
+  padding: 2px 3px;
+  font-size: 11px;
+}
+
+.compact-match-referee-badge-v24d.compact-match-referee-badge-v24e {
+  min-height: 24px;
+  padding: 2px 4px;
+  font-size: 10px;
+  line-height: 1.05;
+  white-space: normal;
+}
+
+.compact-team-strip-badge-v24c.compact-team-strip-badge-v24e {
+  min-height: 20px;
+  font-size: 9px;
+  padding: 3px 4px;
+}
+
+.compact-match-score-row-v24c.compact-match-score-row-v24e {
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.compact-score-box-v24c.compact-score-box-v24e {
+  padding: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.compact-score-box-v24c.compact-score-box-v24e input {
+  min-height: 20px;
+  width: 100%;
+  text-align: center;
+  font-size: 14px;
+}
+
+.compact-match-footer-v24c.compact-match-footer-v24e {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.compact-overall-ranking-column-v24c {
+  height: calc(100vh - 120px);
+}
+
+.overall-ranking-table-compact .overall-rank-col-compact {
+  width: 2ch;
+  min-width: 2ch;
+  max-width: 2ch;
+}
+
+.overall-ranking-table-compact .overall-points-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+}
+
+.compact-ranking-grid {
+  grid-template-columns: 2ch minmax(0, 1fr) 3ch;
+}
+
+@media (max-width: 1200px) {
+  .compact-match-card-v24c.compact-match-card-v24e {
+    width: 100%;
+    min-width: 0;
+  }
+}
