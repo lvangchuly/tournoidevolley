@@ -1,1 +1,1 @@
-V23X: l'accès Public affiche le classement cumulé de brassage comme l'accès Organisateur tant que Principale et Consolante ne sont pas encore générées.
+V23Y: l'accès Public affiche le classement cumulé de brassage comme l'accès Organisateur tant que Principale et Consolante ne sont pas encore générées.

@@ -1,0 +1,1 @@
+V23Y : texte blanc renforcé dans les cases de la colonne Match (Match / Terrain / Poule) sur fond noir.
