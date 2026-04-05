@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24O';
+const APP_VERSION = 'V24P';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -5148,43 +5148,42 @@ export default function App() {
 
     if (compact) {
       return (
-        <div className="table-wrap table-wrap-compact-overall">
-          <table className="overall-ranking-table-compact overall-ranking-table-compact-v24k">
-            <thead>
-              <tr>
-                <th className="overall-rank-col-compact">#</th>
-                <th>Équipe</th>
-                <th className="overall-points-col-compact" aria-label="Points cumulés">Pts</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => {
-                const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
-                const badge = (
-                  <span className="team-badge-compact-main">
-                    <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline team-badge-inline-compact-overall team-badge-inline-compact-overall-v24k">
+        <div className="overall-ranking-compact-v24p">
+          <div className="overall-ranking-compact-head-v24p">
+            <div className="overall-ranking-rank-v24p">#</div>
+            <div className="overall-ranking-team-head-v24p">Équipe</div>
+            <div className="overall-ranking-points-head-v24p" aria-label="Points cumulés">Pts</div>
+          </div>
+          <div className="overall-ranking-compact-body-v24p">
+            {rows.map((row, index) => {
+              const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
+              const content = (
+                <>
+                  <div className="overall-ranking-rank-v24p">{index + 1}</div>
+                  <div className="overall-ranking-team-v24p">
+                    <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline team-badge-inline-compact-overall-v24p">
                       {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
                     </TeamBadge>
-                  </span>
-                );
-                return (
-                  <tr key={row.teamId}>
-                    <td className="overall-rank-col-compact">{index + 1}</td>
-                    <td className="overall-team-col-compact">
-                      {onTeamClick ? (
-                        <button type="button" className="team-badge-button team-badge-button-compact-ranking team-badge-button-compact-ranking-v24k" onClick={() => onTeamClick(row.teamId)}>
-                          {badge}
-                        </button>
-                      ) : (
-                        <div className="team-badge-button-compact-ranking team-badge-button-compact-ranking-v24k">{badge}</div>
-                      )}
-                    </td>
-                    <td className="overall-points-col-compact">{row.tournamentPoints}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  </div>
+                  <div className="overall-ranking-points-v24p">{row.tournamentPoints}</div>
+                </>
+              );
+              return onTeamClick ? (
+                <button
+                  key={row.teamId}
+                  type="button"
+                  className="overall-ranking-row-v24p overall-ranking-row-button-v24p"
+                  onClick={() => onTeamClick(row.teamId)}
+                >
+                  {content}
+                </button>
+              ) : (
+                <div key={row.teamId} className="overall-ranking-row-v24p">
+                  {content}
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }

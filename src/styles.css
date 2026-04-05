@@ -3594,3 +3594,137 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: 10.5px !important;
   padding: 4px 8px !important;
 }
+
+
+/* V24P — classement général compact fidèle au modèle image */
+.compact-overall-ranking-column-v24n {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+}
+
+.compact-overall-ranking-scroll-v24n {
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
+}
+
+.overall-ranking-compact-v24p {
+  width: 100%;
+  min-width: 0;
+}
+
+.overall-ranking-compact-head-v24p,
+.overall-ranking-row-v24p {
+  display: grid;
+  grid-template-columns: 3ch minmax(0, 1fr) 3ch;
+  column-gap: 3px;
+  align-items: center;
+}
+
+.overall-ranking-compact-head-v24p {
+  background: #0b1732;
+  color: #ffffff;
+  border-radius: 14px 14px 0 0;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.overall-ranking-team-head-v24p {
+  text-align: left;
+}
+
+.overall-ranking-points-head-v24p,
+.overall-ranking-points-v24p,
+.overall-ranking-rank-v24p {
+  font-weight: 800;
+}
+
+.overall-ranking-points-head-v24p,
+.overall-ranking-points-v24p {
+  text-align: right;
+}
+
+.overall-ranking-compact-body-v24p {
+  display: grid;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.overall-ranking-row-v24p {
+  width: 100%;
+  min-width: 0;
+  padding: 0 4px;
+  min-height: 23px;
+}
+
+.overall-ranking-row-button-v24p {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.overall-ranking-rank-v24p {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  background: #020b24;
+  color: #ffffff;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 23px;
+  font-size: 12px;
+}
+
+.overall-ranking-team-v24p {
+  min-width: 0;
+}
+
+.team-badge-inline-compact-overall-v24p {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 21px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.overall-ranking-points-v24p {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  color: #0f172a;
+  font-size: 12px;
+  padding-right: 1px;
+}
+
+@media (max-width: 1200px) {
+  .compact-overall-ranking-column-v24n {
+    width: 208px;
+    min-width: 208px;
+    max-width: 208px;
+  }
+
+  .overall-ranking-compact-head-v24p,
+  .overall-ranking-row-v24p {
+    grid-template-columns: 3ch minmax(0, 1fr) 3ch;
+  }
+
+  .team-badge-inline-compact-overall-v24p {
+    padding-left: 6px;
+    padding-right: 6px;
+    font-size: 10px;
+  }
+}
