@@ -2934,3 +2934,145 @@ tbody tr:last-child td { border-bottom: none; }
     grid-template-columns: 176px minmax(0, 1fr) 144px;
   }
 }
+
+
+/* V24J brassage layout refinements */
+.compact-brassage-layout-v24c {
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr) 228px;
+  gap: 8px;
+  align-items: start;
+}
+
+.compact-brassage-board-v24c,
+.compact-brassage-pool-v24c {
+  width: 100%;
+  max-width: 100%;
+}
+
+.compact-brassage-columns-v24c {
+  grid-template-columns: 188px minmax(0, 1fr) 144px;
+  column-gap: 11px;
+  row-gap: 4px;
+}
+
+.compact-match-cards-grid-v24c {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.compact-match-card-v24c.compact-match-card-v24e {
+  padding: 6px;
+  gap: 4px;
+}
+
+.compact-mini-table.compact-ranking-table-v24h .compact-mini-table-head,
+.compact-mini-table.compact-ranking-table-v24h .compact-mini-table-row {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.compact-overall-ranking-column-v24c {
+  width: 228px;
+  min-width: 228px;
+  max-width: 228px;
+  height: calc(100vh - 122px);
+}
+
+.compact-overall-ranking-scroll-v24c {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: calc(100vh - 164px);
+  padding-right: 0;
+}
+
+.overall-ranking-table-compact {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.overall-ranking-table-compact th,
+.overall-ranking-table-compact td {
+  padding: 1px 2px;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.overall-ranking-table-compact thead th {
+  font-size: 9px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.overall-ranking-table-compact .overall-rank-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+}
+
+.overall-ranking-table-compact td:nth-child(2),
+.overall-ranking-table-compact th:nth-child(2) {
+  width: auto;
+  min-width: 0;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .team-badge-button-compact-ranking,
+.overall-ranking-table-compact td:nth-child(2) .inline-cluster {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  width: 100%;
+}
+
+.overall-ranking-table-compact .team-badge-compact-main {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.overall-ranking-table-compact .team-badge-inline-compact-overall,
+.overall-ranking-table-compact .team-badge-inline {
+  min-height: 16px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.overall-ranking-table-compact .team-badge-compact-points {
+  flex: 0 0 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: right;
+  font-size: 10px;
+}
+
+.overall-ranking-table-compact .team-badge-button-compact-ranking {
+  padding: 0;
+}
+
+.table-wrap-compact-overall {
+  overflow-x: hidden;
+}
+
+@media (max-width: 1380px) {
+  .compact-brassage-layout-v24c {
+    grid-template-columns: minmax(0, 1fr) 216px;
+  }
+
+  .compact-overall-ranking-column-v24c {
+    width: 216px;
+    min-width: 216px;
+    max-width: 216px;
+  }
+
+  .compact-brassage-columns-v24c {
+    grid-template-columns: 176px minmax(0, 1fr) 138px;
+    column-gap: 8px;
+  }
+
+  .compact-match-cards-grid-v24c {
+    gap: 7px;
+  }
+}
