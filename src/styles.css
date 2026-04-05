@@ -3295,3 +3295,250 @@ tbody tr:last-child td { border-bottom: none; }
   padding: 3px 5px;
   font-size: 10px;
 }
+
+/* V24N — affichage brassage colonnes poules / terrains / classement général */
+.compact-brassage-layout-v24n {
+  display: grid;
+  grid-template-columns: minmax(240px, 18vw) minmax(0, 1fr) minmax(205px, 13vw);
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+
+.compact-brassage-pools-column-v24n,
+.compact-brassage-matches-column-v24n,
+.compact-overall-ranking-column-v24n {
+  padding: 10px;
+  border-radius: 22px;
+}
+
+.compact-brassage-pools-column-v24n {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-brassage-pool-list-card-v24n {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #d8dee9;
+  background: #fff;
+  border-radius: 16px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.compact-brassage-pool-list-card-v24n.is-selected {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.12);
+}
+.compact-brassage-pool-list-head-v24n {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+.compact-brassage-pool-teams-v24n {
+  display: grid;
+  gap: 5px;
+}
+.compact-brassage-pool-team-row-v24n {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+}
+.compact-rank-chip-v24n {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.compact-brassage-pool-team-badge-v24n {
+  width: 100%;
+  justify-content: flex-start;
+  font-size: 16px;
+  line-height: 1.15;
+  padding: 8px 12px;
+}
+
+.compact-brassage-title-v24n {
+  margin-bottom: 8px;
+}
+.compact-terrain-columns-v24n {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+.compact-terrain-column-v24n {
+  display: grid;
+  gap: 6px;
+}
+.compact-terrain-column-title-v24n {
+  font-size: 15px;
+  font-weight: 800;
+  color: #334155;
+  text-align: center;
+}
+.compact-terrain-match-list-v24n {
+  display: grid;
+  gap: 8px;
+}
+.compact-match-card-v24n {
+  border: 1px solid #bfc9d8;
+  border-radius: 16px;
+  background: #fff;
+  padding: 4px 6px 6px;
+  min-width: 0;
+}
+.compact-match-header-v24n {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.compact-match-chip-v24n {
+  width: 30px;
+  min-width: 30px;
+  height: 24px;
+  border-radius: 999px;
+  background: #5a8ee8;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.compact-match-referee-badge-v24n {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+  min-height: 24px;
+  padding: 5px 8px;
+  white-space: normal;
+}
+.compact-match-team-row-v24n {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.compact-team-strip-badge-v24n {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 8px;
+}
+.compact-match-score-row-v24n {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.compact-score-box-v24n {
+  display: block;
+}
+.compact-score-box-v24n input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  min-height: 32px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 4px 6px;
+}
+.compact-match-footer-v24n {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.compact-match-footer-v24n .badge {
+  margin-left: auto;
+  font-size: 12px;
+}
+.compact-pending-score-v24n {
+  margin-top: 4px;
+}
+
+.compact-overall-ranking-column-v24n {
+  overflow: hidden;
+}
+.compact-overall-ranking-scroll-v24n {
+  max-height: calc(100vh - 250px);
+  overflow: hidden;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k {
+  table-layout: fixed;
+  width: 100%;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-rank-col-compact {
+  width: 2.6ch !important;
+  min-width: 2.6ch !important;
+  max-width: 2.6ch !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-points-col-compact {
+  width: 3.2ch !important;
+  min-width: 3.2ch !important;
+  max-width: 3.2ch !important;
+  text-align: center;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-team-col-compact {
+  width: auto;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th,
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.team-badge-button-compact-ranking-v24k,
+.team-badge-button-compact-ranking-v24k .team-badge-compact-main {
+  display: block;
+  width: 100%;
+}
+.team-badge-inline-compact-overall-v24k {
+  width: 100%;
+  max-width: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 5px 10px;
+}
+
+@media (max-width: 1400px) {
+  .compact-brassage-layout-v24n {
+    grid-template-columns: minmax(220px, 18vw) minmax(0, 1fr) minmax(190px, 14vw);
+    gap: 10px;
+  }
+  .compact-terrain-columns-v24n {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .compact-brassage-layout-v24n {
+    grid-template-columns: 1fr;
+  }
+  .compact-overall-ranking-scroll-v24n {
+    max-height: none;
+    overflow: auto;
+  }
+  .compact-terrain-columns-v24n {
+    grid-template-columns: 1fr;
+  }
+}
