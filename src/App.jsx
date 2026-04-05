@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24Y';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24Z';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24Y';
+const APP_VERSION = 'V24Z';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -839,18 +839,26 @@ function scheduleAlternatingPoolsOnCourt(pools, phase, court, startSlot) {
   }));
 }
 
-function buildPoolMatchDescriptors(pools, phase, preferredCourts) {
+function buildPoolMatchDescriptors(pools, phase, preferredCourts, extra = {}) {
+  const safePreferredCourts = Array.isArray(preferredCourts) && preferredCourts.length ? preferredCourts : [1, 2, 3];
   return (Array.isArray(pools) ? pools : [])
     .filter((pool) => pool && Array.isArray(pool.teamIds) && pool.teamIds.filter(Boolean).length >= 2)
-    .map((pool) => ({
-      pool,
-      phase,
-      preferredCourts: Array.isArray(preferredCourts) && preferredCourts.length ? preferredCourts : [1, 2, 3],
-      matches: createThreeTeamPoolMatches(pool, phase),
-      nextIndex: 0,
-      lastSlot: 0,
-      teamIds: Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [],
-    }));
+    .map((pool) => {
+      const teamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
+      const preferred = typeof extra.getPreferredCourts === 'function'
+        ? extra.getPreferredCourts(pool, safePreferredCourts, teamIds)
+        : safePreferredCourts;
+      return {
+        pool,
+        phase,
+        preferredCourts: Array.isArray(preferred) && preferred.length ? preferred : safePreferredCourts,
+        matches: createThreeTeamPoolMatches(pool, phase),
+        nextIndex: 0,
+        lastSlot: 0,
+        teamIds,
+        teamCount: teamIds.length,
+      };
+    });
 }
 
 function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
@@ -869,6 +877,10 @@ function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
         .filter((entry) => entry.nextIndex < entry.matches.length && entry.preferredCourts.includes(court))
         .filter((entry) => entry.teamIds.every((teamId) => !usedTeamIds.has(teamId)))
         .sort((a, b) => {
+          const aRemaining = Math.max(0, (a.matches?.length || 0) - (a.nextIndex || 0));
+          const bRemaining = Math.max(0, (b.matches?.length || 0) - (b.nextIndex || 0));
+          if (aRemaining !== bRemaining) return bRemaining - aRemaining;
+          if ((a.teamCount || 0) !== (b.teamCount || 0)) return (b.teamCount || 0) - (a.teamCount || 0);
           const aGap = slot - (a.lastSlot || 0);
           const bGap = slot - (b.lastSlot || 0);
           if (aGap !== bGap) return bGap - aGap;
@@ -908,7 +920,13 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
 
   const descriptors = safePools.flatMap((pool, index) => {
     const preferredCourt = ((index % 3) + 1);
-    return buildPoolMatchDescriptors([pool], phase, [preferredCourt]);
+    return buildPoolMatchDescriptors([pool], phase, [preferredCourt], {
+      getPreferredCourts: (currentPool, baseCourts, teamIds) => {
+        if ((teamIds?.length || 0) <= 3 || safePools.length >= 6) return baseCourts;
+        const fallbackCourts = [1, 2, 3].filter((court) => !baseCourts.includes(court));
+        return [...baseCourts, ...fallbackCourts];
+      },
+    });
   });
 
   return schedulePoolDescriptorsOnCourts(descriptors, [1, 2, 3], startSlot);
