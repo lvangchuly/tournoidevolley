@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24P';
+const APP_VERSION = 'V24Q';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1787,6 +1787,7 @@ export default function App() {
   const [refereeScoreDrafts, setRefereeScoreDrafts] = useState({});
   const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const [selectedBrassagePoolByScope, setSelectedBrassagePoolByScope] = useState({ brassage1: '', brassage2: '' });
+  const [selectedBrassageTeamByScope, setSelectedBrassageTeamByScope] = useState({ brassage1: '', brassage2: '' });
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
@@ -4765,6 +4766,7 @@ export default function App() {
     const standingsMap = new Map((Array.isArray(standings) ? standings : []).map((entry) => [entry.pool?.id, entry]));
     const overallRanking = scope === 'brassage1' ? rankingAfterBrassage1 : rankingAfterBrassages;
     const preferredPoolId = selectedBrassagePoolByScope?.[scope] || safePools[0]?.id || '';
+    const selectedTeamId = selectedBrassageTeamByScope?.[scope] || '';
     const terrainMatchMap = new Map();
 
     [1, 2, 3].forEach((courtNumber) => {
@@ -4807,7 +4809,10 @@ export default function App() {
                 type="button"
                 key={pool.id}
                 className={`compact-brassage-pool-list-card-v24n ${isSelected ? 'is-selected' : ''}`.trim()}
-                onClick={() => setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: pool.id }))}
+                onClick={() => {
+                setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: pool.id }));
+                setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: '' }));
+              }}
               >
                 <div className="compact-brassage-pool-list-head-v24n">{formatPoolNameWithLevel(pool, teamMap)}</div>
                 <div className="compact-brassage-pool-teams-v24n">
@@ -4848,9 +4853,10 @@ export default function App() {
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
                       const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const isHighlightedMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId || refereeTeamId === selectedTeamId);
 
                       return (
-                        <div key={match.id} id={`match-card-${match.id}`} className="compact-match-card-v24n">
+                        <div key={match.id} id={`match-card-${match.id}`} className={`compact-match-card-v24n ${isHighlightedMatch ? 'is-team-highlighted' : ''}`.trim()}>
                           <div className="compact-match-header-v24n">
                             <span className="compact-match-chip compact-match-chip-v24n">T{match.court || courtNumber}</span>
                             <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-match-referee-badge-v24n" />
@@ -4898,6 +4904,7 @@ export default function App() {
                 const pool = safePools.find((entry) => Array.isArray(entry.teamIds) && entry.teamIds.includes(teamId));
                 if (!pool) return;
                 setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: pool.id }));
+                setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: teamId }));
               },
             })}
           </div>
