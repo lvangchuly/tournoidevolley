@@ -1725,3 +1725,141 @@ tbody tr:last-child td { border-bottom: none; }
 @media (max-width: 900px) {
   .phase-estimate-columns { grid-template-columns: 1fr; }
 }
+
+.compact-brassage-board {
+  display: grid;
+  gap: 16px;
+}
+
+.compact-brassage-pool {
+  padding: 16px;
+}
+
+.compact-brassage-head {
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.compact-brassage-columns {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(420px, 1.45fr) minmax(220px, 0.9fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.compact-brassage-column {
+  min-width: 0;
+}
+
+.compact-brassage-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.compact-team-list {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-team-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.compact-rank-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.compact-mini-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.compact-mini-table-head,
+.compact-mini-table-row {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+}
+
+.compact-mini-table-head {
+  background: #1f2430;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.compact-mini-table-row {
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.compact-match-grid {
+  grid-template-columns: 56px minmax(0, 1.5fr) minmax(0, 1fr) 74px minmax(110px, 0.9fr);
+}
+
+.compact-ranking-grid {
+  grid-template-columns: 40px minmax(0, 1fr) 52px;
+}
+
+.compact-match-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+}
+
+.compact-match-label span,
+.compact-match-label strong,
+.compact-ranking-team,
+.compact-mini-table-row > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.compact-cell-strong {
+  font-weight: 800;
+}
+
+.compact-empty {
+  border: none;
+  border-radius: 0;
+  padding: 12px;
+}
+
+@media (max-width: 1200px) {
+  .compact-brassage-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .compact-match-grid {
+    grid-template-columns: 48px minmax(0, 1.5fr) minmax(0, 1fr) 64px minmax(92px, 0.8fr);
+  }
+
+  .compact-mini-table-head,
+  .compact-mini-table-row {
+    padding: 8px;
+    gap: 8px;
+    font-size: 12px;
+  }
+}
