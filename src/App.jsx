@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24C';
+const APP_VERSION = 'V24D';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -4745,15 +4745,10 @@ export default function App() {
                         const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                         return (
                           <div key={match.id} id={`match-card-${match.id}`} className="compact-match-card-v24c">
-                            <div className="compact-match-header-v24c">
+                            <div className="compact-match-header-v24c compact-match-header-wide-v24d">
                               <span className="compact-match-chip compact-match-chip-v24c">T{match.court || '—'}</span>
-                              <div className="compact-match-label-bar compact-match-label-bar-v24c">
-                                <span className="compact-match-label-chip">Nom arbitre</span>
-                                <span className="compact-match-label-chip compact-match-number-chip">M{match.slot || '—'}</span>
-                              </div>
-                            </div>
-                            <div className="compact-match-team-strip compact-match-team-strip-referee">
-                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-team-strip-badge compact-team-strip-badge-v24c" />
+                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-match-referee-badge-v24d" />
+                              <span className="compact-match-chip compact-match-chip-v24c">M{match.slot || '—'}</span>
                             </div>
                             <div className="compact-match-team-row-v24c">
                               <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge compact-team-strip-badge-v24c" />
@@ -5070,11 +5065,11 @@ export default function App() {
         <table className={compact ? 'overall-ranking-table-compact' : ''}>
           <thead>
             <tr>
-              <th>#</th>
+              <th className={compact ? 'overall-rank-col-compact' : ''}>#</th>
               <th>Équipe</th>
-              <th>Niveau</th>
+              <th className={compact ? 'overall-level-col-compact' : ''}>Niveau</th>
               {!compact ? <><th>J</th><th>V</th></> : null}
-              <th>Pts T.</th>
+              <th className={compact ? 'overall-points-col-compact' : ''}>Pts T.</th>
               {!compact ? <th>Diff</th> : null}
               {withStatus ? <th>Statut</th> : null}
             </tr>
@@ -5084,7 +5079,7 @@ export default function App() {
               const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
               return (
                 <tr key={row.teamId}>
-                  <td>{index + 1}</td>
+                  <td className={compact ? 'overall-rank-col-compact' : ''}>{index + 1}</td>
                   <td>
                     <div className="inline-cluster">
                       {onTeamClick ? (
@@ -5100,9 +5095,9 @@ export default function App() {
                       )}
                     </div>
                   </td>
-                  <td>{row.level}</td>
+                  <td className={compact ? 'overall-level-col-compact' : ''}>{row.level}</td>
                   {!compact ? <><td>{row.played}</td><td>{row.wins}</td></> : null}
-                  <td>{row.tournamentPoints}</td>
+                  <td className={compact ? 'overall-points-col-compact' : ''}>{row.tournamentPoints}</td>
                   {!compact ? <td>{row.pointDiff}</td> : null}
                   {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
                 </tr>
@@ -5371,7 +5366,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <div className="container">
+      <div className={`container ${['brassage1', 'brassage2', 'principale', 'consolante', 'finales'].includes(activeTab) ? 'organizer-phase-fullwidth' : ''}`.trim()}>
         {activeTab === 'dashboard' ? (
         <header className={`hero hero-organizer-banner ${tournamentLogo ? 'hero-organizer-banner-with-logo' : ''}`.trim()} style={organizerBannerStyle}>
           <div className="banner-side banner-left">
@@ -5626,7 +5621,7 @@ export default function App() {
 
           {activeTab === 'brassage1' && !isSmallTournamentMode && (
             <>
-              <Section title={`Brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`} subtitle="À gauche les équipes de chaque poule avec une recherche d’équipe, au centre les matchs avec l’équipe arbitre, le terrain et la rotation, à droite le classement poule. Le classement général n’est affiché qu’une seule fois dans la colonne de droite." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
+              <Section title={`Brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`} subtitle="À gauche les équipes de chaque poule, au centre les matchs avec l’équipe arbitre, le terrain et la rotation, à droite le classement poule et le classement général cliquable." right={<Button onClick={generateBrassage2}>Générer brassage 2</Button>}>
                 {renderCompactBrassageBoard(brassage1.pools, visibleBrassage1Matches, brassage1Standings, 'brassage1')}
               </Section>
             </>

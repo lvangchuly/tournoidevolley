@@ -12,7 +12,7 @@ a { color: inherit; }
 button, input, select { font: inherit; }
 
 .container {
-  width: min(1400px, calc(100% - 32px));
+  width: min(100vw - 16px, 1800px);
   margin: 0 auto;
 }
 
@@ -2340,5 +2340,187 @@ tbody tr:last-child td { border-bottom: none; }
   .compact-overall-ranking-column-v24c {
     height: auto;
     min-height: 0;
+  }
+}
+
+
+.container.organizer-phase-fullwidth {
+  width: min(100vw - 8px, 1920px);
+}
+
+.compact-ranking-grid {
+  grid-template-columns: 2ch minmax(0, 1fr) 3ch;
+}
+
+.compact-mini-table-head.compact-ranking-grid,
+.compact-mini-table-row.compact-ranking-grid {
+  gap: 8px;
+}
+
+.compact-brassage-layout-v24c {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+}
+
+.compact-brassage-pool-v24c {
+  width: 100%;
+}
+
+.compact-brassage-columns-v24c {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 190px;
+  gap: 10px;
+  align-items: start;
+}
+
+.compact-match-cards-grid-v24c {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.compact-match-card-v24c {
+  display: grid;
+  gap: 6px;
+  padding: 6px;
+}
+
+.compact-match-header-v24c.compact-match-header-wide-v24d {
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.compact-match-chip-v24c {
+  min-height: 30px;
+  min-width: 40px;
+  padding: 4px 4px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.compact-match-referee-badge-v24d {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 4px 6px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.compact-team-strip-badge-v24c {
+  min-height: 24px;
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 4px 6px;
+  text-transform: uppercase;
+}
+
+.compact-match-team-row-v24c {
+  gap: 4px;
+}
+
+.compact-match-score-row-v24c {
+  gap: 4px;
+  padding: 2px 0;
+}
+
+.compact-score-box-v24c {
+  padding: 5px 6px;
+}
+
+.compact-score-box-v24c span {
+  font-size: 10px;
+  margin-bottom: 2px;
+}
+
+.compact-score-box-v24c input {
+  min-height: 22px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.compact-match-footer-v24c {
+  gap: 6px;
+}
+
+.compact-overall-ranking-column-v24c {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-self: stretch;
+  height: calc(100vh - 150px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.compact-overall-ranking-scroll-v24c {
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.overall-ranking-table-compact {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.overall-ranking-table-compact th,
+.overall-ranking-table-compact td {
+  padding: 8px 6px;
+}
+
+.overall-ranking-table-compact .overall-rank-col-compact {
+  width: 2ch;
+  min-width: 2ch;
+  max-width: 2ch;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.overall-ranking-table-compact .overall-level-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.overall-ranking-table-compact .overall-points-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (min-width: 1280px) {
+  .compact-brassage-layout-v24c {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .compact-brassage-columns-v24c {
+    grid-template-columns: 190px minmax(0, 1fr) 175px;
+  }
+  .compact-match-referee-badge-v24d {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .compact-brassage-layout-v24c {
+    grid-template-columns: 1fr;
+  }
+  .compact-overall-ranking-column-v24c {
+    height: auto;
   }
 }
