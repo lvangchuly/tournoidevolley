@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24R';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24S';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24R';
+const APP_VERSION = 'V24S';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -4926,6 +4926,85 @@ export default function App() {
     );
   }
 
+  function renderCompactFinalStage(matches, scope) {
+    const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
+    if (!safeMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
+
+    const terrainMatchMap = new Map();
+    [1, 2, 3].forEach((courtNumber) => {
+      const courtMatches = safeMatches
+        .filter((match) => Number(match.court || 0) === courtNumber)
+        .slice()
+        .sort((a, b) => {
+          if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+          return String(a.id || '').localeCompare(String(b.id || ''));
+        });
+      terrainMatchMap.set(courtNumber, courtMatches);
+    });
+
+    return (
+      <div className="mini-card compact-final-stage-board-v24s">
+        <div className="compact-brassage-title compact-brassage-title-v24n">Matchs</div>
+        <div className="compact-terrain-columns-v24n compact-final-terrain-columns-v24s">
+          {[1, 2, 3].map((courtNumber) => {
+            const courtMatches = terrainMatchMap.get(courtNumber) || [];
+            return (
+              <div key={courtNumber} className="compact-terrain-column-v24n compact-final-terrain-column-v24s">
+                <div className="compact-terrain-column-title-v24n">Terrain {courtNumber}</div>
+                <div className="compact-terrain-match-list-v24n compact-final-terrain-match-list-v24s">
+                  {courtMatches.length ? courtMatches.map((match, index) => {
+                    const teamA = resolveTeam(match.teamAId);
+                    const teamB = resolveTeam(match.teamBId);
+                    const status = getMatchStatusLabel(match, phaseRules);
+                    const pendingStatus = getPendingStatus(match);
+                    const pendingA = toNumber(match.submittedScoreA);
+                    const pendingB = toNumber(match.submittedScoreB);
+                    const isValid = status === 'Valide';
+                    const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const matchNumber = index + 1;
+
+                    return (
+                      <div key={match.id} id={`match-card-${match.id}`} className="compact-match-card-v24n compact-final-match-card-v24s">
+                        <div className="compact-match-header-v24n">
+                          <span className="compact-match-chip compact-match-chip-v24n">T{match.court || courtNumber}</span>
+                          <span className="compact-final-stage-label-v24s">{match.group || match.phase || 'Match'}</span>
+                          <span className="compact-match-chip compact-match-chip-v24n">M{matchNumber}</span>
+                        </div>
+                        <div className="compact-match-team-row-v24n">
+                          <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge-v24n" />
+                          <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge-v24n" />
+                        </div>
+                        <div className="compact-match-score-row-v24n">
+                          <label className="compact-score-box compact-score-box-v24n">
+                            <input type="number" min="0" inputMode="numeric" value={match.scoreA ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
+                          </label>
+                          <label className="compact-score-box compact-score-box-v24n">
+                            <input type="number" min="0" inputMode="numeric" value={match.scoreB ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
+                          </label>
+                        </div>
+                        <div className="compact-match-footer-v24n">
+                          <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
+                          <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                        </div>
+                        {!isValid && pendingStatus === 'Match en cours' ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
+                        {!isValid && canApprovePending ? (
+                          <div className="actions-row compact-actions compact-match-card-actions">
+                            <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                            <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  }) : <div className="empty-state compact-final-empty-v24s">Aucun match sur ce terrain.</div>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   function renderOrganizerMatches(matches, scope) {
     const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
     const availableTeamIds = new Set();
@@ -5819,11 +5898,11 @@ export default function App() {
                     <div className="cards-grid one-up knockout-step-grid">
                       <div className="knockout-panel">
                         <h3>{mainStageDistribution.directPrincipalSemis ? `Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}` : `Quarts de finale principale : ${formatRemainingMatchesLabel(knockout.principalQuarters, phaseRules)}`}</h3>
-                        {renderOrganizerMatches(mainStageDistribution.directPrincipalSemis ? knockout.principalSemis : knockout.principalQuarters, mainStageDistribution.directPrincipalSemis ? 'principalSemis' : 'principalQuarters')}
+                        {renderCompactFinalStage(mainStageDistribution.directPrincipalSemis ? knockout.principalSemis : knockout.principalQuarters, mainStageDistribution.directPrincipalSemis ? 'principalSemis' : 'principalQuarters')}
                       </div>
                       <div className="knockout-panel">
                         <h3>{`Demi-finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteSemis, phaseRules)}`}</h3>
-                        {renderOrganizerMatches(knockout.consolanteSemis, 'consolanteSemis')}
+                        {renderCompactFinalStage(knockout.consolanteSemis, 'consolanteSemis')}
                       </div>
                     </div>
                   </Section>
@@ -5833,18 +5912,18 @@ export default function App() {
                       {!mainStageDistribution.directPrincipalSemis && (
                         <div className="knockout-panel">
                           <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(knockout.principalSemis, phaseRules)}`}</h3>
-                          {renderOrganizerMatches(knockout.principalSemis, 'principalSemis')}
+                          {renderCompactFinalStage(knockout.principalSemis, 'principalSemis')}
                         </div>
                       )}
                       <div className="knockout-panel">
                         <h3>{`Finales consolante : ${formatRemainingMatchesLabel(knockout.consolanteFinals, phaseRules)}`}</h3>
-                        {renderOrganizerMatches(knockout.consolanteFinals, 'consolanteFinals')}
+                        {renderCompactFinalStage(knockout.consolanteFinals, 'consolanteFinals')}
                       </div>
                     </div>
                   </Section>
 
                   <Section title={`Étape 3 du tableau principal : ${formatRemainingMatchesLabel(knockout.principalFinals, phaseRules)}`}>
-                    {renderOrganizerMatches(knockout.principalFinals, 'principalFinals')}
+                    {renderCompactFinalStage(knockout.principalFinals, 'principalFinals')}
                   </Section>
 
                   <Section title="Podiums">

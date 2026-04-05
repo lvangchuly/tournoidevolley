@@ -3733,3 +3733,42 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 10px;
   }
 }
+
+.compact-final-stage-board-v24s {
+  width: 100%;
+  padding: 10px;
+}
+
+.compact-final-terrain-columns-v24s {
+  align-items: start;
+}
+
+.compact-final-terrain-column-v24s {
+  min-width: 0;
+}
+
+.compact-final-terrain-match-list-v24s {
+  min-height: 120px;
+}
+
+.compact-final-match-card-v24s {
+  margin-bottom: 8px;
+}
+
+.compact-final-stage-label-v24s {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #0f172a;
+  white-space: normal;
+}
+
+.compact-final-empty-v24s {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
