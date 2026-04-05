@@ -9,8 +9,8 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24B';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24C';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24B';
+const APP_VERSION = 'V24C';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1264,6 +1264,21 @@ function getLevelClass(level) {
   return LEVEL_CLASS[normalizeLevelValue(level, '')] || 'team-level-default';
 }
 
+function printMatchCard(matchId) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const node = document.getElementById(`match-card-${matchId}`);
+  if (!node) return;
+  const printWindow = window.open('', '_blank', 'width=1000,height=700');
+  if (!printWindow) return;
+  const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map((entry) => entry.outerHTML)
+    .join('\n');
+  printWindow.document.write(`<!doctype html><html><head><title>Impression match</title>${styles}<style>body{margin:0;padding:24px;background:#ffffff;font-family:Inter,Arial,sans-serif}.print-wrap{display:flex;justify-content:center;align-items:flex-start}.compact-match-card-v24c{width:420px!important;max-width:420px!important;box-shadow:none!important;border:1px solid #0f172a!important}</style></head><body><div class="print-wrap">${node.outerHTML}</div></body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  window.setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+}
+
 function TeamBadge({ name, level, className = '', children = null }) {
   return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}{children}</span>;
 }
@@ -1697,7 +1712,7 @@ export default function App() {
   const [refereeSelectedScoreDraft, setRefereeSelectedScoreDraft] = useState(null);
   const [refereeScoreDrafts, setRefereeScoreDrafts] = useState({});
   const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
-  const [brassageSearchByScope, setBrassageSearchByScope] = useState({ brassage1: '', brassage2: '' });
+  const [selectedBrassageTeamByScope, setSelectedBrassageTeamByScope] = useState({ brassage1: '', brassage2: '' });
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
@@ -4675,11 +4690,7 @@ export default function App() {
     const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
     const standingsMap = new Map((Array.isArray(standings) ? standings : []).map((entry) => [entry.pool?.id, entry]));
     const overallRanking = scope === 'brassage1' ? rankingAfterBrassage1 : rankingAfterBrassages;
-    const selectedTeamId = brassageSearchByScope?.[scope] || '';
-    const availableTeamIds = Array.from(new Set(safePools.flatMap((pool) => Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [])));
-    const availableTeams = availableTeamIds
-      .map((teamId) => resolveTeam(teamId))
-      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+    const selectedTeamId = selectedBrassageTeamByScope?.[scope] || '';
     const displayedPools = selectedTeamId
       ? safePools.filter((pool) => Array.isArray(pool.teamIds) && pool.teamIds.includes(selectedTeamId))
       : safePools;
@@ -4687,55 +4698,40 @@ export default function App() {
     if (!safePools.length) return <div className="empty-state">Aucune poule générée pour le moment.</div>;
 
     return (
-      <div className="compact-brassage-layout compact-brassage-layout-wide">
-        <div className="compact-brassage-board">
+      <div className="compact-brassage-layout compact-brassage-layout-v24c">
+        <div className="compact-brassage-board compact-brassage-board-v24c">
           {displayedPools.map((pool) => {
             const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
             const poolMatches = safeMatches
               .filter((match) => match.group === pool.name || (poolTeamIds.includes(match.teamAId) && poolTeamIds.includes(match.teamBId)))
               .sort((a, b) => {
-                if ((a.round || 0) !== (b.round || 0)) return (a.round || 0) - (b.round || 0);
                 if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
                 return (a.court || 0) - (b.court || 0);
               });
             const standingRows = standingsMap.get(pool.id)?.rows || computeRanking(poolTeamIds, poolMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking });
 
             return (
-              <div key={pool.id} className="mini-card compact-brassage-pool compact-brassage-pool-v24b">
-                <div className="compact-brassage-head">{formatPoolNameWithLevel(pool, teamMap)}</div>
-                <div className="compact-brassage-columns compact-brassage-columns-v24b">
-                  <div className="compact-brassage-column compact-brassage-left-column">
-                    <div className="compact-brassage-search">
-                      <label htmlFor={`${scope}-team-search-${pool.id}`} className="compact-brassage-search-label">Rechercher une équipe</label>
-                      <select
-                        id={`${scope}-team-search-${pool.id}`}
-                        className="compact-brassage-search-select"
-                        value={selectedTeamId}
-                        onChange={(e) => setBrassageSearchByScope((current) => ({ ...current, [scope]: e.target.value }))}
-                      >
-                        <option value="">Toutes les équipes</option>
-                        {availableTeams.map((team) => (
-                          <option key={team.id} value={team.id}>{team.name}</option>
-                        ))}
-                      </select>
-                    </div>
+              <div key={pool.id} className="mini-card compact-brassage-pool compact-brassage-pool-v24c">
+                <div className="compact-brassage-head compact-brassage-head-v24c">{formatPoolNameWithLevel(pool, teamMap)}</div>
+                <div className="compact-brassage-columns compact-brassage-columns-v24c">
+                  <div className="compact-brassage-column compact-brassage-left-column compact-brassage-left-column-v24c">
                     <div className="compact-brassage-title">Équipes</div>
-                    <div className="compact-team-list compact-team-list-v24b">
+                    <div className="compact-team-list compact-team-list-v24c">
                       {poolTeamIds.map((teamId, index) => {
                         const team = resolveTeam(teamId);
                         return (
-                          <div key={teamId} className="compact-team-row compact-team-row-v24b">
+                          <div key={teamId} className="compact-team-row compact-team-row-v24c">
                             <span className="compact-rank-chip">{index + 1}</span>
-                            <TeamBadge name={team.name} level={team.level} className="compact-team-badge-v24b" />
+                            <TeamBadge name={team.name} level={team.level} className="compact-team-badge-v24c" />
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="compact-brassage-column compact-brassage-column-center compact-brassage-center-v24b">
+                  <div className="compact-brassage-column compact-brassage-column-center compact-brassage-center-v24c">
                     <div className="compact-brassage-title">Matchs</div>
-                    <div className="compact-match-cards-grid">
+                    <div className="compact-match-cards-grid compact-match-cards-grid-v24c">
                       {poolMatches.map((match) => {
                         const refereeTeamId = poolTeamIds.find((teamId) => teamId !== match.teamAId && teamId !== match.teamBId) || null;
                         const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
@@ -4748,39 +4744,36 @@ export default function App() {
                         const isValid = status === 'Valide';
                         const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                         return (
-                          <div key={match.id} className="compact-match-card-v24b">
-                            <div className="compact-match-card-top">
-                              <span className="compact-match-chip">T{match.court || '—'}</span>
-                              <span className="compact-match-referee-name"><TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-inline-badge-v24b" /></span>
-                              <span className="compact-match-chip">M{match.round || '—'}</span>
-                            </div>
-                            <div className="compact-match-card-labels">
-                              <span>Nom arbitre</span>
-                              <span>Rotation</span>
+                          <div key={match.id} id={`match-card-${match.id}`} className="compact-match-card-v24c">
+                            <div className="compact-match-header-v24c">
+                              <span className="compact-match-chip compact-match-chip-v24c">T{match.court || '—'}</span>
+                              <div className="compact-match-label-bar compact-match-label-bar-v24c">
+                                <span className="compact-match-label-chip">Nom arbitre</span>
+                                <span className="compact-match-label-chip compact-match-number-chip">M{match.slot || '—'}</span>
+                              </div>
                             </div>
                             <div className="compact-match-team-strip compact-match-team-strip-referee">
-                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-team-strip-badge" />
+                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-team-strip-badge compact-team-strip-badge-v24c" />
                             </div>
-                            <div className="compact-match-team-strip">
-                              <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge" />
+                            <div className="compact-match-team-row-v24c">
+                              <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge compact-team-strip-badge-v24c" />
+                              <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge compact-team-strip-badge-v24c" />
                             </div>
-                            <div className="compact-match-score-row">
-                              <label className="compact-score-box">
+                            <div className="compact-match-score-row compact-match-score-row-v24c">
+                              <label className="compact-score-box compact-score-box-v24c">
                                 <span>SCORE</span>
                                 <input type="number" min="0" inputMode="numeric" value={match.scoreA ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
                               </label>
-                              <label className="compact-score-box">
+                              <label className="compact-score-box compact-score-box-v24c">
                                 <span>SCORE</span>
                                 <input type="number" min="0" inputMode="numeric" value={match.scoreB ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
                               </label>
                             </div>
-                            <div className="compact-match-team-strip compact-match-team-strip-bottom">
-                              <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge" />
-                            </div>
-                            <div className="compact-match-card-status-row">
+                            <div className="compact-match-footer-v24c">
+                              <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                               <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
-                              {!isValid && pendingStatus === 'Match en cours' ? <span className="muted tiny">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span> : null}
                             </div>
+                            {!isValid && pendingStatus === 'Match en cours' ? <div className="muted tiny compact-pending-score-v24c">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                             {!isValid && canApprovePending ? (
                               <div className="actions-row compact-actions compact-match-card-actions">
                                 <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
@@ -4794,9 +4787,9 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="compact-brassage-column compact-brassage-right-column">
+                  <div className="compact-brassage-column compact-brassage-right-column compact-brassage-right-column-v24c">
                     <div className="compact-brassage-title">Classement poule</div>
-                    <div className="compact-mini-table compact-ranking-table-v24b">
+                    <div className="compact-mini-table compact-ranking-table-v24c">
                       <div className="compact-mini-table-head compact-ranking-grid">
                         <span>#</span>
                         <span>Équipe</span>
@@ -4820,10 +4813,13 @@ export default function App() {
           {!displayedPools.length ? <div className="empty-state">Aucune poule ne correspond à l’équipe sélectionnée.</div> : null}
         </div>
 
-        <aside className="mini-card compact-overall-ranking-column compact-overall-ranking-column-v24b">
+        <aside className="mini-card compact-overall-ranking-column compact-overall-ranking-column-v24c">
           <div className="compact-brassage-title compact-overall-ranking-title">Classement général</div>
-          <div className="compact-overall-ranking-scroll">
-            {renderOverallRanking(overallRanking, scope === 'brassage2')}
+          <div className="compact-overall-ranking-scroll compact-overall-ranking-scroll-v24c">
+            {renderOverallRanking(overallRanking, scope === 'brassage2', null, {
+              compact: true,
+              onTeamClick: (teamId) => setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: teamId })),
+            })}
           </div>
         </aside>
       </div>
@@ -5066,19 +5062,20 @@ export default function App() {
     );
   }
 
-  function renderOverallRanking(rows, withStatus = false, activeTeamIds = null) {
+  function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
+    const compact = Boolean(options?.compact);
+    const onTeamClick = typeof options?.onTeamClick === 'function' ? options.onTeamClick : null;
     return (
-      <div className="table-wrap">
-        <table>
+      <div className={`table-wrap ${compact ? 'table-wrap-compact-overall' : ''}`.trim()}>
+        <table className={compact ? 'overall-ranking-table-compact' : ''}>
           <thead>
             <tr>
               <th>#</th>
               <th>Équipe</th>
               <th>Niveau</th>
-              <th>J</th>
-              <th>V</th>
+              {!compact ? <><th>J</th><th>V</th></> : null}
               <th>Pts T.</th>
-              <th>Diff</th>
+              {!compact ? <th>Diff</th> : null}
               {withStatus ? <th>Statut</th> : null}
             </tr>
           </thead>
@@ -5090,16 +5087,23 @@ export default function App() {
                   <td>{index + 1}</td>
                   <td>
                     <div className="inline-cluster">
-                      <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
-                        {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
-                      </TeamBadge>
+                      {onTeamClick ? (
+                        <button type="button" className="team-badge-button" onClick={() => onTeamClick(row.teamId)}>
+                          <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
+                            {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                          </TeamBadge>
+                        </button>
+                      ) : (
+                        <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
+                          {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                        </TeamBadge>
+                      )}
                     </div>
                   </td>
                   <td>{row.level}</td>
-                  <td>{row.played}</td>
-                  <td>{row.wins}</td>
+                  {!compact ? <><td>{row.played}</td><td>{row.wins}</td></> : null}
                   <td>{row.tournamentPoints}</td>
-                  <td>{row.pointDiff}</td>
+                  {!compact ? <td>{row.pointDiff}</td> : null}
                   {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
                 </tr>
               );
@@ -5368,6 +5372,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="container">
+        {activeTab === 'dashboard' ? (
         <header className={`hero hero-organizer-banner ${tournamentLogo ? 'hero-organizer-banner-with-logo' : ''}`.trim()} style={organizerBannerStyle}>
           <div className="banner-side banner-left">
             <AccessQrCode
@@ -5434,6 +5439,7 @@ export default function App() {
           </div>
           <div className="organizer-banner-email">Lvangchuly@gmail.com</div>
         </header>
+        ) : null}
 
         <nav className="tabs">
           {tabs.map((tab) => (
