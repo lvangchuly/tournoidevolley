@@ -1911,3 +1911,223 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 12px;
   }
 }
+
+.compact-brassage-layout-wide {
+  grid-template-columns: minmax(0, 1.95fr) minmax(260px, 0.78fr);
+  width: 100%;
+}
+
+.compact-brassage-pool-v24b {
+  padding: 14px;
+}
+
+.compact-brassage-columns-v24b {
+  grid-template-columns: minmax(220px, 0.92fr) minmax(0, 1.75fr) minmax(210px, 0.86fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.compact-brassage-left-column,
+.compact-brassage-right-column {
+  align-self: start;
+}
+
+.compact-team-list-v24b {
+  gap: 10px;
+}
+
+.compact-team-row-v24b {
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.compact-team-badge-v24b {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.compact-brassage-center-v24b {
+  min-width: 0;
+}
+
+.compact-match-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+.compact-match-card-v24b {
+  border: 1px solid #94a3b8;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.compact-match-card-top,
+.compact-match-card-labels {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+}
+
+.compact-match-card-top {
+  background: #f3c54b;
+  border-bottom: 1px solid #caa53d;
+  gap: 6px;
+  padding: 4px 6px;
+}
+
+.compact-match-chip {
+  background: #4f8bd6;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  padding: 3px 0;
+}
+
+.compact-match-referee-name {
+  min-width: 0;
+}
+
+.compact-inline-badge-v24b {
+  display: block;
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-match-card-labels {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px 4px;
+}
+
+.compact-match-card-labels span:nth-child(2) {
+  grid-column: 2 / span 1;
+  text-align: center;
+}
+
+.compact-match-team-strip {
+  padding: 4px 6px 0;
+}
+
+.compact-match-team-strip-referee {
+  padding-top: 0;
+}
+
+.compact-team-strip-badge {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.compact-match-score-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+}
+
+.compact-score-box {
+  display: grid;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.compact-score-box span {
+  text-transform: uppercase;
+}
+
+.compact-score-box input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
+}
+
+.compact-score-box input::placeholder {
+  color: transparent;
+}
+
+.compact-match-team-strip-bottom {
+  padding-bottom: 6px;
+}
+
+.compact-match-card-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 6px 8px;
+}
+
+.compact-match-card-actions {
+  padding: 0 6px 8px;
+}
+
+.compact-ranking-table-v24b .compact-mini-table-row,
+.compact-ranking-table-v24b .compact-mini-table-head {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.compact-overall-ranking-column-v24b {
+  padding: 14px;
+}
+
+.compact-overall-ranking-column-v24b .table-wrap {
+  overflow-x: hidden;
+}
+
+@media (max-width: 1280px) {
+  .compact-brassage-columns-v24b {
+    grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.45fr) minmax(190px, 0.85fr);
+  }
+
+  .compact-team-badge-v24b {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .compact-brassage-layout-wide {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .compact-brassage-columns-v24b {
+    grid-template-columns: 1fr;
+  }
+}

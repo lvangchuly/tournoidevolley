@@ -9,8 +9,8 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24A';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24B';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24A';
+const APP_VERSION = 'V24B';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -4687,7 +4687,7 @@ export default function App() {
     if (!safePools.length) return <div className="empty-state">Aucune poule générée pour le moment.</div>;
 
     return (
-      <div className="compact-brassage-layout">
+      <div className="compact-brassage-layout compact-brassage-layout-wide">
         <div className="compact-brassage-board">
           {displayedPools.map((pool) => {
             const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
@@ -4701,10 +4701,10 @@ export default function App() {
             const standingRows = standingsMap.get(pool.id)?.rows || computeRanking(poolTeamIds, poolMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking });
 
             return (
-              <div key={pool.id} className="mini-card compact-brassage-pool">
+              <div key={pool.id} className="mini-card compact-brassage-pool compact-brassage-pool-v24b">
                 <div className="compact-brassage-head">{formatPoolNameWithLevel(pool, teamMap)}</div>
-                <div className="compact-brassage-columns">
-                  <div className="compact-brassage-column">
+                <div className="compact-brassage-columns compact-brassage-columns-v24b">
+                  <div className="compact-brassage-column compact-brassage-left-column">
                     <div className="compact-brassage-search">
                       <label htmlFor={`${scope}-team-search-${pool.id}`} className="compact-brassage-search-label">Rechercher une équipe</label>
                       <select
@@ -4720,57 +4720,83 @@ export default function App() {
                       </select>
                     </div>
                     <div className="compact-brassage-title">Équipes</div>
-                    <div className="compact-team-list">
+                    <div className="compact-team-list compact-team-list-v24b">
                       {poolTeamIds.map((teamId, index) => {
                         const team = resolveTeam(teamId);
                         return (
-                          <div key={teamId} className="compact-team-row">
+                          <div key={teamId} className="compact-team-row compact-team-row-v24b">
                             <span className="compact-rank-chip">{index + 1}</span>
-                            <TeamBadge name={team.name} level={team.level} />
+                            <TeamBadge name={team.name} level={team.level} className="compact-team-badge-v24b" />
                           </div>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="compact-brassage-column compact-brassage-column-center">
+                  <div className="compact-brassage-column compact-brassage-column-center compact-brassage-center-v24b">
                     <div className="compact-brassage-title">Matchs</div>
-                    <div className="compact-mini-table">
-                      <div className="compact-mini-table-head compact-match-grid">
-                        <span>Rot.</span>
-                        <span>Match</span>
-                        <span>Arbitre</span>
-                        <span>Terrain</span>
-                        <span>Statut</span>
-                      </div>
-                      <div className="compact-mini-table-body">
-                        {poolMatches.map((match) => {
-                          const refereeTeamId = poolTeamIds.find((teamId) => teamId !== match.teamAId && teamId !== match.teamBId) || null;
-                          const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
-                          const status = getMatchStatusLabel(match, phaseRules);
-                          const badgeClass = status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral';
-                          return (
-                            <div key={match.id} className="compact-mini-table-row compact-match-grid">
-                              <span className="compact-cell-strong">{match.round || '—'}</span>
-                              <span className="compact-match-label">
-                                <span>{resolveTeam(match.teamAId).name}</span>
-                                <strong>{(match.scoreA !== '' && match.scoreB !== '') ? `${match.scoreA} - ${match.scoreB}` : 'vs'}</strong>
-                                <span>{resolveTeam(match.teamBId).name}</span>
-                              </span>
-                              <span>{refereeTeam ? refereeTeam.name : '—'}</span>
-                              <span>T{match.court || '—'}</span>
-                              <span><span className={`badge ${badgeClass}`}>{status}</span></span>
+                    <div className="compact-match-cards-grid">
+                      {poolMatches.map((match) => {
+                        const refereeTeamId = poolTeamIds.find((teamId) => teamId !== match.teamAId && teamId !== match.teamBId) || null;
+                        const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
+                        const teamA = resolveTeam(match.teamAId);
+                        const teamB = resolveTeam(match.teamBId);
+                        const status = getMatchStatusLabel(match, phaseRules);
+                        const pendingStatus = getPendingStatus(match);
+                        const pendingA = toNumber(match.submittedScoreA);
+                        const pendingB = toNumber(match.submittedScoreB);
+                        const isValid = status === 'Valide';
+                        const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                        return (
+                          <div key={match.id} className="compact-match-card-v24b">
+                            <div className="compact-match-card-top">
+                              <span className="compact-match-chip">T{match.court || '—'}</span>
+                              <span className="compact-match-referee-name"><TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-inline-badge-v24b" /></span>
+                              <span className="compact-match-chip">M{match.round || '—'}</span>
                             </div>
-                          );
-                        })}
-                        {!poolMatches.length ? <div className="empty-state compact-empty">Aucun match</div> : null}
-                      </div>
+                            <div className="compact-match-card-labels">
+                              <span>Nom arbitre</span>
+                              <span>Rotation</span>
+                            </div>
+                            <div className="compact-match-team-strip compact-match-team-strip-referee">
+                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-team-strip-badge" />
+                            </div>
+                            <div className="compact-match-team-strip">
+                              <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge" />
+                            </div>
+                            <div className="compact-match-score-row">
+                              <label className="compact-score-box">
+                                <span>SCORE</span>
+                                <input type="number" min="0" inputMode="numeric" value={match.scoreA ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
+                              </label>
+                              <label className="compact-score-box">
+                                <span>SCORE</span>
+                                <input type="number" min="0" inputMode="numeric" value={match.scoreB ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
+                              </label>
+                            </div>
+                            <div className="compact-match-team-strip compact-match-team-strip-bottom">
+                              <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge" />
+                            </div>
+                            <div className="compact-match-card-status-row">
+                              <span className={`badge ${isValid ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral'}`}>{status}</span>
+                              {!isValid && pendingStatus === 'Match en cours' ? <span className="muted tiny">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span> : null}
+                            </div>
+                            {!isValid && canApprovePending ? (
+                              <div className="actions-row compact-actions compact-match-card-actions">
+                                <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                                <Button variant="secondary" onClick={() => rejectRefereeScore(scope, match.id)}>Refuser</Button>
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                      {!poolMatches.length ? <div className="empty-state compact-empty">Aucun match</div> : null}
                     </div>
                   </div>
 
-                  <div className="compact-brassage-column">
+                  <div className="compact-brassage-column compact-brassage-right-column">
                     <div className="compact-brassage-title">Classement poule</div>
-                    <div className="compact-mini-table">
+                    <div className="compact-mini-table compact-ranking-table-v24b">
                       <div className="compact-mini-table-head compact-ranking-grid">
                         <span>#</span>
                         <span>Équipe</span>
@@ -4794,7 +4820,7 @@ export default function App() {
           {!displayedPools.length ? <div className="empty-state">Aucune poule ne correspond à l’équipe sélectionnée.</div> : null}
         </div>
 
-        <aside className="mini-card compact-overall-ranking-column">
+        <aside className="mini-card compact-overall-ranking-column compact-overall-ranking-column-v24b">
           <div className="compact-brassage-title compact-overall-ranking-title">Classement général</div>
           <div className="compact-overall-ranking-scroll">
             {renderOverallRanking(overallRanking, scope === 'brassage2')}
