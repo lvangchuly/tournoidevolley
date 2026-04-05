@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V23AB';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V23AC';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V23AB';
+const APP_VERSION = 'V23AC';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -4673,119 +4673,122 @@ export default function App() {
     const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
     const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
     const standingsMap = new Map((Array.isArray(standings) ? standings : []).map((entry) => [entry.pool?.id, entry]));
+    const safeOverallRows = Array.isArray(overallRows) ? overallRows : [];
 
     if (!safePools.length) return <div className="empty-state">Aucune poule générée pour le moment.</div>;
 
     return (
-      <div className="compact-brassage-board">
-        {safePools.map((pool) => {
-          const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
-          const poolMatches = safeMatches
-            .filter((match) => match.group === pool.name || (poolTeamIds.includes(match.teamAId) && poolTeamIds.includes(match.teamBId)))
-            .sort((a, b) => {
-              if ((a.round || 0) !== (b.round || 0)) return (a.round || 0) - (b.round || 0);
-              if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
-              return (a.court || 0) - (b.court || 0);
-            });
-          const standingRows = standingsMap.get(pool.id)?.rows || computeRanking(poolTeamIds, poolMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking });
+      <div className="compact-brassage-layout">
+        <div className="compact-brassage-board">
+          {safePools.map((pool) => {
+            const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
+            const poolMatches = safeMatches
+              .filter((match) => match.group === pool.name || (poolTeamIds.includes(match.teamAId) && poolTeamIds.includes(match.teamBId)))
+              .sort((a, b) => {
+                if ((a.round || 0) !== (b.round || 0)) return (a.round || 0) - (b.round || 0);
+                if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+                return (a.court || 0) - (b.court || 0);
+              });
+            const standingRows = standingsMap.get(pool.id)?.rows || computeRanking(poolTeamIds, poolMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking });
 
-          return (
-            <div key={pool.id} className="mini-card compact-brassage-pool">
-              <div className="compact-brassage-head">{formatPoolNameWithLevel(pool, teamMap)}</div>
-              <div className="compact-brassage-columns">
-                <div className="compact-brassage-column">
-                  <div className="compact-brassage-title">Équipes</div>
-                  <div className="compact-team-list">
-                    {poolTeamIds.map((teamId, index) => {
-                      const team = resolveTeam(teamId);
-                      return (
-                        <div key={teamId} className="compact-team-row">
-                          <span className="compact-rank-chip">{index + 1}</span>
-                          <TeamBadge name={team.name} level={team.level} />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="compact-brassage-column compact-brassage-column-center">
-                  <div className="compact-brassage-title">Matchs</div>
-                  <div className="compact-mini-table">
-                    <div className="compact-mini-table-head compact-match-grid">
-                      <span>Rot.</span>
-                      <span>Match</span>
-                      <span>Arbitre</span>
-                      <span>Terrain</span>
-                      <span>Statut</span>
-                    </div>
-                    <div className="compact-mini-table-body">
-                      {poolMatches.map((match) => {
-                        const refereeTeamId = poolTeamIds.find((teamId) => teamId !== match.teamAId && teamId !== match.teamBId) || null;
-                        const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
-                        const status = getMatchStatusLabel(match, phaseRules);
-                        const badgeClass = status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral';
+            return (
+              <div key={pool.id} className="mini-card compact-brassage-pool">
+                <div className="compact-brassage-head">{formatPoolNameWithLevel(pool, teamMap)}</div>
+                <div className="compact-brassage-columns">
+                  <div className="compact-brassage-column">
+                    <div className="compact-brassage-title">Équipes</div>
+                    <div className="compact-team-list">
+                      {poolTeamIds.map((teamId, index) => {
+                        const team = resolveTeam(teamId);
                         return (
-                          <div key={match.id} className="compact-mini-table-row compact-match-grid">
-                            <span className="compact-cell-strong">{match.round || '—'}</span>
-                            <span className="compact-match-label">
-                              <span>{resolveTeam(match.teamAId).name}</span>
-                              <strong>{(match.scoreA !== '' && match.scoreB !== '') ? `${match.scoreA} - ${match.scoreB}` : 'vs'}</strong>
-                              <span>{resolveTeam(match.teamBId).name}</span>
-                            </span>
-                            <span>{refereeTeam ? refereeTeam.name : '—'}</span>
-                            <span>T{match.court || '—'}</span>
-                            <span><span className={`badge ${badgeClass}`}>{status}</span></span>
+                          <div key={teamId} className="compact-team-row">
+                            <span className="compact-rank-chip">{index + 1}</span>
+                            <TeamBadge name={team.name} level={team.level} />
                           </div>
                         );
                       })}
-                      {!poolMatches.length ? <div className="empty-state compact-empty">Aucun match</div> : null}
                     </div>
                   </div>
-                </div>
 
-                <div className="compact-brassage-column">
-                  <div className="compact-brassage-title">Classement poule</div>
-                  <div className="compact-mini-table">
-                    <div className="compact-mini-table-head compact-ranking-grid">
-                      <span>#</span>
-                      <span>Équipe</span>
-                      <span>Pts</span>
-                    </div>
-                    <div className="compact-mini-table-body">
-                      {standingRows.map((row, index) => (
-                        <div key={row.teamId} className="compact-mini-table-row compact-ranking-grid">
-                          <span className="compact-cell-strong">{index + 1}</span>
-                          <span className="compact-ranking-team"><TeamBadge name={row.teamName} level={row.level} /></span>
-                          <span className="compact-cell-strong">{row.tournamentPoints}</span>
-                        </div>
-                      ))}
+                  <div className="compact-brassage-column compact-brassage-column-center">
+                    <div className="compact-brassage-title">Matchs</div>
+                    <div className="compact-mini-table">
+                      <div className="compact-mini-table-head compact-match-grid">
+                        <span>Rot.</span>
+                        <span>Match</span>
+                        <span>Arbitre</span>
+                        <span>Terrain</span>
+                        <span>Statut</span>
+                      </div>
+                      <div className="compact-mini-table-body">
+                        {poolMatches.map((match) => {
+                          const refereeTeamId = poolTeamIds.find((teamId) => teamId !== match.teamAId && teamId !== match.teamBId) || null;
+                          const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
+                          const status = getMatchStatusLabel(match, phaseRules);
+                          const badgeClass = status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral';
+                          return (
+                            <div key={match.id} className="compact-mini-table-row compact-match-grid">
+                              <span className="compact-cell-strong">{match.round || '—'}</span>
+                              <span className="compact-match-label">
+                                <span>{resolveTeam(match.teamAId).name}</span>
+                                <strong>{(match.scoreA !== '' && match.scoreB !== '') ? `${match.scoreA} - ${match.scoreB}` : 'vs'}</strong>
+                                <span>{resolveTeam(match.teamBId).name}</span>
+                              </span>
+                              <span>{refereeTeam ? refereeTeam.name : '—'}</span>
+                              <span>T{match.court || '—'}</span>
+                              <span><span className={`badge ${badgeClass}`}>{status}</span></span>
+                            </div>
+                          );
+                        })}
+                        {!poolMatches.length ? <div className="empty-state compact-empty">Aucun match</div> : null}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="compact-brassage-column">
-                  <div className="compact-brassage-title">Classement général</div>
-                  <div className="compact-mini-table">
-                    <div className="compact-mini-table-head compact-ranking-grid">
-                      <span>#</span>
-                      <span>Équipe</span>
-                      <span>Pts</span>
-                    </div>
-                    <div className="compact-mini-table-body">
-                      {(Array.isArray(overallRows) ? overallRows : []).map((row, index) => (
-                        <div key={row.teamId} className="compact-mini-table-row compact-ranking-grid">
-                          <span className="compact-cell-strong">{index + 1}</span>
-                          <span className="compact-ranking-team"><TeamBadge name={row.teamName} level={row.level} /></span>
-                          <span className="compact-cell-strong">{row.tournamentPoints}</span>
-                        </div>
-                      ))}
+                  <div className="compact-brassage-column">
+                    <div className="compact-brassage-title">Classement poule</div>
+                    <div className="compact-mini-table">
+                      <div className="compact-mini-table-head compact-ranking-grid">
+                        <span>#</span>
+                        <span>Équipe</span>
+                        <span>Pts</span>
+                      </div>
+                      <div className="compact-mini-table-body">
+                        {standingRows.map((row, index) => (
+                          <div key={row.teamId} className="compact-mini-table-row compact-ranking-grid">
+                            <span className="compact-cell-strong">{index + 1}</span>
+                            <span className="compact-ranking-team"><TeamBadge name={row.teamName} level={row.level} /></span>
+                            <span className="compact-cell-strong">{row.tournamentPoints}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        <aside className="mini-card compact-brassage-overall">
+          <div className="compact-brassage-title">Classement général</div>
+          <div className="compact-mini-table">
+            <div className="compact-mini-table-head compact-ranking-grid">
+              <span>#</span>
+              <span>Équipe</span>
+              <span>Pts</span>
             </div>
-          );
-        })}
+            <div className="compact-mini-table-body">
+              {safeOverallRows.map((row, index) => (
+                <div key={row.teamId} className="compact-mini-table-row compact-ranking-grid">
+                  <span className="compact-cell-strong">{index + 1}</span>
+                  <span className="compact-ranking-team"><TeamBadge name={row.teamName} level={row.level} /></span>
+                  <span className="compact-cell-strong">{row.tournamentPoints}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
     );
   }
