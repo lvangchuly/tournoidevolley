@@ -3542,3 +3542,55 @@ tbody tr:last-child td { border-bottom: none; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* V24O — correction colonne classement général brassage */
+.compact-brassage-layout-v24n {
+  grid-template-columns: minmax(240px, 18vw) minmax(0, 1fr) minmax(228px, 14vw) !important;
+}
+.compact-overall-ranking-column-v24n {
+  padding: 8px 8px 10px !important;
+}
+.compact-overall-ranking-scroll-v24n {
+  max-height: calc(100vh - 205px) !important;
+  overflow: hidden !important;
+}
+.table-wrap-compact-overall {
+  overflow-x: hidden !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-rank-col-compact {
+  width: 3ch !important;
+  min-width: 3ch !important;
+  max-width: 3ch !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-points-col-compact {
+  width: 3ch !important;
+  min-width: 3ch !important;
+  max-width: 3ch !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-team-col-compact {
+  width: auto !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th,
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td {
+  padding: 4px 4px !important;
+}
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th:last-child,
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td:last-child {
+  text-align: center !important;
+  overflow: visible !important;
+}
+.team-badge-button-compact-ranking-v24k {
+  padding: 0 !important;
+}
+.team-badge-inline-compact-overall-v24k {
+  font-size: 10.5px !important;
+  padding: 4px 8px !important;
+}
