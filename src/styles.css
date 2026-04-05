@@ -2658,3 +2658,60 @@ tbody tr:last-child td { border-bottom: none; }
   white-space: nowrap;
   text-align: right;
 }
+
+
+.inline-cluster-compact-overall {
+  width: 100%;
+}
+
+.team-badge-button-compact-ranking {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.team-badge-compact-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+}
+
+.team-badge-inline-compact-overall {
+  width: 100%;
+  min-width: 0;
+}
+
+.team-badge-compact-points {
+  flex: 0 0 4ch;
+  min-width: 4ch;
+  max-width: 4ch;
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  text-align: right;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.overall-ranking-table-compact td:nth-child(2) {
+  overflow: visible;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .inline-cluster,
+.overall-ranking-table-compact td:nth-child(2) .team-badge-button-compact-ranking {
+  width: 100%;
+  min-width: 0;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .team-badge-inline,
+.overall-ranking-table-compact td:nth-child(2) .team-badge-inline-compact-overall {
+  width: 100%;
+  max-width: none;
+}
