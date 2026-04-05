@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24L';
+const APP_VERSION = 'V24M';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1340,7 +1340,7 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
     window.alert("La fenêtre d'impression a été bloquée par le navigateur.");
     return;
   }
-  printWindow.document.write(`<!doctype html><html><head><title>${title}</title>${styles}<style>@page{size:A4 portrait;margin:8mm}body{margin:0;background:#fff;font-family:Inter,Arial,sans-serif;color:#0f172a}.print-a4-title{font-weight:800;font-size:16px;margin:0 0 8px}.print-a4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:start}.print-a4-grid .compact-match-card-v24c{transform:scale(.72);transform-origin:top left;width:138%;margin:0 0 -42px 0;box-shadow:none!important;border:1px solid #0f172a!important;break-inside:avoid;page-break-inside:avoid}.print-a4-grid .compact-match-card-v24c:last-child{margin-bottom:0}.print-a4-grid .compact-score-box input{background:#fff!important}</style></head><body><div class="print-a4-title">${title}</div><div class="print-a4-grid">${nodes}</div></body></html>`);
+  printWindow.document.write(`<!doctype html><html><head><title>${title}</title>${styles}<style>@page{size:A4 landscape;margin:8mm}body{margin:0;background:#fff;font-family:Inter,Arial,sans-serif;color:#0f172a}.print-a4-title{font-weight:800;font-size:16px;margin:0 0 8px}.print-a4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:start}.print-a4-grid .compact-match-card-v24c{transform:scale(.72);transform-origin:top left;width:138%;margin:0 0 -42px 0;box-shadow:none!important;border:1px solid #0f172a!important;break-inside:avoid;page-break-inside:avoid}.print-a4-grid .compact-match-card-v24c:last-child{margin-bottom:0}.print-a4-grid .compact-score-box input{background:#fff!important}</style></head><body><div class="print-a4-title">${title}</div><div class="print-a4-grid">${nodes}</div></body></html>`);
   printWindow.document.close();
   printWindow.focus();
   window.setTimeout(() => {
@@ -5156,7 +5156,7 @@ export default function App() {
               <tr>
                 <th className="overall-rank-col-compact">#</th>
                 <th>Équipe</th>
-                <th className="overall-points-col-compact" aria-label="Points cumulés" />
+                <th className="overall-points-col-compact" aria-label="Points cumulés">Pts</th>
               </tr>
             </thead>
             <tbody>

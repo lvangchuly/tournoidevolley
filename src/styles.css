@@ -3235,3 +3235,63 @@ tbody tr:last-child td { border-bottom: none; }
 .team-badge-inline-compact-overall-v24k {
   padding: 3px 6px;
 }
+
+/* V24M - classement général compact avec points visibles + impression paysage */
+.compact-overall-ranking-column-v24c {
+  width: 186px;
+  min-width: 186px;
+  max-width: 186px;
+  height: calc(100vh - 88px);
+}
+
+.compact-overall-ranking-scroll-v24c {
+  max-height: calc(100vh - 122px);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-rank-col-compact {
+  width: 4.5ch;
+  min-width: 4.5ch;
+  max-width: 4.5ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-points-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th {
+  padding: 2px 2px;
+  font-size: 10px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td {
+  padding: 1px 2px;
+  height: 20px;
+  font-size: 10px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-team-col-compact {
+  padding-left: 2px;
+  padding-right: 1px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td:last-child,
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th:last-child {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.team-badge-inline-compact-overall-v24k {
+  padding: 3px 5px;
+  font-size: 10px;
+}
