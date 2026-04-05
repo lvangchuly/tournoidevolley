@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24J';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24K';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24J';
+const APP_VERSION = 'V24K';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -5144,16 +5144,60 @@ export default function App() {
   function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
     const compact = Boolean(options?.compact);
     const onTeamClick = typeof options?.onTeamClick === 'function' ? options.onTeamClick : null;
+
+    if (compact) {
+      return (
+        <div className="table-wrap table-wrap-compact-overall">
+          <table className="overall-ranking-table-compact overall-ranking-table-compact-v24k">
+            <thead>
+              <tr>
+                <th className="overall-rank-col-compact">#</th>
+                <th>Équipe</th>
+                <th className="overall-points-col-compact" aria-label="Points cumulés" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => {
+                const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
+                const badge = (
+                  <span className="team-badge-compact-main">
+                    <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline team-badge-inline-compact-overall team-badge-inline-compact-overall-v24k">
+                      {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                    </TeamBadge>
+                  </span>
+                );
+                return (
+                  <tr key={row.teamId}>
+                    <td className="overall-rank-col-compact">{index + 1}</td>
+                    <td className="overall-team-col-compact">
+                      {onTeamClick ? (
+                        <button type="button" className="team-badge-button team-badge-button-compact-ranking team-badge-button-compact-ranking-v24k" onClick={() => onTeamClick(row.teamId)}>
+                          {badge}
+                        </button>
+                      ) : (
+                        <div className="team-badge-button-compact-ranking team-badge-button-compact-ranking-v24k">{badge}</div>
+                      )}
+                    </td>
+                    <td className="overall-points-col-compact">{row.tournamentPoints}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
     return (
-      <div className={`table-wrap ${compact ? 'table-wrap-compact-overall' : ''}`.trim()}>
-        <table className={compact ? 'overall-ranking-table-compact' : ''}>
+      <div className="table-wrap">
+        <table>
           <thead>
             <tr>
-              <th className={compact ? 'overall-rank-col-compact' : ''}>#</th>
+              <th>#</th>
               <th>Équipe</th>
-              {!compact ? <th>Niveau</th> : null}
-              {!compact ? <><th>J</th><th>V</th><th>Pts T.</th></> : null}
-              {!compact ? <th>Diff</th> : null}
+              <th>Niveau</th>
+              <th>J</th><th>V</th><th>Pts T.</th>
+              <th>Diff</th>
               {withStatus ? <th>Statut</th> : null}
             </tr>
           </thead>
@@ -5162,33 +5206,19 @@ export default function App() {
               const isInRefereeGame = Boolean(activeTeamIds?.has(row.teamId));
               return (
                 <tr key={row.teamId}>
-                  <td className={compact ? 'overall-rank-col-compact' : ''}>{index + 1}</td>
+                  <td>{index + 1}</td>
                   <td>
-                    <div className={`inline-cluster ${compact ? 'inline-cluster-compact-overall' : ''}`.trim()}>
-                      {onTeamClick ? (
-                        <button type="button" className="team-badge-button team-badge-button-compact-ranking" onClick={() => onTeamClick(row.teamId)}>
-                          <span className="team-badge-compact-main">
-                            <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline team-badge-inline-compact-overall">
-                              {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
-                            </TeamBadge>
-                          </span>
-                          {compact ? <span className="team-badge-compact-points">{row.tournamentPoints}</span> : null}
-                        </button>
-                      ) : (
-                        <div className={compact ? 'team-badge-button-compact-ranking' : ''}>
-                          <span className="team-badge-compact-main">
-                            <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline team-badge-inline-compact-overall">
-                              {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
-                            </TeamBadge>
-                          </span>
-                          {compact ? <span className="team-badge-compact-points">{row.tournamentPoints}</span> : null}
-                        </div>
-                      )}
+                    <div className="inline-cluster">
+                      <div>
+                        <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
+                          {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                        </TeamBadge>
+                      </div>
                     </div>
                   </td>
-                  {!compact ? <td>{row.level}</td> : null}
-                  {!compact ? <><td>{row.played}</td><td>{row.wins}</td><td>{row.tournamentPoints}</td></> : null}
-                  {!compact ? <td>{row.pointDiff}</td> : null}
+                  <td>{row.level}</td>
+                  <td>{row.played}</td><td>{row.wins}</td><td>{row.tournamentPoints}</td>
+                  <td>{row.pointDiff}</td>
                   {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
                 </tr>
               );

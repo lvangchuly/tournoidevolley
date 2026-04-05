@@ -2936,7 +2936,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V24J brassage layout refinements */
+/* V24K brassage layout refinements */
 .compact-brassage-layout-v24c {
   width: 100%;
   max-width: 100%;
@@ -3075,4 +3075,105 @@ tbody tr:last-child td { border-bottom: none; }
   .compact-match-cards-grid-v24c {
     gap: 7px;
   }
+}
+
+/* V24K - classement général compact style image */
+.compact-overall-ranking-column-v24c {
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  height: calc(100vh - 108px);
+}
+
+.compact-overall-ranking-scroll-v24c {
+  max-height: calc(100vh - 148px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th {
+  background: #09183b;
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th:first-child {
+  border-top-left-radius: 14px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th:last-child {
+  border-top-right-radius: 14px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-rank-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-points-col-compact {
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td {
+  padding: 2px 4px;
+  font-size: 10px;
+  line-height: 1;
+  height: 21px;
+  border-bottom: 1px solid #d9dee7;
+  background: #ffffff;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td:first-child {
+  background: #020d2f;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td:last-child {
+  text-align: center;
+  font-weight: 700;
+  padding-left: 1px;
+  padding-right: 1px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-team-col-compact {
+  padding-left: 4px;
+  padding-right: 2px;
+}
+
+.team-badge-button-compact-ranking-v24k {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.team-badge-inline-compact-overall-v24k {
+  display: block;
+  width: 100%;
+  min-height: 18px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
