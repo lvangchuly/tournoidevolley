@@ -2715,3 +2715,107 @@ tbody tr:last-child td { border-bottom: none; }
   width: 100%;
   max-width: none;
 }
+
+
+/* V24H */
+.container.organizer-phase-fullwidth {
+  width: min(100vw - 4px, 100vw);
+  max-width: none;
+}
+
+.compact-brassage-layout-v24c {
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 8px;
+}
+
+.compact-brassage-columns-v24c {
+  grid-template-columns: 190px minmax(0, 1fr) 152px;
+  gap: 6px;
+}
+
+.compact-match-cards-grid-v24c {
+  gap: 4px;
+}
+
+.compact-match-card-v24c.compact-match-card-v24e {
+  width: 75%;
+  min-width: 132px;
+  gap: 4px;
+  padding: 4px;
+}
+
+.compact-overall-ranking-column-v24c {
+  height: calc(100vh - 112px);
+}
+
+.compact-overall-ranking-scroll-v24c {
+  overflow: hidden;
+}
+
+.overall-ranking-table-compact {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.overall-ranking-table-compact th,
+.overall-ranking-table-compact td {
+  padding: 4px 4px;
+  font-size: 12px;
+  line-height: 1.05;
+}
+
+.overall-ranking-table-compact thead th {
+  font-size: 11px;
+}
+
+.overall-ranking-table-compact .overall-rank-col-compact {
+  width: 4ch;
+  min-width: 4ch;
+  max-width: 4ch;
+}
+
+.overall-ranking-table-compact td:nth-child(2),
+.overall-ranking-table-compact th:nth-child(2) {
+  width: auto;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .team-badge-button-compact-ranking,
+.overall-ranking-table-compact td:nth-child(2) .inline-cluster {
+  gap: 4px;
+}
+
+.team-badge-compact-points {
+  flex: 0 0 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  font-size: 12px;
+}
+
+.overall-ranking-table-compact th:nth-child(3),
+.overall-ranking-table-compact td:nth-child(3) {
+  display: none;
+}
+
+.compact-ranking-grid {
+  grid-template-columns: 2ch minmax(0, 1fr) 3ch;
+}
+
+.compact-mini-table-head.compact-ranking-grid,
+.compact-mini-table-row.compact-ranking-grid {
+  gap: 4px;
+}
+
+.compact-mini-table.compact-ranking-table-v24h .compact-mini-table-head,
+.compact-mini-table.compact-ranking-table-v24h .compact-mini-table-row {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.compact-mini-table.compact-ranking-table-v24h .compact-cell-strong {
+  white-space: nowrap;
+}
+
+.overall-ranking-table-compact td, .overall-ranking-table-compact th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
