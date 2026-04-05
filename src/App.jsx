@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V24E';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V24F';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V24E';
+const APP_VERSION = 'V24F';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1264,6 +1264,46 @@ function getLevelClass(level) {
   return LEVEL_CLASS[normalizeLevelValue(level, '')] || 'team-level-default';
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function renderMatchCardMarkup(match, resolveTeam, poolTeamIds = [], phaseRules = PHASE_RULES_DEFAULT) {
+  const refereeTeamId = Array.isArray(poolTeamIds)
+    ? poolTeamIds.find((teamId) => teamId !== match?.teamAId && teamId !== match?.teamBId) || null
+    : null;
+  const refereeTeam = refereeTeamId ? resolveTeam(refereeTeamId) : null;
+  const teamA = resolveTeam(match?.teamAId);
+  const teamB = resolveTeam(match?.teamBId);
+  const status = getMatchStatusLabel(match, phaseRules);
+  const statusClass = status === 'Valide' ? 'badge-success' : status === 'Score invalide' ? 'badge-danger' : 'badge-neutral';
+  return `
+    <div class="compact-match-card-v24c compact-match-card-v24e">
+      <div class="compact-match-header-v24c compact-match-header-wide-v24d compact-match-header-wide-v24e">
+        <span class="compact-match-chip compact-match-chip-v24c">T${escapeHtml(match?.court || '—')}</span>
+        <span class="team-badge ${escapeHtml(getLevelClass(refereeTeam?.level))} compact-match-referee-badge-v24d compact-match-referee-badge-v24e">${escapeHtml(refereeTeam?.name || '—')}</span>
+        <span class="compact-match-chip compact-match-chip-v24c">M${escapeHtml(match?.slot || '—')}</span>
+      </div>
+      <div class="compact-match-team-row-v24c compact-match-team-row-v24e">
+        <span class="team-badge ${escapeHtml(getLevelClass(teamA?.level))} compact-team-strip-badge compact-team-strip-badge-v24c compact-team-strip-badge-v24e">${escapeHtml(teamA?.name || '—')}</span>
+        <span class="team-badge ${escapeHtml(getLevelClass(teamB?.level))} compact-team-strip-badge compact-team-strip-badge-v24c compact-team-strip-badge-v24e">${escapeHtml(teamB?.name || '—')}</span>
+      </div>
+      <div class="compact-match-score-row compact-match-score-row-v24c compact-match-score-row-v24e">
+        <label class="compact-score-box compact-score-box-v24c compact-score-box-v24e"><input type="text" value="${escapeHtml(match?.scoreA ?? '')}" readonly /></label>
+        <label class="compact-score-box compact-score-box-v24c compact-score-box-v24e"><input type="text" value="${escapeHtml(match?.scoreB ?? '')}" readonly /></label>
+      </div>
+      <div class="compact-match-footer-v24c compact-match-footer-v24e">
+        <span class="match-print-button-v24c">🖨️</span>
+        <span class="badge ${statusClass}">${escapeHtml(status)}</span>
+      </div>
+    </div>`;
+}
+
 function printMatchCard(matchId) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const node = document.getElementById(`match-card-${matchId}`);
@@ -1279,28 +1319,39 @@ function printMatchCard(matchId) {
   window.setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
 }
 
-function printRemainingBrassageMatches(title, matches) {
+function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  const remaining = dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => getMatchStatusLabel(match, PHASE_RULES_DEFAULT) !== 'Valide');
+  const remaining = dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide');
   if (!remaining.length) {
     window.alert('Aucun match restant à imprimer.');
     return;
   }
-  const nodes = remaining
-    .map((match) => document.getElementById(`match-card-${match.id}`)?.outerHTML || '')
-    .filter(Boolean)
-    .join('');
-  if (!nodes) return;
+  const poolByName = new Map((Array.isArray(pools) ? pools : []).map((pool) => [pool?.name, pool]));
+  const nodes = remaining.map((match) => {
+    const pool = poolByName.get(match?.group);
+    const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds : [];
+    return renderMatchCardMarkup(match, resolveTeamFn, teamIds, phaseRules);
+  }).join('');
   const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
     .map((entry) => entry.outerHTML)
     .join('\n');
   const printWindow = window.open('', '_blank', 'width=900,height=1200');
-  if (!printWindow) return;
-  printWindow.document.write(`<!doctype html><html><head><title>${title}</title>${styles}<style>@page{size:A4 portrait;margin:8mm}body{margin:0;background:#fff;font-family:Inter,Arial,sans-serif;color:#0f172a}.print-a4-title{font-weight:800;font-size:16px;margin:0 0 8px}.print-a4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:start}.print-a4-grid .compact-match-card-v24c{transform:scale(.72);transform-origin:top left;width:138%;margin:0 0 -42px 0;box-shadow:none!important;border:1px solid #0f172a!important;break-inside:avoid;page-break-inside:avoid}.print-a4-grid .compact-match-card-v24c:last-child{margin-bottom:0}</style></head><body><div class="print-a4-title">${title}</div><div class="print-a4-grid">${nodes}</div></body></html>`);
+  if (!printWindow) {
+    window.alert("La fenêtre d'impression a été bloquée par le navigateur.");
+    return;
+  }
+  printWindow.document.write(`<!doctype html><html><head><title>${title}</title>${styles}<style>@page{size:A4 portrait;margin:8mm}body{margin:0;background:#fff;font-family:Inter,Arial,sans-serif;color:#0f172a}.print-a4-title{font-weight:800;font-size:16px;margin:0 0 8px}.print-a4-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-items:start}.print-a4-grid .compact-match-card-v24c{transform:scale(.72);transform-origin:top left;width:138%;margin:0 0 -42px 0;box-shadow:none!important;border:1px solid #0f172a!important;break-inside:avoid;page-break-inside:avoid}.print-a4-grid .compact-match-card-v24c:last-child{margin-bottom:0}.print-a4-grid .compact-score-box input{background:#fff!important}</style></head><body><div class="print-a4-title">${title}</div><div class="print-a4-grid">${nodes}</div></body></html>`);
   printWindow.document.close();
   printWindow.focus();
-  window.setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+  window.setTimeout(() => {
+    try {
+      printWindow.print();
+    } finally {
+      printWindow.close();
+    }
+  }, 350);
 }
+
 
 function TeamBadge({ name, level, className = '', children = null }) {
   return <span className={`team-badge ${getLevelClass(level)} ${className}`.trim()}>{name}{children}</span>;
@@ -5105,15 +5156,19 @@ export default function App() {
                   <td>
                     <div className="inline-cluster">
                       {onTeamClick ? (
-                        <button type="button" className="team-badge-button" onClick={() => onTeamClick(row.teamId)}>
+                        <button type="button" className="team-badge-button team-badge-button-compact-ranking" onClick={() => onTeamClick(row.teamId)}>
                           <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
                             {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
                           </TeamBadge>
+                          {compact ? <span className="team-badge-compact-points">{row.tournamentPoints}</span> : null}
                         </button>
                       ) : (
-                        <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
-                          {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
-                        </TeamBadge>
+                        <div className={compact ? 'team-badge-button-compact-ranking' : ''}>
+                          <TeamBadge name={row.teamName} level={row.level} className="team-badge-inline">
+                            {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
+                          </TeamBadge>
+                          {compact ? <span className="team-badge-compact-points">{row.tournamentPoints}</span> : null}
+                        </div>
                       )}
                     </div>
                   </td>
@@ -5643,7 +5698,7 @@ export default function App() {
 
           {activeTab === 'brassage1' && !isSmallTournamentMode && (
             <>
-              <Section title={`Brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`} right={<><Button variant="secondary" onClick={() => printRemainingBrassageMatches('Brassage 1 — matchs restants', visibleBrassage1Matches)}>🖨️</Button><Button onClick={generateBrassage2}>Générer brassage 2</Button></>}>
+              <Section title={`Brassage 1 : ${formatRemainingMatchesLabel(visibleBrassage1Matches, phaseRules)}`} right={<><Button variant="secondary" onClick={() => printRemainingBrassageMatches('Brassage 1 — matchs restants', visibleBrassage1Matches, brassage1.pools, resolveTeam, phaseRules)}>🖨️</Button><Button onClick={generateBrassage2}>Générer brassage 2</Button></>}>
                 {renderCompactBrassageBoard(brassage1.pools, visibleBrassage1Matches, brassage1Standings, 'brassage1')}
               </Section>
             </>
@@ -5651,7 +5706,7 @@ export default function App() {
 
           {activeTab === 'brassage2' && !isSmallTournamentMode && (
             <>
-              <Section title={`Brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`} right={<><Button variant="secondary" onClick={() => printRemainingBrassageMatches('Brassage 2 — matchs restants', visibleBrassage2Matches)}>🖨️</Button><Button onClick={generateMainStage}>Générer principale / consolante</Button></>}>
+              <Section title={`Brassage 2 : ${formatRemainingMatchesLabel(visibleBrassage2Matches, phaseRules)}`} right={<><Button variant="secondary" onClick={() => printRemainingBrassageMatches('Brassage 2 — matchs restants', visibleBrassage2Matches, brassage2.pools, resolveTeam, phaseRules)}>🖨️</Button><Button onClick={generateMainStage}>Générer principale / consolante</Button></>}>
                 {renderCompactBrassageBoard(brassage2.pools, visibleBrassage2Matches, brassage2Standings, 'brassage2')}
               </Section>
             </>

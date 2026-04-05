@@ -2478,9 +2478,9 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .overall-ranking-table-compact .overall-rank-col-compact {
-  width: 2ch;
-  min-width: 2ch;
-  max-width: 2ch;
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
   text-align: center;
   white-space: nowrap;
 }
@@ -2599,9 +2599,9 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .overall-ranking-table-compact .overall-rank-col-compact {
-  width: 2ch;
-  min-width: 2ch;
-  max-width: 2ch;
+  width: 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
 }
 
 .overall-ranking-table-compact .overall-points-col-compact {
@@ -2619,4 +2619,42 @@ tbody tr:last-child td { border-bottom: none; }
     width: 100%;
     min-width: 0;
   }
+}
+
+
+.team-badge-button-compact-ranking {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.team-badge-compact-points {
+  flex: 0 0 3ch;
+  min-width: 3ch;
+  max-width: 3ch;
+  text-align: right;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .inline-cluster {
+  width: 100%;
+}
+
+.overall-ranking-table-compact td:nth-child(2) .team-badge-inline {
+  max-width: calc(100% - 3.5ch);
+}
+
+.overall-ranking-table-compact td:nth-child(4),
+.overall-ranking-table-compact th:nth-child(4) {
+  width: 4ch;
+  min-width: 4ch;
+  white-space: nowrap;
+  text-align: right;
 }
