@@ -1,0 +1,4 @@
+V24A
+- Recherche d'équipe par phase de brassage
+- Classement général unique à droite avec défilement
+- Suppression du classement général en bas
