@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V23Y';
+const APP_VERSION = 'V23Z';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -3039,7 +3039,7 @@ export default function App() {
   }, [refereeSelectedEntry?.match?.id, refereeSelectedEntry?.match?.submittedScoreA, refereeSelectedEntry?.match?.submittedScoreB, refereeSelectedEntry?.match?.submittedAt, refereeSelectedEntry?.match?.refereeInProgress, refereeSelectedEntry?.match?.matchInProgress, refereeSelectedEntry?.match?.validatedAt, phaseRules]);
 
   useEffect(() => {
-    const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'finales', 'export'];
+    const allowedTabs = isSmallTournamentMode ? ['dashboard', 'equipes', 'championship', 'finales', 'export'] : ['dashboard', 'equipes', 'brassage1', 'brassage2', 'principale', 'consolante', 'finales', 'export'];
     if (!allowedTabs.includes(activeTab)) {
       setActiveTab('dashboard');
     }
@@ -5011,7 +5011,8 @@ export default function App() {
     { id: 'equipes', label: 'Équipes' },
     { id: 'brassage1', label: 'Brassage 1' },
     { id: 'brassage2', label: 'Brassage 2' },
-    { id: 'principale', label: 'Principale / Consolante' },
+    { id: 'principale', label: 'Principale' },
+    { id: 'consolante', label: 'Consolante' },
     { id: 'finales', label: 'Phases finales' },
     { id: 'public', label: 'Affichage public' },
     { id: 'export', label: 'Sauvegarde' },
@@ -5482,11 +5483,16 @@ export default function App() {
 
           {activeTab === 'principale' && !isSmallTournamentMode && (
             <>
-              <Section title="Poules principale">
+              <Section title="Poules principale" right={<Button variant="success" onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Générer demies principale' : 'Générer quarts principale'}</Button>}>
                 {renderStandings(principaleStandings)}
               </Section>
               <Section title={`Matchs de la principale : ${formatRemainingMatchesLabel(visiblePrincipaleMatches, phaseRules)}`}>{renderOrganizerMatches(visiblePrincipaleMatches, 'principale')}</Section>
-              <Section title="Poules consolante" right={<><Button variant="success" onClick={generatePrincipalQuarters}>{mainStageDistribution.directPrincipalSemis ? 'Générer demies principale' : 'Générer quarts principale'}</Button><Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button></>}>
+            </>
+          )}
+
+          {activeTab === 'consolante' && !isSmallTournamentMode && (
+            <>
+              <Section title="Poules consolante" right={<Button variant="secondary" onClick={generateConsolanteSemis}>Générer demies consolante</Button>}>
                 {renderStandings(consolanteStandings)}
               </Section>
               <Section title={`Matchs de la consolante : ${formatRemainingMatchesLabel(visibleConsolanteMatches, phaseRules)}`}>{renderOrganizerMatches(visibleConsolanteMatches, 'consolante')}</Section>
