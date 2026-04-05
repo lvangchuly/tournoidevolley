@@ -3177,3 +3177,61 @@ tbody tr:last-child td { border-bottom: none; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* V24L - classement général ajusté + numéro de match par terrain */
+.compact-overall-ranking-column-v24c {
+  width: 208px;
+  min-width: 208px;
+  max-width: 208px;
+  height: calc(100vh - 96px);
+}
+
+.compact-overall-ranking-scroll-v24c {
+  max-height: calc(100vh - 132px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-rank-col-compact {
+  width: 4ch;
+  min-width: 4ch;
+  max-width: 4ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-points-col-compact {
+  width: 2.6ch;
+  min-width: 2.6ch;
+  max-width: 2.6ch;
+  text-align: center;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th {
+  padding: 3px 3px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td {
+  padding: 2px 3px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k .overall-team-col-compact {
+  width: auto;
+  padding-left: 3px;
+  padding-right: 1px;
+}
+
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k tbody td:last-child,
+.overall-ranking-table-compact.overall-ranking-table-compact-v24k thead th:last-child {
+  padding-left: 1px;
+  padding-right: 1px;
+}
+
+.team-badge-inline-compact-overall-v24k {
+  padding: 3px 6px;
+}
