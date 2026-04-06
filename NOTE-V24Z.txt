@@ -1,1 +1,0 @@
-V24Z : optimisation des terrains libres pour les poules de 4 equipes ou plus en brassage.
