@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25Q';
+const APP_VERSION = 'V25R';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2581,6 +2581,7 @@ export default function App() {
             name: String(data?.settings?.tournamentName || id || 'Tournoi sans nom'),
             createdAt: createdAtRaw,
             createdAtValue: Number.isFinite(createdAtValue) ? createdAtValue : Number.MAX_SAFE_INTEGER,
+            organizerPassword: String(data?.settings?.organizerPassword ?? ''),
           };
         })
         .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
@@ -2630,13 +2631,18 @@ export default function App() {
         throw new Error(enhancedMessage);
       }
       const tournamentPassword = String(readPayload?.settings?.organizerPassword ?? '');
-      const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi.`);
-      if (deletionPassword === null) return;
-      const normalizedDeletionPassword = String(deletionPassword ?? '');
-      const isPasswordValid = normalizedDeletionPassword === 'Chuly0ne' || (tournamentPassword !== '' && normalizedDeletionPassword === tournamentPassword);
-      if (!isPasswordValid) {
-        window.alert('Mot de passe incorrect. Suppression annulée.');
-        return;
+      if (tournamentPassword === '') {
+        const confirmedWithoutPassword = window.confirm(`Le tournoi « ${targetLabel} » n'a pas de mot de passe. Confirmer sa suppression ?`);
+        if (!confirmedWithoutPassword) return;
+      } else {
+        const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi.`);
+        if (deletionPassword === null) return;
+        const normalizedDeletionPassword = String(deletionPassword ?? '');
+        const isPasswordValid = normalizedDeletionPassword === 'Chuly0ne' || normalizedDeletionPassword === tournamentPassword;
+        if (!isPasswordValid) {
+          window.alert('Mot de passe incorrect. Suppression annulée.');
+          return;
+        }
       }
       const response = await fetch(buildFirebaseTournamentUrl(targetId), { method: 'DELETE' });
       const payload = await response.json().catch(() => ({}));
@@ -5907,7 +5913,7 @@ export default function App() {
                             }}
                           >
                             <span>{item.name}</span>
-                            <small>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('fr-FR') : ''}</small>
+                            <small>{item.createdAt ? new Date(item.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : ''}</small>
                           </button>
                         ))}
                       </div>
