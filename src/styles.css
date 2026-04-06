@@ -3328,10 +3328,10 @@ tbody tr:last-child td { border-bottom: none; }
   cursor: pointer;
 }
 .compact-brassage-pool-list-card-v24n.is-selected {
-  border-color: #1d4ed8;
-  border-width: 3px;
-  box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.22), 0 10px 24px rgba(29, 78, 216, 0.18);
-  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+  border-color: #dc2626;
+  border-width: 4px;
+  box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.24), 0 12px 28px rgba(220, 38, 38, 0.20);
+  background: linear-gradient(180deg, #ffffff 0%, #fff1f2 100%);
 }
 .compact-brassage-pool-list-head-v24n {
   font-size: 15px;
@@ -3399,10 +3399,10 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: 0;
 }
 .compact-match-card-v24n.is-team-highlighted {
-  border-color: #1d4ed8;
-  border-width: 3px;
-  box-shadow: 0 0 0 5px rgba(29, 78, 216, 0.24), 0 12px 28px rgba(29, 78, 216, 0.18);
-  background: linear-gradient(180deg, #ffffff 0%, #eef5ff 100%);
+  border-color: #dc2626;
+  border-width: 4px;
+  box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.24), 0 14px 30px rgba(220, 38, 38, 0.20);
+  background: linear-gradient(180deg, #ffffff 0%, #fff1f2 100%);
 }
 .compact-match-header-v24n {
   display: grid;
