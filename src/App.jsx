@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26D';
+const APP_VERSION = 'V26E';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1848,15 +1848,21 @@ function normalizeImageFileToSquareDataUrl(file, targetSize = NORMALIZED_LOGO_SO
   });
 }
 
-function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt }) {
+function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt, onOpen }) {
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`;
   return (
-    <div className="referee-qr-card">
+    <div
+      className="referee-qr-card referee-qr-card-clickable"
+      role={onOpen ? 'button' : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onClick={onOpen}
+      onKeyDown={onOpen ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(); } } : undefined}
+    >
       <div className="referee-qr-title">{title}</div>
       {topImageSrc ? <img className="referee-qr-top-image" src={topImageSrc} alt={topImageAlt || ''} /> : null}
       <img className="referee-qr-image" src={qrSrc} alt={alt} />
       <div className="referee-qr-caption">{caption}</div>
-      <a className="referee-qr-link" href={url} target="_blank" rel="noreferrer">{url}</a>
+      <a className="referee-qr-link" href={url} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{url}</a>
     </div>
   );
 }
@@ -5855,7 +5861,6 @@ export default function App() {
     { id: 'equipes', label: 'Équipes' },
     { id: 'championship', label: 'Championnat' },
     { id: 'finales', label: 'Phases finales' },
-    { id: 'public', label: 'Affichage public' },
     { id: 'export', label: 'Sauvegarde' },
   ] : [
     { id: 'dashboard', label: 'Vue d’ensemble' },
@@ -5865,7 +5870,6 @@ export default function App() {
     { id: 'principale', label: 'Principale' },
     { id: 'consolante', label: 'Consolante' },
     { id: 'finales', label: 'Phases finales' },
-    { id: 'public', label: 'Affichage public' },
     { id: 'export', label: 'Sauvegarde' },
   ];
 
@@ -5994,7 +5998,6 @@ export default function App() {
               </div>
               <div className="actions-stack">
                 <Button variant="primary" onClick={requestOrganizerMode}>Accès organisateur</Button>
-                <Button variant="success" onClick={enterRefereeMode}>Mode arbitres</Button>
               </div>
             </div>
           </header>
@@ -6169,6 +6172,7 @@ export default function App() {
               caption="Scanne ce QR code pour ouvrir directement le mode Arbitres."
               topImageSrc="/organizer-banner-bg.png"
               topImageAlt="Logo NEO DEV ChulyOne"
+              onOpen={enterRefereeMode}
             />
           </div>
           <div className="hero-controls hero-controls-centered">
@@ -6198,23 +6202,14 @@ export default function App() {
               placeholder="Nom du tournoi"
               aria-label="Nom du tournoi"
             />
-            <label>
-              <span>Début</span>
-              <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-            </label>
             <div className="hero-pill organizer-phase-pill">
               <OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} />
             </div>
             <div className="actions-stack hero-actions-centered">
               <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
-              <Button variant="secondary" onClick={enterRefereeMode}>Mode arbitres</Button>
-              <Button variant="secondary" onClick={enterPublicMode}>Affichage public</Button>
               <Button variant="danger" onClick={startNewTournament}>Nouveau tournoi</Button>
             </div>
             <div className="muted small banner-meta">Identifiant du tournoi : <strong>{sharedTournamentId}</strong></div>
-            {lastSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde locale : {new Date(lastSavedAt).toLocaleString('fr-FR')}</div> : null}
-            {remoteSavedAt ? <div className="muted small banner-meta">Dernière sauvegarde Firebase : {new Date(remoteSavedAt).toLocaleString('fr-FR')}</div> : null}
-            {remoteSyncMessage ? <div className="muted small banner-meta">{remoteSyncMessage}</div> : null}
           </div>
           <div className="banner-side banner-right">
             <AccessQrCode
@@ -6222,6 +6217,7 @@ export default function App() {
               title="Accès public"
               alt="QR code d’accès à l’affichage public"
               caption="Scanne ce QR code pour ouvrir directement l’affichage public du tournoi."
+              onOpen={enterPublicMode}
             />
           </div>
           <div className="organizer-banner-email">Lvangchuly@gmail.com</div>
@@ -6282,7 +6278,7 @@ export default function App() {
                   <Button type="button" variant="secondary" onClick={updateOrganizerPassword}>Enregistrer le mot de passe</Button>
                 </div>
                 <p className="muted small organizer-password-help">
-                  Mot de passe actuel : {organizerPassword === '' ? 'aucun mot de passe' : 'défini'}
+                  MOT DE PASSE ACTUEL: {organizerPassword === '' ? 'aucun mot de passe' : organizerPassword}
                 </p>
               </Section>
 
@@ -6346,8 +6342,8 @@ export default function App() {
                 </div>
               </Section>
 
-              <Section title="Informations" subtitle="Explication du calcul des points et rappel du déroulé du tournoi." right={isSmallTournamentMode ? <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer Aller</Button><Button variant="secondary" onClick={generateBrassage2}>2. Générer Retour</Button><Button variant="success" onClick={generateSmallKnockoutStage1}>3. Générer tableau final</Button></> : <><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>1. Générer brassage 1</Button>{shouldSkipBrassage2 ? null : <Button variant="secondary" onClick={generateBrassage2}>2. Générer brassage 2</Button>}{canDisableBrassage2 ? <Button variant="success" onClick={() => generateMainStage(true)}>{shouldSkipBrassage2 ? '2. Générer principale / consolante' : 'Passer en principale / consolante'}</Button> : <Button variant="success" onClick={generateMainStage}>{shouldSkipBrassage2 ? '2. Générer principale / consolante' : '3. Générer principale / consolante'}</Button>}</>}>
-                <div className="cards-grid two-up info-grid">
+              <Section title="Informations" subtitle="Explication du calcul des points.">
+                <div className="cards-grid one-up info-grid">
                   <div className="mini-card info-card">
                     <div className="mini-card-head">Calcul des points</div>
                     <p className="muted small">L’équipe gagnante marque le score gagnant multiplié par 2, puis on ajoute l’écart de points. L’équipe perdante conserve ses points marqués puis on retire cet écart.</p>
@@ -6355,7 +6351,6 @@ export default function App() {
                     <p className="muted small">Ces points servent ensuite à départager les équipes dans les classements de poules, de brassage et dans le classement cumulé.</p>
                     {hasDuplicateTeamNames ? <p className="helper-text danger-text">Des doublons de nom d’équipe sont détectés. Le brassage 1 reste bloqué tant qu’ils ne sont pas corrigés.</p> : null}
                   </div>
-                  <div className="mini-card public-ranking-card"><OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} compact /><div className="mini-card-head top-gap">Classement général</div>{renderOverallRanking(isSmallTournamentMode ? championshipRanking : overallRanking)}</div>
                 </div>
               </Section>
             </>
@@ -6521,7 +6516,7 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={copyState}>Copier JSON</Button><Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button><Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button><Button variant="danger" onClick={resetTournament}>Réinitialiser</Button></>}>
+            <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button><Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button><Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up public-rankings-grid">
                 <div className="mini-card public-ranking-card">
@@ -6542,7 +6537,7 @@ export default function App() {
                       <div className="inline-form-row">
                         <input
                           value={sharedTournamentId}
-                          onChange={(e) => updateSharedTournamentIdentifier(e.target.value)}
+                          readOnly
                           placeholder="tournoi-ab12c"
                         />
                         <Button variant="secondary" onClick={regenerateSharedTournamentIdentifier}>Nouveau code</Button>

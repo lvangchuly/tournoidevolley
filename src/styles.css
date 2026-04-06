@@ -4190,3 +4190,13 @@ tbody tr:last-child td { border-bottom: none; }
     align-items: center;
   }
 }
+
+
+.referee-qr-card-clickable {
+  cursor: pointer;
+}
+
+.referee-qr-card-clickable:focus-visible {
+  outline: 3px solid rgba(255,255,255,0.75);
+  outline-offset: 3px;
+}
