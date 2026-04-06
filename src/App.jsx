@@ -9,7 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V25M';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V25S';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25R';
+const APP_VERSION = 'V25S';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1854,7 +1854,7 @@ export default function App() {
   const initial = loadState();
   const initialOrganizerPassword = Object.prototype.hasOwnProperty.call(initial?.settings || {}, 'organizerPassword')
     ? String(initial?.settings?.organizerPassword ?? '')
-    : 'Chuly0ne';
+    : '';
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mode, setMode] = useState(() => {
     if (typeof window === 'undefined') return 'home';
@@ -2632,7 +2632,7 @@ export default function App() {
       }
       const tournamentPassword = String(readPayload?.settings?.organizerPassword ?? '');
       if (tournamentPassword === '') {
-        const confirmedWithoutPassword = window.confirm(`Le tournoi « ${targetLabel} » n'a pas de mot de passe. Confirmer sa suppression ?`);
+        const confirmedWithoutPassword = window.confirm(`Le tournoi « ${targetLabel} » n'a pas de mot de passe. Veux-tu le supprimer ?`);
         if (!confirmedWithoutPassword) return;
       } else {
         const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi.`);
@@ -2696,7 +2696,7 @@ export default function App() {
   async function createTournamentFromHome() {
     const resetStartedAt = new Date().toISOString();
     const freshState = {
-      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: true, resetLevelsToL: true }),
+      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: false, resetLevelsToL: true }),
       meta: { createdAt: resetStartedAt, lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
@@ -3720,7 +3720,7 @@ export default function App() {
     const preservePassword = options.preservePassword !== false;
     const resetLevelsToL = options.resetLevelsToL === true;
     const nextSharedTournamentId = preserveSharedId ? (String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId('Tournoi de volley')) : buildDefaultSharedTournamentId('Tournoi de volley');
-    const nextOrganizerPassword = preservePassword ? organizerPassword : 'Chuly0ne';
+    const nextOrganizerPassword = preservePassword ? organizerPassword : '';
     return {
       teams: resetLevelsToL ? defaultTeamsAllLevelL() : defaultTeams(),
       settings: {
@@ -3766,7 +3766,7 @@ export default function App() {
 
   async function startNewTournament() {
     const confirmed = confirmWithDetails(
-      'Le tournoi sera réinitialisé. Un nouvel identifiant de tournoi sera également généré. Le mot de passe organisateur actuel sera conservé.',
+      'Le tournoi sera réinitialisé. Un nouvel identifiant de tournoi sera également généré. Le mot de passe organisateur sera vide.',
       'Veux-tu continuer ?'
     );
     if (!confirmed) return;
@@ -3779,7 +3779,7 @@ export default function App() {
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
-      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: true, resetLevelsToL: true }),
+      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: false, resetLevelsToL: true }),
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
@@ -4067,7 +4067,7 @@ export default function App() {
 
   async function resetTournament() {
     const confirmed = confirmWithDetails(
-      'Le tournoi sera réinitialisé. Un nouvel identifiant de tournoi sera également généré. Le mot de passe organisateur actuel sera conservé.',
+      'Le tournoi sera réinitialisé. Un nouvel identifiant de tournoi sera également généré. Le mot de passe organisateur sera vide.',
       'Veux-tu continuer ?'
     );
     if (!confirmed) return;
@@ -4080,7 +4080,7 @@ export default function App() {
     pendingFreshTournamentTimestampRef.current = resetStartedAt;
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
-      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: true, resetLevelsToL: true }),
+      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: false, resetLevelsToL: true }),
       meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
     };
     applyPersistedState(freshState);
