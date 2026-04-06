@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25M';
+const APP_VERSION = 'V25N';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1951,8 +1951,9 @@ export default function App() {
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const normalizedHomeSearch = useMemo(() => String(homeSearch || '').trim().toLocaleLowerCase('fr-FR'), [homeSearch]);
   const filteredHomeTournamentOptions = useMemo(() => {
-    if (!normalizedHomeSearch) return homeTournamentOptions;
-    return homeTournamentOptions
+    const baseItems = [...homeTournamentOptions].sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' }));
+    if (!normalizedHomeSearch) return baseItems;
+    return baseItems
       .map((item) => {
         const name = String(item.name || '').toLocaleLowerCase('fr-FR');
         const index = name.indexOf(normalizedHomeSearch);
@@ -1960,8 +1961,7 @@ export default function App() {
       })
       .sort((a, b) => {
         if (a.matchIndex !== b.matchIndex) return a.matchIndex - b.matchIndex;
-        if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
-        return String(a.name || '').localeCompare(String(b.name || ''), 'fr');
+        return String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' });
       });
   }, [homeTournamentOptions, normalizedHomeSearch]);
   const organizerBannerStyle = useMemo(() => {
@@ -2583,10 +2583,7 @@ export default function App() {
             createdAtValue: Number.isFinite(createdAtValue) ? createdAtValue : Number.MAX_SAFE_INTEGER,
           };
         })
-        .sort((a, b) => {
-          if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
-          return a.name.localeCompare(b.name, 'fr');
-        });
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }));
       setHomeTournamentOptions(items);
       setHomeSelectedTournamentId((current) => {
         if (current && items.some((item) => item.id === current)) return current;
@@ -5845,7 +5842,8 @@ export default function App() {
                     const nextValue = e.target.value;
                     setHomeSearch(nextValue);
                     const normalizedNextValue = String(nextValue || '').trim().toLocaleLowerCase('fr-FR');
-                    const nextOptions = homeTournamentOptions
+                    const nextOptions = [...homeTournamentOptions]
+                      .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' }))
                       .map((item) => {
                         const name = String(item.name || '').toLocaleLowerCase('fr-FR');
                         const index = normalizedNextValue ? name.indexOf(normalizedNextValue) : 0;
@@ -5853,8 +5851,7 @@ export default function App() {
                       })
                       .sort((a, b) => {
                         if (a.matchIndex !== b.matchIndex) return a.matchIndex - b.matchIndex;
-                        if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
-                        return String(a.name || '').localeCompare(String(b.name || ''), 'fr');
+                        return String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' });
                       });
                     if (nextOptions[0]) setHomeSelectedTournamentId(nextOptions[0].id);
                     setHomeSelectorOpen(true);
@@ -5879,7 +5876,7 @@ export default function App() {
                     {!homeCatalogLoading && !homeCatalogError && filteredHomeTournamentOptions.length === 0 ? <div className="home-selector-status">Aucun tournoi trouvé.</div> : null}
                     {!homeCatalogLoading && !homeCatalogError && filteredHomeTournamentOptions.length > 0 ? (
                       <div className="home-selector-list">
-                        {filteredHomeTournamentOptions.slice(0, 12).map((item) => (
+                        {filteredHomeTournamentOptions.map((item) => (
                           <button
                             key={item.id}
                             type="button"
