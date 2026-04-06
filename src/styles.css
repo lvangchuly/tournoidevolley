@@ -3606,19 +3606,28 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* V24P — classement général compact fidèle au modèle image */
 .compact-overall-ranking-column-v24n {
-  width: 220px;
-  min-width: 220px;
-  max-width: 220px;
+  width: 210px;
+  min-width: 210px;
+  max-width: 210px;
+  display: flex;
+  flex-direction: column;
 }
 
 .compact-overall-ranking-scroll-v24n {
-  max-height: calc(100vh - 140px);
+  height: calc(100dvh - 150px);
+  max-height: calc(100dvh - 150px);
+  min-height: 220px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .overall-ranking-compact-v24p {
   width: 100%;
   min-width: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .overall-ranking-compact-head-v24p,
@@ -3656,15 +3665,19 @@ tbody tr:last-child td { border-bottom: none; }
 
 .overall-ranking-compact-body-v24p {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   padding-top: 2px;
+  min-height: 0;
+  height: 100%;
+  grid-auto-rows: minmax(0, 1fr);
 }
 
 .overall-ranking-row-v24p {
   width: 100%;
   min-width: 0;
   padding: 0 4px;
-  min-height: 23px;
+  min-height: 0;
+  height: 100%;
 }
 
 .overall-ranking-row-button-v24p {
@@ -3684,8 +3697,9 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 23px;
-  font-size: 12px;
+  min-height: 0;
+  height: 100%;
+  font-size: clamp(10px, 1.15vh, 12px);
 }
 
 .overall-ranking-team-v24p {
@@ -3697,10 +3711,11 @@ tbody tr:last-child td { border-bottom: none; }
   align-items: center;
   width: 100%;
   min-width: 0;
-  min-height: 21px;
-  padding: 3px 8px;
+  min-height: 0;
+  height: 100%;
+  padding: 1px 7px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: clamp(9px, 1.05vh, 11px);
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -3714,15 +3729,20 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: 3ch;
   max-width: 3ch;
   color: #0f172a;
-  font-size: 12px;
+  font-size: clamp(10px, 1.15vh, 12px);
   padding-right: 1px;
 }
 
 @media (max-width: 1200px) {
   .compact-overall-ranking-column-v24n {
-    width: 208px;
-    min-width: 208px;
-    max-width: 208px;
+    width: 196px;
+    min-width: 196px;
+    max-width: 196px;
+  }
+
+  .compact-overall-ranking-scroll-v24n {
+    height: calc(100dvh - 136px);
+    max-height: calc(100dvh - 136px);
   }
 
   .overall-ranking-compact-head-v24p,
@@ -3731,9 +3751,28 @@ tbody tr:last-child td { border-bottom: none; }
   }
 
   .team-badge-inline-compact-overall-v24p {
-    padding-left: 6px;
-    padding-right: 6px;
-    font-size: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+@media (max-height: 820px) {
+  .compact-overall-ranking-scroll-v24n {
+    height: calc(100dvh - 128px);
+    max-height: calc(100dvh - 128px);
+  }
+
+  .overall-ranking-compact-head-v24p {
+    padding: 1px 4px;
+    font-size: 9px;
+  }
+
+  .overall-ranking-compact-body-v24p {
+    gap: 0;
+  }
+
+  .team-badge-inline-compact-overall-v24p {
+    border-radius: 8px;
   }
 }
 
