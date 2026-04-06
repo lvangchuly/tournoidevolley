@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25Y';
+const APP_VERSION = 'V26A';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -5873,6 +5873,14 @@ export default function App() {
     const selectedHomeTournament = homeTournamentOptions.find((item) => item.id === homeSelectedTournamentId) || null;
     return (
       <div className="home-page">
+        <div className="home-corner-brand" aria-label="Informations de contact">
+          <div className="home-corner-logo">
+            <div className="home-corner-logo-top">NEO DEV</div>
+            <div className="home-corner-logo-mark">⚙</div>
+            <div className="home-corner-logo-bottom">Chuly0ne</div>
+          </div>
+          <div className="home-corner-email">Lvangchuly@gmail.com</div>
+        </div>
         <div className="home-shell">
           <div className="home-brand">
             <div className="home-brand-pill">TOURNOIDEVOLLEY.FR</div>
