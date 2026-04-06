@@ -3848,13 +3848,14 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .home-corner-logo-image {
-  width: 118px;
-  height: 138px;
-  display: block;
+  width: 176px;
+  height: 176px;
   object-fit: contain;
   border-radius: 18px;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.30);
-  background: rgba(255,255,255,0.96);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: #f2f2f2;
+  display: block;
 }
 
 .home-corner-email {
