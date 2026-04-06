@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25P';
+const APP_VERSION = 'V25Q';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2630,7 +2630,7 @@ export default function App() {
         throw new Error(enhancedMessage);
       }
       const tournamentPassword = String(readPayload?.settings?.organizerPassword ?? '');
-      const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi ou le mot de passe par défaut Chuly0ne.`);
+      const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi.`);
       if (deletionPassword === null) return;
       const normalizedDeletionPassword = String(deletionPassword ?? '');
       const isPasswordValid = normalizedDeletionPassword === 'Chuly0ne' || (tournamentPassword !== '' && normalizedDeletionPassword === tournamentPassword);
