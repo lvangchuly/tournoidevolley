@@ -1,1 +1,0 @@
-V23R: correction demandée pour stabiliser la saisie du mot de passe organisateur et des scores gagnants, afin qu'ils ne soient plus écrasés immédiatement.
