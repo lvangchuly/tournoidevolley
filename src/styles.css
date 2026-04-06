@@ -3847,40 +3847,14 @@ tbody tr:last-child td { border-bottom: none; }
   pointer-events: none;
 }
 
-.home-corner-logo {
+.home-corner-logo-image {
   width: 118px;
-  min-height: 138px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #fbfbfb 0%, #ececec 100%);
+  height: 138px;
+  display: block;
+  object-fit: contain;
+  border-radius: 18px;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.30);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  color: #8c8c8c;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 8px;
-  text-align: center;
-}
-
-.home-corner-logo-top {
-  font-size: 0.9rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  transform: rotate(-17deg);
-  margin-bottom: 10px;
-}
-
-.home-corner-logo-mark {
-  font-size: 2.4rem;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-
-.home-corner-logo-bottom {
-  font-size: 0.9rem;
-  font-weight: 800;
-  transform: rotate(-10deg);
+  background: rgba(255,255,255,0.96);
 }
 
 .home-corner-email {
