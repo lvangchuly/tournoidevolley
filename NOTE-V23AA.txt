@@ -1,2 +1,0 @@
-V23AA
-- Affichage compact du Brassage 1 et 2 : équipes à gauche, matchs+arbitre/terrain/rotation au centre, classement temps réel à droite.
