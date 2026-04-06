@@ -1,1 +1,0 @@
-V23Y: la synchro distante n'écrase plus pendant l'édition le mot de passe organisateur, le logo et les scores gagnants. Ces réglages sont sauvegardés après modification.
