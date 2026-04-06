@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25H';
+const APP_VERSION = 'V25I';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1557,15 +1557,18 @@ function Button({ children, variant = 'primary', ...props }) {
 }
 
 function Section({ title, subtitle, right, children }) {
+  const hasHeader = Boolean(title || subtitle || right);
   return (
     <section className="section-card">
-      <div className="section-head">
-        <div>
-          <h2>{title}</h2>
-          {subtitle ? <p className="muted">{subtitle}</p> : null}
+      {hasHeader ? (
+        <div className="section-head">
+          <div>
+            {title ? <h2>{title}</h2> : null}
+            {subtitle ? <p className="muted">{subtitle}</p> : null}
+          </div>
+          {right ? <div className="actions-row">{right}</div> : null}
         </div>
-        {right ? <div className="actions-row">{right}</div> : null}
-      </div>
+      ) : null}
       {children}
     </section>
   );
@@ -5692,7 +5695,6 @@ export default function App() {
                 <div className={`hero-version ${tournamentLogo ? '' : 'hero-version-dark'}`.trim()}>Version {APP_VERSION}</div>
               </div>
               <h1>{tournamentName} — mode arbitres</h1>
-              <p>{isSmallTournamentMode ? 'Sélectionne un match du Championnat ou du tableau final unique pour saisir les scores.' : 'Sélectionne un match pour saisir les scores. Dès qu’un score officiel est validé, il reste visible mais il ne peut plus être modifié en mode arbitres.'}</p>
             </div>
             <div className="hero-controls">
               <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : ''}`.trim()}>
@@ -5715,7 +5717,7 @@ export default function App() {
                 {renderRefereeSelectedMatch(refereeSelectedEntry)}
               </Section>
             ) : (
-              <Section title="Choisir un match" subtitle="Sélectionne le match à saisir. Les autres matchs seront masqués tant qu’un match est ouvert.">
+              <Section>
                 <div className="referee-selector-grid">
                   {refereeMatchGroups.filter((group) => group.matches.length > 0).map((group) => (
                     <div key={group.scope} className="mini-card public-ranking-card">
