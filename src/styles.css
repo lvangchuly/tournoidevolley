@@ -33,7 +33,8 @@ button, input, select { font: inherit; }
 .public-hero { background: linear-gradient(135deg, #1d4ed8, #0f172a); }
 .hero h1 { margin: 14px 0 10px; font-size: clamp(28px, 4vw, 42px); }
 .hero-title-input {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   border: 0;
   outline: none;
   background: transparent;
@@ -1086,6 +1087,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 .organizer-password-help {
   margin: 12px 0 0;
+  text-transform: none;
 }
 
 .tournament-logo-grid {

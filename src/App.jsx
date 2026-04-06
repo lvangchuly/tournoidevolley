@@ -30,7 +30,8 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26E';
+const APP_VERSION = 'V26F';
+const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1891,9 +1892,9 @@ export default function App() {
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
   const [organizerPassword, setOrganizerPassword] = useState(initialOrganizerPassword);
   const [passwordDraft, setPasswordDraft] = useState(initialOrganizerPassword);
-  const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || 'Tournoi de volley');
+  const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
   const [tournamentLogo, setTournamentLogo] = useState(initial?.settings?.tournamentLogo || '');
-  const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || 'Tournoi de volley'));
+  const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME));
   const [disableBrassage2, setDisableBrassage2] = useState(Boolean(initial?.settings?.disableBrassage2));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
@@ -1955,7 +1956,7 @@ export default function App() {
   const pendingFreshTournamentTimestampRef = useRef(null);
   const pendingStructureSyncTimestampRef = useRef(null);
   const pendingLocalMutationTimestampRef = useRef(null);
-  const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || 'Tournoi de volley');
+  const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
 
   useEffect(() => {
     sharedTournamentIdRef.current = sharedTournamentId;
@@ -2149,7 +2150,7 @@ export default function App() {
       setOrganizerPassword(nextPassword);
       setPasswordDraft(nextPassword);
     }
-    if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentName')) setTournamentName(parsed.settings?.tournamentName || 'Tournoi de volley');
+    if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentName')) setTournamentName(parsed.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'disableBrassage2')) setDisableBrassage2(Boolean(parsed.settings?.disableBrassage2));
@@ -3749,7 +3750,7 @@ export default function App() {
         slotDuration: 20,
         phaseRules: safeClone(DEFAULT_PHASE_RULES, DEFAULT_PHASE_RULES),
         organizerPassword: nextOrganizerPassword,
-        tournamentName: 'Tournoi de volley',
+        tournamentName: DEFAULT_TOURNAMENT_NAME,
         tournamentLogo: '',
         sharedTournamentId: nextSharedTournamentId,
         disableBrassage2: false,
@@ -3863,7 +3864,7 @@ export default function App() {
 
   function updateSharedTournamentIdentifier(nextValue, options = {}) {
     const requestedValue = String(nextValue || '').trim();
-    const nextId = requestedValue ? slugify(requestedValue) : buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || 'Tournoi de volley');
+    const nextId = requestedValue ? slugify(requestedValue) : buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || DEFAULT_TOURNAMENT_NAME);
     setSharedTournamentId(nextId);
     sharedTournamentIdRef.current = nextId;
     if (options.showMessage) {
@@ -3882,7 +3883,7 @@ export default function App() {
     if (!confirmedInfo) return null;
     const confirmedContinue = window.confirm('Veux-tu continuer ?');
     if (!confirmedContinue) return null;
-    return updateSharedTournamentIdentifier(buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || 'Tournoi de volley'), { showMessage: true });
+    return updateSharedTournamentIdentifier(buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || DEFAULT_TOURNAMENT_NAME), { showMessage: true });
   }
 
   function updateOrganizerPassword() {
@@ -6184,22 +6185,23 @@ export default function App() {
               className="hero-title-input"
               type="text"
               value={tournamentName}
+              style={{ width: `min(100%, ${Math.max(String(tournamentName || DEFAULT_TOURNAMENT_NAME).length + 2, 30)}ch)` }}
               onChange={(e) => {
                 const nextName = e.target.value;
                 setTournamentName(nextName);
                 if (!String(sharedTournamentIdRef.current || '').trim()) {
-                  const nextId = buildDefaultSharedTournamentId(nextName || 'Tournoi de volley');
+                  const nextId = buildDefaultSharedTournamentId(nextName || DEFAULT_TOURNAMENT_NAME);
                   setSharedTournamentId(nextId);
                 }
                 queueBackgroundCloudSave(150);
               }}
               onBlur={() => {
                 const trimmedName = String(tournamentName || '').trim();
-                const nextName = !trimmedName ? 'Tournoi de volley' : trimmedName;
+                const nextName = !trimmedName ? DEFAULT_TOURNAMENT_NAME : trimmedName;
                 if (nextName !== tournamentName) setTournamentName(nextName);
                 queueBackgroundCloudSave(0);
               }}
-              placeholder="Nom du tournoi"
+              placeholder={DEFAULT_TOURNAMENT_NAME}
               aria-label="Nom du tournoi"
             />
             <div className="hero-pill organizer-phase-pill">
