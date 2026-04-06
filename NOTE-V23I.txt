@@ -1,1 +1,0 @@
-V23Y: synchronisation renforcée du tournoi partagé. Même identifiant = même liste d'équipes et même tournoi sur tous les appareils.
