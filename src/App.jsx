@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25N';
+const APP_VERSION = 'V25O';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -5909,7 +5909,6 @@ export default function App() {
               </button>
             </div>
           </div>
-          {selectedHomeTournament ? <div className="home-selected-note">Tournoi sélectionné : <strong>{selectedHomeTournament.name}</strong></div> : null}
         </div>
       </div>
     );
