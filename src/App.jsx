@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25O';
+const APP_VERSION = 'V25P';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -2620,6 +2620,24 @@ export default function App() {
     setHomeDeletingTournamentId(targetId);
     setHomeCatalogError('');
     try {
+      const readResponse = await fetch(buildFirebaseTournamentUrl(targetId));
+      const readPayload = await readResponse.json().catch(() => ({}));
+      if (!readResponse.ok) {
+        const rawMessage = String(readPayload?.error || 'Impossible de vérifier le mot de passe du tournoi.');
+        const enhancedMessage = /permission denied/i.test(rawMessage)
+          ? "Permission denied : la règle Firebase doit autoriser la lecture du tournoi sélectionné pour vérifier le mot de passe avant suppression."
+          : rawMessage;
+        throw new Error(enhancedMessage);
+      }
+      const tournamentPassword = String(readPayload?.settings?.organizerPassword ?? '');
+      const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi ou le mot de passe par défaut Chuly0ne.`);
+      if (deletionPassword === null) return;
+      const normalizedDeletionPassword = String(deletionPassword ?? '');
+      const isPasswordValid = normalizedDeletionPassword === 'Chuly0ne' || (tournamentPassword !== '' && normalizedDeletionPassword === tournamentPassword);
+      if (!isPasswordValid) {
+        window.alert('Mot de passe incorrect. Suppression annulée.');
+        return;
+      }
       const response = await fetch(buildFirebaseTournamentUrl(targetId), { method: 'DELETE' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
