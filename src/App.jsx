@@ -10,7 +10,7 @@ import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V26G';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V26J';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26G';
+const APP_VERSION = 'V26J';
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
@@ -51,7 +51,10 @@ const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', '
 const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 
 function getPreferredBrassagePoolCount(teamCount) {
-  if (teamCount <= 10) return 0;
+  if (teamCount < 8) return 0;
+  if (teamCount === 8) return 2;
+  if (teamCount === 9) return 3;
+  if (teamCount === 10) return 2;
   if (teamCount === 11) return 3;
   if (teamCount === 12) return 4;
   if (teamCount === 13 || teamCount === 14) return 4;
@@ -2023,10 +2026,10 @@ export default function App() {
     return !!normalizedName && (duplicateTeamNameMap.get(normalizedName) || 0) > 1;
   }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
-  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length <= 10;
+  const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 8;
   const mainStageDistribution = useMemo(() => getMainStageDistribution(activeTeams.length), [activeTeams.length]);
   const useNormalizedPoolRanking = !isSmallTournamentMode && mainStageDistribution.normalizedRanking;
-  const canDisableBrassage2 = !isSmallTournamentMode && activeTeams.length >= 11 && activeTeams.length <= 17;
+  const canDisableBrassage2 = !isSmallTournamentMode && activeTeams.length >= 8 && activeTeams.length <= 17;
   const shouldSkipBrassage2 = canDisableBrassage2 && disableBrassage2;
 
   const brassage1Standings = useMemo(() => computeGroupStandings(brassage1.pools, brassage1.matches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking }), [brassage1, teamMap, phaseRules, useNormalizedPoolRanking]);
@@ -3892,7 +3895,12 @@ export default function App() {
     if (!confirmedInfo) return null;
     const confirmedContinue = window.confirm('Veux-tu continuer ?');
     if (!confirmedContinue) return null;
-    return updateSharedTournamentIdentifier(buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || DEFAULT_TOURNAMENT_NAME), { showMessage: true });
+    const nextId = updateSharedTournamentIdentifier(
+      buildDefaultSharedTournamentId(tournamentNameRef.current || tournamentName || DEFAULT_TOURNAMENT_NAME),
+      { showMessage: true }
+    );
+    reloadTournamentInOrganizerMode(nextId);
+    return nextId;
   }
 
   function updateOrganizerPassword() {
@@ -4199,7 +4207,7 @@ export default function App() {
       window.alert('Ajoute au moins 2 équipes pour générer un tournoi.');
       return;
     }
-    if (readyTeams.length <= 10) {
+    if (readyTeams.length < 8) {
       const seededIds = sortTeamsForSeeding(readyTeams).map((team) => team.id);
       const pools = createChampionshipPool(seededIds, CHAMPIONSHIP_ALLER_POOL_NAME);
       const matches = createChampionshipMatches(seededIds, 'Championnat Aller', CHAMPIONSHIP_ALLER_POOL_NAME, false);
@@ -4216,7 +4224,7 @@ export default function App() {
       return;
     }
     if (readyTeams.length > TEAM_TARGET) {
-      window.alert(`Cette application est limitée à ${TEAM_TARGET} équipes maximum. Actuellement : ${readyTeams.length}. Pour 10 équipes ou moins, le mode Championnat Aller / Retour est utilisé automatiquement.`);
+      window.alert(`Cette application est limitée à ${TEAM_TARGET} équipes maximum. Actuellement : ${readyTeams.length}. Pour moins de 8 équipes, le mode Championnat Aller / Retour est utilisé automatiquement.`);
       return;
     }
     const orderedTeams = sortTeamsForSeeding(readyTeams);
@@ -4373,12 +4381,12 @@ export default function App() {
       return;
     }
     const rankedIds = championshipRanking.map((row) => row.teamId);
-    if (rankedIds.length >= 5) {
-      const quarters = assignSchedule(buildQuarterMatchesFromRanking(rankedIds), stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
-      const nextSingleKnockout = { quarters, semis: [], finals: [] };
+    if (rankedIds.length >= 4) {
+      const semis = assignSchedule(buildSemisFromRanking(rankedIds.slice(0, 4)), stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
+      const nextSingleKnockout = { quarters: [], semis, finals: [] };
       singleKnockoutRef.current = nextSingleKnockout;
       setSingleKnockout(nextSingleKnockout);
-    } else if (rankedIds.length >= 3) {
+    } else if (rankedIds.length === 3) {
       const semis = assignSchedule(buildSemisFromRanking(rankedIds), stageSlotCount(championshipLeg1.matches.length) + stageSlotCount(championshipLeg2.matches.length));
       const nextSingleKnockout = { quarters: [], semis, finals: [] };
       singleKnockoutRef.current = nextSingleKnockout;
@@ -6257,7 +6265,7 @@ export default function App() {
           {activeTab === 'dashboard' && (
             <>
               <div className="cards-grid six-up">
-                <StatCard label="Équipes" value={teams.length} subvalue={isSmallTournamentMode ? 'Mode Championnat Aller / Retour' : 'Cible : 18'} />
+                <StatCard label="Équipes" value={teams.length} subvalue={isSmallTournamentMode ? 'Mode Championnat Aller / Retour (< 8 équipes)' : 'Cible : 18'} />
                 {isSmallTournamentMode ? (
                   <>
                     <StatCard label="Championnat Aller" value={`${completedMatchCounts.championnatAller}/${championshipLeg1.matches.length || 0}`} subvalue="Toutes les équipes" />
@@ -6368,7 +6376,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, PN = 4, R = 3, D = 2, L = 1. Le brassage 1 utilise les numéros de la liste affichée des équipes triées par niveau : 1 à 6 en équipe 1, 18 à 13 en équipe 2, puis 7 à 12 en équipe 3. En cas d'égalité complète avant saisie des scores, l'ordre affiché dans la poule suit cet ordre d'affectation. Pour 11 à 17 équipes, le brassage privilégie uniquement des poules de 3 ou 4 équipes, sans poule de 2." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle="N = 5, PN = 4, R = 3, D = 2, L = 1. Le brassage 1 utilise les numéros de la liste affichée des équipes triées par niveau : 1 à 6 en équipe 1, 18 à 13 en équipe 2, puis 7 à 12 en équipe 3. En cas d'égalité complète avant saisie des scores, l'ordre affiché dans la poule suit cet ordre d'affectation. Pour 8 à 17 équipes, le brassage privilégie uniquement des poules de 3 à 5 équipes, sans poule de 2." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
