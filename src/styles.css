@@ -4000,6 +4000,25 @@ tbody tr:last-child td { border-bottom: none; }
   color: #fecaca;
 }
 
+
+.home-delete-button {
+  width: 82px;
+  min-height: 82px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 140, 66, 0.7);
+  background: linear-gradient(180deg, #fff9f4 0%, #ffe0c2 45%, #ffb977 100%);
+  color: #f97316;
+  font-size: 2.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.home-delete-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .home-selected-note {
   margin-top: 22px;
   font-size: 1.1rem;
@@ -4025,6 +4044,11 @@ tbody tr:last-child td { border-bottom: none; }
     width: 100%;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .home-delete-button {
+    width: 100%;
+    min-height: 64px;
   }
 
   .home-selector-block {
