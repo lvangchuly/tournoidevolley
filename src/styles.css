@@ -3814,3 +3814,232 @@ tbody tr:last-child td { border-bottom: none; }
   align-items: center;
   justify-content: center;
 }
+
+.home-page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(26, 64, 126, 0.35), transparent 40%), linear-gradient(180deg, #091327 0%, #081226 100%);
+  padding: 32px 18px;
+  color: #f8fafc;
+}
+
+.home-shell {
+  min-height: calc(100vh - 64px);
+  border-radius: 32px;
+  background: linear-gradient(180deg, rgba(9, 19, 39, 0.95), rgba(10, 23, 48, 0.96));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.35);
+  padding: 42px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.home-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.home-brand-pill {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+}
+
+.home-version {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.home-new-tournament {
+  margin-top: 26px;
+  background: #ef2323;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  min-width: min(760px, 85vw);
+  padding: 18px 28px;
+  font-size: 2rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.home-selector-row {
+  margin-top: 58px;
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+}
+
+.home-continue-button {
+  width: 104px;
+  min-height: 104px;
+  border-radius: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.26);
+  background: linear-gradient(180deg, #ffffff 0%, #d4d4d4 52%, #6f6f6f 100%);
+  color: #0b1223;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 2.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.home-continue-button span {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+
+.home-selector-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-selector-label {
+  font-size: 2.1rem;
+  font-weight: 700;
+}
+
+.home-selector {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: min(820px, 72vw);
+  border: 2px solid #0d36d9;
+  border-radius: 999px;
+  background: rgba(8, 18, 38, 0.96);
+  overflow: visible;
+}
+
+.home-selector-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  padding: 14px 20px;
+  outline: none;
+}
+
+.home-selector-input::placeholder {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.home-selector-toggle {
+  width: 64px;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.home-selector-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #0c1630;
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  border-radius: 20px;
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.35);
+  padding: 10px;
+  z-index: 15;
+}
+
+.home-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.home-selector-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: white;
+  padding: 10px 14px;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-selector-option small {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.home-selector-option-active,
+.home-selector-option:hover {
+  background: rgba(59, 130, 246, 0.24);
+}
+
+.home-selector-status {
+  padding: 12px 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.home-selector-error {
+  color: #fecaca;
+}
+
+.home-selected-note {
+  margin-top: 22px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 900px) {
+  .home-version {
+    font-size: 1.4rem;
+  }
+
+  .home-new-tournament,
+  .home-selector {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-shell {
+    padding: 28px 16px;
+  }
+
+  .home-selector-row {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-selector-block {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-selector-label,
+  .home-selector-input {
+    font-size: 1.35rem;
+  }
+
+  .home-continue-button {
+    width: 100%;
+    min-height: 74px;
+    flex-direction: row;
+  }
+}

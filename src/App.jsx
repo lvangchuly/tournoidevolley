@@ -9,8 +9,8 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V25K';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V25L';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -29,7 +29,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V25K';
+const APP_VERSION = 'V25L';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
 
@@ -1756,6 +1756,10 @@ function buildFirebaseTournamentUrl(sharedTournamentId) {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments/${effectiveId}.json`;
 }
 
+function buildFirebaseTournamentsCollectionUrl() {
+  return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments.json`;
+}
+
 function buildBaseAccessHref() {
   if (typeof window === 'undefined') return '';
   const href = String(window.location.href || '');
@@ -1853,9 +1857,11 @@ export default function App() {
     : 'Chuly0ne';
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mode, setMode] = useState(() => {
-    if (typeof window === 'undefined') return 'public';
+    if (typeof window === 'undefined') return 'home';
     const params = new URLSearchParams(window.location.search);
-    return params.get('mode') === 'referee' ? 'referee' : 'public';
+    if (params.get('mode') === 'referee') return 'referee';
+    if (params.get('sharedTournamentId')) return 'public';
+    return 'home';
   });
   const [isOrganizerAuthenticated, setIsOrganizerAuthenticated] = useState(false);
   const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
@@ -1875,6 +1881,13 @@ export default function App() {
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
+  const [createdAt, setCreatedAt] = useState(initial?.meta?.createdAt || new Date().toISOString());
+  const [homeTournamentOptions, setHomeTournamentOptions] = useState([]);
+  const [homeSearch, setHomeSearch] = useState('');
+  const [homeSelectedTournamentId, setHomeSelectedTournamentId] = useState('');
+  const [homeSelectorOpen, setHomeSelectorOpen] = useState(false);
+  const [homeCatalogLoading, setHomeCatalogLoading] = useState(false);
+  const [homeCatalogError, setHomeCatalogError] = useState('');
   const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
   const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
   const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
@@ -1901,6 +1914,7 @@ export default function App() {
   const refereeSelectedScoreDraftRef = useRef(refereeSelectedScoreDraft);
   const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
   const cloudSaveInFlightRef = useRef(false);
+  const createdAtRef = useRef(createdAt);
   const queuedCloudSaveRequestRef = useRef(null);
   const teamsRef = useRef(teams);
   const startTimeRef = useRef(startTime);
@@ -1934,6 +1948,21 @@ export default function App() {
 
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
+  const normalizedHomeSearch = useMemo(() => String(homeSearch || '').trim().toLocaleLowerCase('fr-FR'), [homeSearch]);
+  const filteredHomeTournamentOptions = useMemo(() => {
+    if (!normalizedHomeSearch) return homeTournamentOptions;
+    return homeTournamentOptions
+      .map((item) => {
+        const name = String(item.name || '').toLocaleLowerCase('fr-FR');
+        const index = name.indexOf(normalizedHomeSearch);
+        return { ...item, matchIndex: index < 0 ? Number.MAX_SAFE_INTEGER : index };
+      })
+      .sort((a, b) => {
+        if (a.matchIndex !== b.matchIndex) return a.matchIndex - b.matchIndex;
+        if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
+        return String(a.name || '').localeCompare(String(b.name || ''), 'fr');
+      });
+  }, [homeTournamentOptions, normalizedHomeSearch]);
   const organizerBannerStyle = useMemo(() => {
     if (!tournamentLogo) return undefined;
     return {
@@ -2063,6 +2092,7 @@ export default function App() {
         disableBrassage2: overrides.disableBrassage2 ?? disableBrassage2Ref.current,
       },
       meta: {
+        createdAt: overrides.createdAt ?? createdAtRef.current,
         lastSavedAt: savedAt,
         remoteSavedAt: overrides.remoteSavedAt ?? remoteSavedAtRef.current,
       },
@@ -2104,6 +2134,7 @@ export default function App() {
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'disableBrassage2')) setDisableBrassage2(Boolean(parsed.settings?.disableBrassage2));
+    if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'createdAt')) setCreatedAt(parsed.meta?.createdAt || new Date().toISOString());
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
     if (parsed.brassage1) setBrassage1(normalizeLeagueState(parsed.brassage1));
@@ -2531,6 +2562,118 @@ export default function App() {
     }
   }
 
+  async function fetchHomeTournamentCatalog() {
+    setHomeCatalogLoading(true);
+    setHomeCatalogError('');
+    try {
+      const response = await fetch(buildFirebaseTournamentsCollectionUrl());
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Impossible de charger la liste des tournois.');
+      }
+      const items = Object.entries(payload || {})
+        .map(([id, data]) => {
+          const createdAtRaw = data?.meta?.createdAt || data?.meta?.lastSavedAt || data?.meta?.remoteSavedAt || '';
+          const createdAtValue = createdAtRaw ? new Date(createdAtRaw).getTime() : Number.MAX_SAFE_INTEGER;
+          return {
+            id,
+            name: String(data?.settings?.tournamentName || id || 'Tournoi sans nom'),
+            createdAt: createdAtRaw,
+            createdAtValue: Number.isFinite(createdAtValue) ? createdAtValue : Number.MAX_SAFE_INTEGER,
+          };
+        })
+        .sort((a, b) => {
+          if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
+          return a.name.localeCompare(b.name, 'fr');
+        });
+      setHomeTournamentOptions(items);
+      setHomeSelectedTournamentId((current) => {
+        if (current && items.some((item) => item.id === current)) return current;
+        return items[0]?.id || '';
+      });
+      setHomeSearch((current) => {
+        if (current) return current;
+        return items[0]?.name || '';
+      });
+      return items;
+    } catch (error) {
+      setHomeCatalogError(error.message || 'Impossible de charger la liste des tournois.');
+      setHomeTournamentOptions([]);
+      setHomeSelectedTournamentId('');
+      return [];
+    } finally {
+      setHomeCatalogLoading(false);
+    }
+  }
+
+  async function continueWithSelectedTournament() {
+    const targetId = String(homeSelectedTournamentId || '').trim();
+    if (!targetId) {
+      window.alert('Sélectionne un tournoi dans la liste.');
+      return;
+    }
+    const loaded = await loadTournamentFromCloud(targetId, false);
+    if (!loaded) return;
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      url.searchParams.set('sharedTournamentId', targetId);
+      window.history.replaceState({}, '', url.toString());
+    }
+    setHomeSelectorOpen(false);
+    setMode('public');
+    setIsOrganizerAuthenticated(false);
+  }
+
+  async function createTournamentFromHome() {
+    const resetStartedAt = new Date().toISOString();
+    const freshState = {
+      ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: true, resetLevelsToL: true }),
+      meta: { createdAt: resetStartedAt, lastSavedAt: resetStartedAt, remoteSavedAt: '' },
+    };
+    applyPersistedState(freshState);
+    restoreOrganizerFreshView();
+    setRemoteStateInitialized(true);
+    setRemoteSyncMessage('');
+    setIsRemoteSyncing(false);
+    if (typeof window !== 'undefined') {
+      try { window.localStorage.removeItem(STORAGE_KEY); } catch {}
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(freshState));
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      url.searchParams.set('sharedTournamentId', freshState.settings.sharedTournamentId);
+      window.history.replaceState({}, '', url.toString());
+    }
+    if (String(freshState.settings?.sharedTournamentId || '').trim()) {
+      const savedAt = new Date().toISOString();
+      const cloudPayload = {
+        ...freshState,
+        meta: { ...(freshState.meta || {}), remoteSavedAt: savedAt },
+      };
+      try {
+        const response = await fetch(buildFirebaseTournamentUrl(freshState.settings.sharedTournamentId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cloudPayload),
+        });
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || 'Impossible de créer le tournoi sur Firebase.');
+        applyPersistedState(cloudPayload);
+        setRemoteSavedAt(savedAt);
+        setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
+        if (typeof window !== 'undefined') safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(cloudPayload));
+      } catch (error) {
+        setRemoteSyncMessage(error.message || 'Échec de la création du tournoi sur Firebase.');
+        window.alert(error.message || 'Échec de la création du tournoi sur Firebase.');
+        return;
+      }
+    }
+    setMode('organizer');
+    setIsOrganizerAuthenticated(true);
+    setActiveTab('dashboard');
+    fetchHomeTournamentCatalog();
+  }
+
   async function saveTournamentToCloud(showMessage = true, silent = false) {
     if (mode === 'referee' && !remoteStateInitialized) {
       if (!silent) {
@@ -2620,6 +2763,7 @@ export default function App() {
   useEffect(() => { tournamentNameRef.current = tournamentName; }, [tournamentName]);
   useEffect(() => { tournamentLogoRef.current = tournamentLogo; }, [tournamentLogo]);
   useEffect(() => { sharedTournamentIdRef.current = sharedTournamentId; }, [sharedTournamentId]);
+  useEffect(() => { createdAtRef.current = createdAt; }, [createdAt]);
   useEffect(() => { disableBrassage2Ref.current = disableBrassage2; }, [disableBrassage2]);
   useEffect(() => { remoteSavedAtRef.current = remoteSavedAt; }, [remoteSavedAt]);
   useEffect(() => { brassage1Ref.current = brassage1; }, [brassage1]);
@@ -2667,7 +2811,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!sharedTournamentId) return;
+    if (mode === 'home') {
+      fetchHomeTournamentCatalog();
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (!filteredHomeTournamentOptions.length) return;
+    const selectedItem = filteredHomeTournamentOptions.find((item) => item.id === homeSelectedTournamentId);
+    if (!selectedItem) {
+      setHomeSelectedTournamentId(filteredHomeTournamentOptions[0].id);
+    }
+  }, [filteredHomeTournamentOptions, homeSelectedTournamentId]);
+
+
+  useEffect(() => {
+    if (mode === 'home' || !sharedTournamentId) return;
     let cancelled = false;
 
     const pollRemoteLiveState = async () => {
@@ -3506,7 +3665,7 @@ export default function App() {
         sharedTournamentId: nextSharedTournamentId,
         disableBrassage2: false,
       },
-      meta: { lastSavedAt: '', remoteSavedAt: '' },
+      meta: { createdAt: new Date().toISOString(), lastSavedAt: '', remoteSavedAt: '' },
       brassage1: { pools: [], matches: [] },
       brassage2: { pools: [], matches: [] },
       mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
@@ -5612,6 +5771,95 @@ export default function App() {
     { id: 'export', label: 'Sauvegarde' },
   ];
 
+
+  if (mode === 'home') {
+    const selectedHomeTournament = homeTournamentOptions.find((item) => item.id === homeSelectedTournamentId) || null;
+    return (
+      <div className="home-page">
+        <div className="home-shell">
+          <div className="home-brand">
+            <div className="home-brand-pill">TOURNOIDEVOLLEY.FR</div>
+            <div className="home-version">VERSION {APP_VERSION}</div>
+          </div>
+          <button className="home-new-tournament" onClick={createTournamentFromHome}>Nouveau tournoi</button>
+          <div className="home-selector-row">
+            <button className="home-continue-button" onClick={continueWithSelectedTournament} aria-label="Continuer vers le tournoi sélectionné">▶<span>CONTINUER</span></button>
+            <div className="home-selector-block">
+              <label className="home-selector-label" htmlFor="home-tournament-search">Tournoi:</label>
+              <div className={`home-selector ${homeSelectorOpen ? 'home-selector-open' : ''}`.trim()}>
+                <input
+                  id="home-tournament-search"
+                  className="home-selector-input"
+                  type="text"
+                  value={homeSearch}
+                  placeholder="Nom du tournoi recherché"
+                  onFocus={() => setHomeSelectorOpen(true)}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    setHomeSearch(nextValue);
+                    const normalizedNextValue = String(nextValue || '').trim().toLocaleLowerCase('fr-FR');
+                    const nextOptions = homeTournamentOptions
+                      .map((item) => {
+                        const name = String(item.name || '').toLocaleLowerCase('fr-FR');
+                        const index = normalizedNextValue ? name.indexOf(normalizedNextValue) : 0;
+                        return { ...item, matchIndex: index < 0 ? Number.MAX_SAFE_INTEGER : index };
+                      })
+                      .sort((a, b) => {
+                        if (a.matchIndex !== b.matchIndex) return a.matchIndex - b.matchIndex;
+                        if (a.createdAtValue !== b.createdAtValue) return a.createdAtValue - b.createdAtValue;
+                        return String(a.name || '').localeCompare(String(b.name || ''), 'fr');
+                      });
+                    if (nextOptions[0]) setHomeSelectedTournamentId(nextOptions[0].id);
+                    setHomeSelectorOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      continueWithSelectedTournament();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="home-selector-toggle"
+                  aria-label="Afficher la liste des tournois"
+                  onClick={() => setHomeSelectorOpen((current) => !current)}
+                >▼</button>
+                {homeSelectorOpen ? (
+                  <div className="home-selector-dropdown">
+                    {homeCatalogLoading ? <div className="home-selector-status">Chargement des tournois…</div> : null}
+                    {!homeCatalogLoading && homeCatalogError ? <div className="home-selector-status home-selector-error">{homeCatalogError}</div> : null}
+                    {!homeCatalogLoading && !homeCatalogError && filteredHomeTournamentOptions.length === 0 ? <div className="home-selector-status">Aucun tournoi trouvé.</div> : null}
+                    {!homeCatalogLoading && !homeCatalogError && filteredHomeTournamentOptions.length > 0 ? (
+                      <div className="home-selector-list">
+                        {filteredHomeTournamentOptions.slice(0, 12).map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`home-selector-option ${item.id === homeSelectedTournamentId ? 'home-selector-option-active' : ''}`.trim()}
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              setHomeSelectedTournamentId(item.id);
+                              setHomeSearch(item.name);
+                              setHomeSelectorOpen(false);
+                            }}
+                          >
+                            <span>{item.name}</span>
+                            <small>{item.createdAt ? new Date(item.createdAt).toLocaleDateString('fr-FR') : ''}</small>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          {selectedHomeTournament ? <div className="home-selected-note">Tournoi sélectionné : <strong>{selectedHomeTournament.name}</strong></div> : null}
+        </div>
+      </div>
+    );
+  }
 
   if (mode === 'public') {
     return (
