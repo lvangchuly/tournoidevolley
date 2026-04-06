@@ -1,4 +1,0 @@
-V23Z
-- Onglet 'Principale / Consolante' scindé en deux onglets distincts : 'Principale' et 'Consolante'.
-- Les actions de génération restent sur l'onglet correspondant.
-- Source modifiée dans src/App.jsx.
