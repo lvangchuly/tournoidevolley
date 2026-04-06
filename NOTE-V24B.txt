@@ -1,4 +1,0 @@
-Version V24B
-- Affichage Brassage 1/2 rapproché du modèle fourni.
-- Cartes de matchs avec Tn / Mn, arbitre coloré, équipes colorées, saisie directe des scores organisateur.
-- Mise en page étendue sur la largeur de l'écran.
