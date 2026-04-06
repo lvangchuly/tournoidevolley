@@ -1,1 +1,0 @@
-V23Y: identifiant du tournoi enrichi d'un code aléatoire et modifiable par l'organisateur.
