@@ -6096,6 +6096,16 @@ export default function App() {
     || singleKnockout.semis.length > 0
     || singleKnockout.finals.length > 0;
 
+  const reloadOrganizerHomePage = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const targetUrl = 'https://tournoidevolley.fr/';
+    if (window.location.href === targetUrl || `${window.location.origin}/` === targetUrl) {
+      window.location.reload();
+      return;
+    }
+    window.location.assign(targetUrl);
+  }, []);
+
   const tabs = isSmallTournamentMode ? [
     { id: 'dashboard', label: 'Vue d’ensemble' },
     { id: 'equipes', label: 'Équipes' },
@@ -6417,7 +6427,22 @@ export default function App() {
           </div>
           <div className="hero-controls hero-controls-centered">
             <div className="hero-brand">
-              <div className="hero-tag">tournoidevolley.fr</div>
+              <div
+                className="hero-tag"
+                onClick={reloadOrganizerHomePage}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    reloadOrganizerHomePage();
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                title="Recharger tournoidevolley.fr"
+                style={{ cursor: 'pointer' }}
+              >
+                tournoidevolley.fr
+              </div>
               <div className="hero-version">Version {APP_VERSION}</div>
             </div>
             <input
