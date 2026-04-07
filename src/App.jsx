@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26O';
+const APP_VERSION = 'V26P';
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
@@ -1242,10 +1242,10 @@ function compareStandingRows(a, b, options = {}) {
   const normalizeByMatches = Boolean(options?.normalizeByMatches);
 
   if (normalizeByMatches) {
-    if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.avgTournamentPoints !== a.avgTournamentPoints) return b.avgTournamentPoints - a.avgTournamentPoints;
     if (b.avgPointDiff !== a.avgPointDiff) return b.avgPointDiff - a.avgPointDiff;
     if (b.avgPointsFor !== a.avgPointsFor) return b.avgPointsFor - a.avgPointsFor;
+    if (b.wins !== a.wins) return b.wins - a.wins;
     if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
   } else if (b.tournamentPoints !== a.tournamentPoints) return b.tournamentPoints - a.tournamentPoints;
 
@@ -1254,6 +1254,13 @@ function compareStandingRows(a, b, options = {}) {
   if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
   if ((a.initialOrder ?? 0) !== (b.initialOrder ?? 0)) return (a.initialOrder ?? 0) - (b.initialOrder ?? 0);
   return a.teamName.localeCompare(b.teamName, 'fr');
+}
+
+function formatStandingPoints(row, normalizeByMatches = false) {
+  if (!row) return '0';
+  if (!normalizeByMatches) return String(row.tournamentPoints ?? 0);
+  const value = Number.isFinite(row.avgTournamentPoints) ? row.avgTournamentPoints : 0;
+  return value.toFixed(2).replace('.', ',');
 }
 
 function computeRanking(teamIds, matches, teamMap, phaseRules, options = {}) {
@@ -2027,7 +2034,7 @@ export default function App() {
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 8;
   const mainStageDistribution = useMemo(() => getMainStageDistribution(activeTeams.length), [activeTeams.length]);
-  const useNormalizedPoolRanking = !isSmallTournamentMode && mainStageDistribution.normalizedRanking;
+  const useNormalizedPoolRanking = !isSmallTournamentMode;
   const canDisableBrassage2 = !isSmallTournamentMode && activeTeams.length >= 8 && activeTeams.length <= 17;
   const shouldSkipBrassage2 = canDisableBrassage2 && disableBrassage2;
 
@@ -5261,7 +5268,7 @@ export default function App() {
                       <td><TeamBadge name={row.teamName} level={row.level} /></td>
                       <td>{row.played}</td>
                       <td>{row.wins}</td>
-                      <td>{row.tournamentPoints}</td>
+                      <td>{formatStandingPoints(row, useNormalizedPoolRanking)}</td>
                       <td>{row.pointDiff}</td>
                     </tr>
                   ))}
@@ -5778,7 +5785,7 @@ export default function App() {
                       {isInRefereeGame ? <span className="team-badge-status">&nbsp;(En jeu)</span> : null}
                     </TeamBadge>
                   </div>
-                  <div className="overall-ranking-points-v24p">{row.tournamentPoints}</div>
+                  <div className="overall-ranking-points-v24p">{formatStandingPoints(row, useNormalizedPoolRanking)}</div>
                 </>
               );
               return onTeamClick ? (
@@ -5830,7 +5837,7 @@ export default function App() {
                     </div>
                   </td>
                   <td>{row.level}</td>
-                  <td>{row.played}</td><td>{row.wins}</td><td>{row.tournamentPoints}</td>
+                  <td>{row.played}</td><td>{row.wins}</td><td>{formatStandingPoints(row, useNormalizedPoolRanking)}</td>
                   <td>{row.pointDiff}</td>
                   {withStatus ? <td>{index < 12 ? 'Principale' : 'Consolante'}</td> : null}
                 </tr>
@@ -6297,7 +6304,7 @@ export default function App() {
                     {shouldSkipBrassage2 ? <StatCard label="Brassage 2" value="Désactivé" subvalue="Passage direct après le brassage 1" /> : <StatCard label="Brassage 2" value={`${completedMatchCounts.b2}/${visibleBrassage2Matches.length || 0}`} subvalue={getBrassagePoolSummary(activeTeams.length)} />}
                     <StatCard label="Principale" value={`${completedMatchCounts.principale}/${visiblePrincipaleMatches.length || 0}`} subvalue={mainStageDistribution.principalePoolNames.length === 2 ? '2 poules' : '4 poules de 3'} />
                     <StatCard label="Consolante" value={`${completedMatchCounts.consolante}/${visibleConsolanteMatches.length || 0}`} subvalue="2 poules de 3" />
-                    <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${rankingAfterBrassages[0]?.tournamentPoints ?? 0} pts`} />
+                    <StatCard label="Leader" value={rankingAfterBrassages[0]?.teamName || '-'} subvalue={`${formatStandingPoints(rankingAfterBrassages[0], useNormalizedPoolRanking)} pts`} />
                   </>
                 )}
               </div>
