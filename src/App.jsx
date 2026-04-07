@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26M';
+const APP_VERSION = 'V26O';
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
@@ -1221,16 +1221,6 @@ function OrganizerPhaseEstimateCard({ data, compact = false }) {
                 <strong className="phase-estimate-row-value">{item.value}</strong>
               </div>
             ))}
-          </div>
-                    <div className="home-signature" aria-label="Signature Tournoi de Volley">
-            <div className="home-signature-logo">
-              <div className="home-signature-ring">
-                <div className="home-signature-line home-signature-line-top">NEO DEV</div>
-                <div className="home-signature-mark">⚙</div>
-                <div className="home-signature-line home-signature-line-bottom">Chuly0ne</div>
-              </div>
-            </div>
-            <div className="home-signature-email">Lvangchuly@gmail.com</div>
           </div>
         </div>
       </div>
