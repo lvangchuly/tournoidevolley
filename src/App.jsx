@@ -3245,27 +3245,45 @@ export default function App() {
       return Boolean(teamName && teamName !== 'à définir');
     };
 
-    const extractPodium = (matches) => {
+    const extractPodium = (matches, fallbackRanking = []) => {
       const finalMatch = matches.find((match) => match.group === 'Finale');
       const smallFinal = matches.find((match) => match.group === 'Petite finale');
       const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
       const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
 
-      const first = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
+      let first = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
         ? finalResult.winner
         : null;
-      const second = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
+      let second = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
         ? finalResult.loser
         : null;
-      const third = smallFinal && isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
+      let third = smallFinal && isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
         ? smallResult.winner
         : null;
+
+      if (!first || !second || !third) {
+        const fallback = (Array.isArray(fallbackRanking) ? fallbackRanking : [])
+          .map((row) => row?.teamId || null)
+          .filter((teamId) => isResolvedPodiumTeam(teamId));
+        if (!first) first = fallback[0] || null;
+        if (!second) second = fallback[1] || null;
+        if (!third) third = fallback[2] || null;
+      }
 
       return { first, second, third };
     };
 
+    const consolantePoolComplete = mainStage.consolanteMatches.length > 0
+      && mainStage.consolanteMatches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+    const consolanteFallbackRanking = mainStage.consolantePools.length === 1
+      && knockout.consolanteSemis.length === 0
+      && knockout.consolanteFinals.length === 0
+      && consolantePoolComplete
+      ? consolanteOverallRanking
+      : [];
+
     const principale = extractPodium(knockout.principalFinals);
-    const consolante = extractPodium(knockout.consolanteFinals);
+    const consolante = extractPodium(knockout.consolanteFinals, consolanteFallbackRanking);
     const tournamentFinished = Boolean(
       principale.first
       && principale.second
@@ -3276,7 +3294,7 @@ export default function App() {
     );
 
     return { tournamentFinished, principale, consolante };
-  }, [knockout.principalFinals, knockout.consolanteFinals, phaseRules, resolveTeam]);
+  }, [knockout.principalFinals, knockout.consolanteFinals, knockout.consolanteSemis, mainStage.consolanteMatches, mainStage.consolantePools, consolanteOverallRanking, phaseRules, resolveTeam]);
 
   const featuredPublicMatches = useMemo(() => {
     if (publicPodiumLeaders.tournamentFinished) {
@@ -5945,31 +5963,34 @@ export default function App() {
     );
   }
 
-  function renderPodium(title, matches) {
+  function renderPodium(title, matches, fallbackPodium = null) {
     const finalMatch = matches.find((match) => match.group === 'Finale');
     const smallFinal = matches.find((match) => match.group === 'Petite finale');
     const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
     const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
+    const firstTeamId = finalResult.winner || fallbackPodium?.first || null;
+    const secondTeamId = finalResult.loser || fallbackPodium?.second || null;
+    const thirdTeamId = smallResult.winner || fallbackPodium?.third || null;
     return (
       <div className="mini-card public-ranking-card">
         <div className="mini-card-head">{title}</div>
         <div className="podium-steps podium-steps-model">
           <div className="podium-lane podium-lane-second">
-            <div className="podium-team-label">{finalResult.loser ? <TeamBadge name={resolveTeam(finalResult.loser).name} level={resolveTeam(finalResult.loser).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-team-label">{secondTeamId ? <TeamBadge name={resolveTeam(secondTeamId).name} level={resolveTeam(secondTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-second">
               <div className="podium-step-rank">2e</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-first">
-            <div className="podium-team-label">{finalResult.winner ? <TeamBadge name={resolveTeam(finalResult.winner).name} level={resolveTeam(finalResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-team-label">{firstTeamId ? <TeamBadge name={resolveTeam(firstTeamId).name} level={resolveTeam(firstTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-first">
               <div className="podium-step-rank">1er</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-third">
-            <div className="podium-team-label">{smallResult.winner ? <TeamBadge name={resolveTeam(smallResult.winner).name} level={resolveTeam(smallResult.winner).level} className="podium-team-badge" /> : 'À venir'}</div>
+            <div className="podium-team-label">{thirdTeamId ? <TeamBadge name={resolveTeam(thirdTeamId).name} level={resolveTeam(thirdTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
             <div className="podium-stick" aria-hidden="true" />
             <div className="podium-step podium-step-third">
               <div className="podium-step-rank">3e</div>
@@ -6197,7 +6218,7 @@ export default function App() {
               <Section title="Podiums">
                 <div className="cards-grid two-up public-rankings-grid">
                   {renderPodium('Tableau principal', knockout.principalFinals)}
-                  {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                  {renderPodium('Tableau consolante', knockout.consolanteFinals, publicPodiumLeaders.consolante)}
                 </div>
               </Section>
             ) : null}
@@ -6657,7 +6678,7 @@ export default function App() {
                   <Section title="Podiums">
                     <div className="cards-grid two-up public-rankings-grid">
                       {renderPodium('Tableau principal', knockout.principalFinals)}
-                      {renderPodium('Tableau consolante', knockout.consolanteFinals)}
+                      {renderPodium('Tableau consolante', knockout.consolanteFinals, publicPodiumLeaders.consolante)}
                     </div>
                   </Section>
                 </>
