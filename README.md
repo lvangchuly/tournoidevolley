@@ -107,3 +107,17 @@ Pour fonctionner, la base doit autoriser temporairement la lecture/écriture RES
 
 
 - V23Y : identifiant du tournoi = nom du tournoi + code aléatoire, modifiable par l'organisateur.
+
+## V27 - Firebase temps réel
+
+Cette version améliore la synchro distante :
+
+- écoute **temps réel** de Firebase via un flux REST (`EventSource`) avec repli automatique sur un rafraîchissement périodique
+- publication plus rapide des scores arbitres pour éviter les décalages d'affichage
+- `package-lock.json` nettoyé pour Vercel (`registry.npmjs.org`)
+
+### Limite importante sur la sécurité
+
+Sans authentification Firebase, il n'est pas possible de sécuriser finement la base tout en laissant l'accès web aux organisateurs, arbitres et public.
+
+Le fichier `firebase-rtdb-rules-v27.json` fournit donc une base minimale de règles pour laisser fonctionner l'application actuelle, mais une vraie sécurisation nécessite ensuite l'ajout d'une authentification ou d'un proxy serveur.
