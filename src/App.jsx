@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V26K';
+const APP_VERSION = 'V26M';
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
@@ -6267,7 +6267,6 @@ export default function App() {
               onOpen={enterPublicMode}
             />
           </div>
-          <div className="organizer-banner-email">Lvangchuly@gmail.com</div>
         </header>
         ) : null}
 
