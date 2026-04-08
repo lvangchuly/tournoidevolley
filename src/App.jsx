@@ -10,7 +10,7 @@ import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27M';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27N';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27M';
+const APP_VERSION = 'V27N';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -1735,10 +1735,42 @@ function formatRemainingMatchesLabel(matches, phaseRules) {
   return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
 }
 
+function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSkipBrassage2, hasConsolante, mainStageDistribution }) {
+  const levelText = 'N = National, PN = Pré-National, R = Régional, D = Départementale, L = Loisir.';
+  if (!teamCount) return `${levelText} Ajoutez des équipes pour afficher automatiquement le déroulé du tournoi.`;
+
+  if (isSmallTournamentMode) {
+    const finalStageText = teamCount <= 2
+      ? 'pas de phase finale supplémentaire : le classement du championnat désigne directement le vainqueur'
+      : teamCount <= 4
+        ? 'demi-finales puis finale et petite finale'
+        : 'quarts de finale, demi-finales puis finale et petite finale';
+    return `${levelText} Avec ${teamCount} équipes, le tournoi se joue en championnat aller${teamCount >= 5 ? ' puis retour' : ''}. À l’issue du championnat, le classement général qualifie les équipes pour ${finalStageText}.`;
+  }
+
+  const phases = ['Brassage 1'];
+  if (!shouldSkipBrassage2) phases.push('Brassage 2');
+  phases.push('Principale');
+  if (hasConsolante) phases.push('Consolante');
+
+  let finalsText = 'tableau final adapté automatiquement';
+  if (mainStageDistribution?.directPrincipalSemis) {
+    finalsText = hasConsolante
+      ? 'demi-finales principale et demi-finales consolante, puis finales'
+      : 'demi-finales puis finale et petite finale';
+  } else if (mainStageDistribution?.topCount >= 8) {
+    finalsText = hasConsolante
+      ? 'quarts de finale principale, demi-finales consolante, puis finales'
+      : 'quarts de finale puis demi-finales, finale et petite finale';
+  }
+
+  return `${levelText} Avec ${teamCount} équipes, les phases prévues sont : ${phases.join(' → ')}. Les équipes sont réparties automatiquement en poules de 3 à 5 selon l’effectif, puis le classement moyen par match alimente ${finalsText}.`;
+}
 
 
 function PublicPodiumHighlightCard({ title, principalTeamId, consolanteTeamId, resolveTeam }) {
-  const renderSlot = (label, teamId) => {
+  const showConsolante = Boolean(consolanteTeamId);
+  const renderSlot = (teamId) => {
     if (!teamId) return <div className="public-podium-team-value muted">À venir</div>;
     const team = resolveTeam(teamId);
     return <TeamBadge name={team.name} level={team.level} className="team-badge-public public-podium-badge" />;
@@ -1753,12 +1785,14 @@ function PublicPodiumHighlightCard({ title, principalTeamId, consolanteTeamId, r
       <div className="public-podium-card-body">
         <div className="public-podium-team-row">
           <div className="public-podium-team-label">Principale</div>
-          <div className="public-podium-team-content">{renderSlot('Principale', principalTeamId)}</div>
+          <div className="public-podium-team-content">{renderSlot(principalTeamId)}</div>
         </div>
-        <div className="public-podium-team-row">
-          <div className="public-podium-team-label">Consolante</div>
-          <div className="public-podium-team-content">{renderSlot('Consolante', consolanteTeamId)}</div>
-        </div>
+        {showConsolante ? (
+          <div className="public-podium-team-row">
+            <div className="public-podium-team-label">Consolante</div>
+            <div className="public-podium-team-content">{renderSlot(consolanteTeamId)}</div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -5787,6 +5821,7 @@ export default function App() {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
+    const activeCourtNumbers = [1, 2, 3].filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
     const poolCards = safePools.map((pool) => {
       const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
@@ -5848,8 +5883,8 @@ export default function App() {
 
         <div className="mini-card compact-brassage-matches-column-v24n">
           <div className="compact-brassage-title compact-brassage-title-v24n">Matchs</div>
-          <div className="compact-terrain-columns-v24n">
-            {[1, 2, 3].map((courtNumber) => {
+          <div className="compact-terrain-columns-v24n" style={{ gridTemplateColumns: `repeat(${Math.max(1, activeCourtNumbers.length)}, minmax(0, 1fr))` }}>
+            {activeCourtNumbers.map((courtNumber) => {
               const courtMatches = terrainMatchMap.get(courtNumber) || [];
               return (
                 <div key={courtNumber} className="compact-terrain-column-v24n">
@@ -5928,6 +5963,7 @@ export default function App() {
                 </div>
               );
             })}
+            {!activeCourtNumbers.length ? <div className="empty-state compact-final-empty-v24s">Aucun match prévu sur les terrains pour cette phase.</div> : null}
           </div>
         </div>
 
@@ -5964,12 +6000,13 @@ export default function App() {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
+    const activeCourtNumbers = [1, 2, 3].filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
     return (
       <div className="mini-card compact-final-stage-board-v24s">
         <div className="compact-brassage-title compact-brassage-title-v24n">Matchs</div>
-        <div className="compact-terrain-columns-v24n compact-final-terrain-columns-v24s">
-          {[1, 2, 3].map((courtNumber) => {
+        <div className="compact-terrain-columns-v24n compact-final-terrain-columns-v24s" style={{ gridTemplateColumns: `repeat(${Math.max(1, activeCourtNumbers.length)}, minmax(0, 1fr))` }}>
+          {activeCourtNumbers.map((courtNumber) => {
             const courtMatches = terrainMatchMap.get(courtNumber) || [];
             return (
               <div key={courtNumber} className="compact-terrain-column-v24n compact-final-terrain-column-v24s">
@@ -6374,21 +6411,21 @@ export default function App() {
         <div className="podium-steps podium-steps-model">
           <div className="podium-lane podium-lane-second">
             <div className="podium-team-label">{secondTeamId ? <TeamBadge name={resolveTeam(secondTeamId).name} level={resolveTeam(secondTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
             <div className="podium-step podium-step-second">
               <div className="podium-step-rank">2e</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-first">
             <div className="podium-team-label">{firstTeamId ? <TeamBadge name={resolveTeam(firstTeamId).name} level={resolveTeam(firstTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
             <div className="podium-step podium-step-first">
               <div className="podium-step-rank">1er</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-third">
             <div className="podium-team-label">{thirdTeamId ? <TeamBadge name={resolveTeam(thirdTeamId).name} level={resolveTeam(thirdTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-stick" aria-hidden="true" />
+            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
             <div className="podium-step podium-step-third">
               <div className="podium-step-rank">3e</div>
             </div>
@@ -6423,6 +6460,14 @@ export default function App() {
     || singleKnockout.quarters.length > 0
     || singleKnockout.semis.length > 0
     || singleKnockout.finals.length > 0;
+
+  const hasConsolanteStage = hasOrganizerConsolanteMatches || mainStage.consolantePools.length > 0 || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0 || Boolean(publicPodiumLeaders?.consolante?.first);
+  const equipesSubtitle = buildTeamsPhaseExplanation(teams.length, {
+    isSmallTournamentMode,
+    shouldSkipBrassage2,
+    hasConsolante: hasConsolanteStage,
+    mainStageDistribution,
+  });
 
   const tabs = isSmallTournamentMode ? [
     { id: 'dashboard', label: 'Vue d’ensemble' },
@@ -6907,7 +6952,7 @@ export default function App() {
           )}
 
           {activeTab === 'equipes' && (
-            <Section title="Équipes" subtitle="N = 5, PN = 4, R = 3, D = 2, L = 1. Le brassage 1 utilise les numéros de la liste affichée des équipes triées par niveau : 1 à 6 en équipe 1, 18 à 13 en équipe 2, puis 7 à 12 en équipe 3. En cas d'égalité complète avant saisie des scores, l'ordre affiché dans la poule suit cet ordre d'affectation. Pour 8 à 17 équipes, le brassage privilégie uniquement des poules de 3 à 5 équipes, sans poule de 2." right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
+            <Section title="Équipes" subtitle={equipesSubtitle} right={<><Button variant="secondary" onClick={addTeam} disabled={teamAdditionLocked}>Ajouter</Button><Button onClick={generateBrassage1} disabled={generateBrassage1Locked}>Générer brassage 1</Button></>}>
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -6938,10 +6983,6 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              {teamLevelLocked ? <p className="muted small helper-text">Le niveau d’équipe est verrouillé dès qu’un match valide existe dans la première phase du tournoi. Le nom reste modifiable.</p> : null}
-              <p className="muted small helper-text">Maximum {TEAM_TARGET} équipes. Le bouton Ajouter est bloqué à partir de {TEAM_TARGET} équipes et dès que la première phase du tournoi est générée.</p>
-              {hasDuplicateTeamNames ? <p className="helper-text danger-text">Les numéros en couleur signalent des doublons de nom d’équipe. Corrigez-les avant de générer le brassage 1.</p> : null}
-              {teamDeletionLocked ? <p className="muted small helper-text">Le bouton Supprimer disparaît dès qu’un match du tournoi est officiellement validé. Après "Nouveau tournoi", il reste disponible tant qu’aucun match du nouveau tournoi n’a été validé.</p> : null}
             </Section>
           )}
 
@@ -7055,9 +7096,9 @@ export default function App() {
                   </Section>
 
                   <Section title="Podiums">
-                    <div className="cards-grid two-up public-rankings-grid">
+                    <div className={`cards-grid ${hasConsolanteStage ? 'two-up' : 'one-up'} public-rankings-grid`}>
                       {renderPodium('Tableau principal', knockout.principalFinals)}
-                      {renderPodium('Tableau consolante', knockout.consolanteFinals, publicPodiumLeaders.consolante)}
+                      {hasConsolanteStage ? renderPodium('Tableau consolante', knockout.consolanteFinals, publicPodiumLeaders.consolante) : null}
                     </div>
                   </Section>
                 </>
