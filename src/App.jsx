@@ -10,8 +10,8 @@ import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27W';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27V', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27X';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27W', 'tournoidevolley-react-vite-V27V', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27W';
+const APP_VERSION = 'V27X';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -3527,8 +3527,8 @@ export default function App() {
   }) : ({
     brassage1Complete: visibleBrassage1Matches.length > 0 && visibleBrassage1Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     brassage2Complete: shouldSkipBrassage2 || (visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide')),
-    principalePoolsComplete: mainStage.principaleMatches.length > 0 && mainStage.principaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
-    consolantePoolsComplete: mainStage.consolanteMatches.length > 0 && mainStage.consolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    principalePoolsComplete: visiblePrincipaleMatches.length > 0 && visiblePrincipaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    consolantePoolsComplete: visibleConsolanteMatches.length > 0 && visibleConsolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalQuartersComplete: knockout.principalQuarters.length === 0 || knockout.principalQuarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     principalSemisComplete: knockout.principalSemis.length > 0 && knockout.principalSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolanteSemisComplete: knockout.consolanteSemis.length > 0 && knockout.consolanteSemis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -3623,18 +3623,22 @@ export default function App() {
     if (stageValidation.principalePoolsComplete && knockoutRef.current.principalQuarters.length === 0 && knockoutRef.current.principalSemis.length === 0) {
       const signature = `auto-principale-stage1-${mainStageDistribution.directPrincipalSemis ? 'semis' : 'quarters'}`;
       if (!autoGeneratedStageSignaturesRef.current.has(signature)) {
-        autoGeneratedStageSignaturesRef.current.add(signature);
-        generatePrincipalQuarters();
-        generatedFinalStageFromPools = true;
+        const generated = generatePrincipalQuarters();
+        if (generated !== false) {
+          autoGeneratedStageSignaturesRef.current.add(signature);
+          generatedFinalStageFromPools = true;
+        }
       }
     }
 
     if (stageValidation.consolantePoolsComplete && knockoutRef.current.consolanteSemis.length === 0 && knockoutRef.current.consolanteFinals.length === 0 && mainStageDistribution.consolanteMode !== 'direct-podium') {
       const signature = 'auto-consolante-semis';
       if (!autoGeneratedStageSignaturesRef.current.has(signature)) {
-        autoGeneratedStageSignaturesRef.current.add(signature);
-        generateConsolanteSemis();
-        generatedFinalStageFromPools = true;
+        const generated = generateConsolanteSemis();
+        if (generated !== false) {
+          autoGeneratedStageSignaturesRef.current.add(signature);
+          generatedFinalStageFromPools = true;
+        }
       }
     }
 
@@ -4702,7 +4706,7 @@ export default function App() {
     const brassage1Complete = brassage1PoolChecks.length > 0 && brassage1PoolChecks.every((entry) => entry.isReady);
     if (!brassage1Complete) {
       window.alert(`Tous les matchs attendus du Brassage 1 doivent être valides avant de ${shouldSkipBrassage2 ? 'générer la principale / consolante' : 'générer le Brassage 2'}.`);
-      return;
+      return false;
     }
     if (!confirmClearStageScores([
       ...currentBrassage2.matches,
@@ -4987,7 +4991,7 @@ export default function App() {
     const currentKnockout = knockoutRef.current;
     if (!currentMainStage.principalePools.length) {
       window.alert('Génère d’abord la principale.');
-      return;
+      return false;
     }
     const currentVisiblePrincipaleMatches = filterMatchesToPools(currentMainStage.principaleMatches, currentMainStage.principalePools, 'Principale');
     const currentDistribution = getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length);
@@ -4996,7 +5000,7 @@ export default function App() {
       window.alert(currentDistribution.directPrincipalSemis
         ? 'Tous les scores des poules principales doivent être valides avant de générer les demi-finales principale.'
         : 'Tous les scores des poules principales doivent être valides avant de générer les quarts principale.');
-      return;
+      return false;
     }
     const clearLabel = currentDistribution.directPrincipalSemis
       ? 'les demi-finales et finales principale'
@@ -5005,7 +5009,7 @@ export default function App() {
       ...currentKnockout.principalQuarters,
       ...currentKnockout.principalSemis,
       ...currentKnockout.principalFinals,
-    ], clearLabel)) return;
+    ], clearLabel)) return false;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
     const currentPrincipaleStandings = computeGroupStandings(currentMainStage.principalePools, currentVisiblePrincipaleMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: currentDistribution.normalizedRanking });
     const pA = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'A');
@@ -5033,7 +5037,7 @@ export default function App() {
       setActiveTab('finales');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
-      return;
+      return true;
     }
 
     const pC = getStandingsRowsForPool(currentPrincipaleStandings, currentMainStage.principalePools, 'C');
@@ -5060,6 +5064,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    return true;
   }
 
   function generateConsolanteSemis() {
@@ -5067,7 +5072,7 @@ export default function App() {
     const currentKnockout = knockoutRef.current;
     if (!currentMainStage.consolantePools.length) {
       window.alert('Génère d’abord la consolante.');
-      return;
+      return false;
     }
     const currentVisibleConsolanteMatches = filterMatchesToPools(currentMainStage.consolanteMatches, currentMainStage.consolantePools, 'Consolante');
     const consolantePoolsComplete = currentVisibleConsolanteMatches.length > 0 && currentVisibleConsolanteMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
@@ -5078,7 +5083,7 @@ export default function App() {
     if (!confirmClearStageScores([
       ...currentKnockout.consolanteSemis,
       ...currentKnockout.consolanteFinals,
-    ], 'les demi-finales et finales de consolante')) return;
+    ], 'les demi-finales et finales de consolante')) return false;
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
     const currentConsolanteStandings = computeGroupStandings(currentMainStage.consolantePools, currentVisibleConsolanteMatches, currentTeamMap, phaseRulesRef.current, { normalizeByMatches: getMainStageDistribution(teamsRef.current.filter((team) => team.name.trim()).length).normalizedRanking });
     const isChampionshipConsolante = currentMainStage.consolantePools.length === 1 && (currentMainStage.consolantePools[0]?.teamIds?.length || 0) === 5;
@@ -5126,6 +5131,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    return true;
   }
 
   function generatePrincipalSemis() {
