@@ -10,8 +10,8 @@ import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27AE';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27AD', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27AF';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27AE', 'tournoidevolley-react-vite-V27AD', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27AE';
+const APP_VERSION = 'V27AF';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -1166,6 +1166,7 @@ function ensureMatchArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
 }
 
+
 function buildDirectRankingPodiumFallback(pools, poolMatches, semiMatches, finalMatches, overallRanking, phaseRules) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
   const safePoolMatches = Array.isArray(poolMatches) ? poolMatches.filter(Boolean) : [];
@@ -1182,6 +1183,39 @@ function buildDirectRankingPodiumFallback(pools, poolMatches, semiMatches, final
     .map((row) => ({ ...row, teamId: row?.teamId || null }))
     .filter((row) => row.teamId)
     .slice(0, 3);
+}
+
+function extractPodiumFromStageMatches(matches, phaseRules, fallbackRanking = []) {
+  const safeMatches = ensureMatchArray(matches);
+  const normalized = safeMatches.map((match) => ({
+    ...match,
+    __groupKey: String(match?.group || '').trim().toLowerCase(),
+  }));
+  const finalMatch = normalized.find((match) => match.__groupKey === 'finale') || null;
+  const smallFinalMatch = normalized.find((match) => match.__groupKey.startsWith('petite finale')) || null;
+  const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
+  const smallFinalResult = smallFinalMatch ? getWinnerLoser(smallFinalMatch, phaseRules) : { winner: null, loser: null };
+
+  const fallbackIds = (Array.isArray(fallbackRanking) ? fallbackRanking : [])
+    .map((row) => row?.teamId || row || null)
+    .filter(Boolean);
+
+  const used = new Set();
+  const take = (teamId) => {
+    if (!teamId || used.has(teamId)) return null;
+    used.add(teamId);
+    return teamId;
+  };
+  const takeFallback = () => {
+    const next = fallbackIds.find((teamId) => teamId && !used.has(teamId)) || null;
+    return take(next);
+  };
+
+  const first = take(finalResult.winner) || takeFallback();
+  const second = take(finalResult.loser) || takeFallback();
+  const third = take(smallFinalResult.winner) || takeFallback();
+
+  return { first, second, third, finalMatch, smallFinalMatch };
 }
 
 function toTimestamp(value) {
@@ -3380,33 +3414,11 @@ export default function App() {
       return Boolean(teamName && teamName !== 'à définir');
     };
 
-    const extractPodium = (matches, fallbackRanking = []) => {
-      const finalMatch = matches.find((match) => match.group === 'Finale');
-      const smallFinal = matches.find((match) => match.group === 'Petite finale');
-      const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
-      const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
-
-      let first = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.winner)
-        ? finalResult.winner
-        : null;
-      let second = finalMatch && isMatchResultValid(finalMatch, phaseRules) && isResolvedPodiumTeam(finalResult.loser)
-        ? finalResult.loser
-        : null;
-      let third = smallFinal && isMatchResultValid(smallFinal, phaseRules) && isResolvedPodiumTeam(smallResult.winner)
-        ? smallResult.winner
-        : null;
-
-      if (!first || !second || !third) {
-        const fallback = (Array.isArray(fallbackRanking) ? fallbackRanking : [])
-          .map((row) => row?.teamId || null)
-          .filter((teamId) => isResolvedPodiumTeam(teamId));
-        if (!first) first = fallback[0] || null;
-        if (!second) second = fallback[1] || null;
-        if (!third) third = fallback[2] || null;
-      }
-
-      return { first, second, third };
-    };
+    const sanitizePodium = (podium) => ({
+      first: isResolvedPodiumTeam(podium?.first) ? podium.first : null,
+      second: isResolvedPodiumTeam(podium?.second) ? podium.second : null,
+      third: isResolvedPodiumTeam(podium?.third) ? podium.third : null,
+    });
 
     const consolanteFallbackRanking = buildDirectRankingPodiumFallback(
       mainStage.consolantePools,
@@ -3417,19 +3429,24 @@ export default function App() {
       phaseRules,
     );
 
-    const principale = extractPodium(knockout.principalFinals);
-    const consolante = extractPodium(knockout.consolanteFinals, consolanteFallbackRanking);
+    const principale = sanitizePodium(extractPodiumFromStageMatches(knockout.principalFinals, phaseRules, principaleOverallRanking));
+    const consolante = sanitizePodium(extractPodiumFromStageMatches(knockout.consolanteFinals, phaseRules, consolanteFallbackRanking));
+    const hasConsolantePodium = Boolean(
+      mainStageDistribution.consolanteCount > 0
+      || mainStage.consolantePools.length > 0
+      || knockout.consolanteSemis.length > 0
+      || knockout.consolanteFinals.length > 0
+      || consolanteFallbackRanking.length > 0
+    );
     const tournamentFinished = Boolean(
       principale.first
       && principale.second
       && principale.third
-      && consolante.first
-      && consolante.second
-      && consolante.third
+      && (!hasConsolantePodium || (consolante.first && consolante.second && consolante.third))
     );
 
-    return { tournamentFinished, principale, consolante };
-  }, [knockout.principalFinals, knockout.consolanteFinals, knockout.consolanteSemis, mainStage.consolanteMatches, mainStage.consolantePools, consolanteOverallRanking, phaseRules, resolveTeam]);
+    return { tournamentFinished, principale, consolante, hasConsolantePodium };
+  }, [knockout.principalFinals, knockout.consolanteFinals, knockout.consolanteSemis, mainStage.consolanteMatches, mainStage.consolantePools, consolanteOverallRanking, principaleOverallRanking, phaseRules, resolveTeam, mainStageDistribution.consolanteCount]);
 
   const featuredPublicMatches = useMemo(() => {
     if (publicPodiumLeaders.tournamentFinished) {
@@ -6516,15 +6533,13 @@ export default function App() {
 
   function renderPodium(title, matches, fallbackPodium = null) {
     try {
-      const safeMatches = ensureMatchArray(matches);
-      const safeFallbackPodium = fallbackPodium && typeof fallbackPodium === 'object' ? fallbackPodium : null;
-      const finalMatch = safeMatches.find((match) => match?.group === 'Finale');
-      const smallFinal = safeMatches.find((match) => match?.group === 'Petite finale');
-      const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
-      const smallResult = smallFinal ? getWinnerLoser(smallFinal, phaseRules) : { winner: null, loser: null };
-      const firstTeamId = finalResult.winner || safeFallbackPodium?.first || null;
-      const secondTeamId = finalResult.loser || safeFallbackPodium?.second || null;
-      const thirdTeamId = smallResult.winner || safeFallbackPodium?.third || null;
+      const fallbackRanking = fallbackPodium && typeof fallbackPodium === 'object'
+        ? [fallbackPodium.first, fallbackPodium.second, fallbackPodium.third].filter(Boolean).map((teamId) => ({ teamId }))
+        : [];
+      const podium = extractPodiumFromStageMatches(matches, phaseRules, fallbackRanking);
+      const firstTeamId = podium.first || null;
+      const secondTeamId = podium.second || null;
+      const thirdTeamId = podium.third || null;
       const safeTeam = (teamId) => {
         if (!teamId) return null;
         const team = resolveTeam(teamId);
@@ -6837,9 +6852,9 @@ export default function App() {
             )}
             {publicPodiumLeaders.tournamentFinished ? (
               <Section title="Podiums">
-                <div className="cards-grid two-up public-rankings-grid">
-                  {renderPodium('Tableau principal', finalsPrincipalFinalsMatches)}
-                  {renderPodium('Tableau consolante', finalsConsolanteFinalsMatches, publicPodiumLeaders?.consolante || null)}
+                <div className={`cards-grid ${publicPodiumLeaders.hasConsolantePodium ? 'two-up' : 'one-up'} public-rankings-grid`}>
+                  {renderPodium('Tableau principal', finalsPrincipalFinalsMatches, publicPodiumLeaders?.principale || null)}
+                  {publicPodiumLeaders.hasConsolantePodium ? renderPodium('Tableau consolante', finalsConsolanteFinalsMatches, publicPodiumLeaders?.consolante || null) : null}
                 </div>
               </Section>
             ) : null}
@@ -7278,7 +7293,7 @@ export default function App() {
 
                       <Section title="Podiums">
                         <div className={`cards-grid ${hasConsolanteStage ? 'two-up' : 'one-up'} public-rankings-grid`}>
-                          {renderPodium('Tableau principal', finalsPrincipalFinalsMatches)}
+                          {renderPodium('Tableau principal', finalsPrincipalFinalsMatches, publicPodiumLeaders?.principale || null)}
                           {hasConsolanteStage ? renderPodium('Tableau consolante', finalsConsolanteFinalsMatches, publicPodiumLeaders?.consolante || null) : null}
                         </div>
                       </Section>
