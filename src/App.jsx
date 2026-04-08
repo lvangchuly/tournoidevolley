@@ -6430,21 +6430,21 @@ export default function App() {
         <div className="podium-steps podium-steps-model">
           <div className="podium-lane podium-lane-second">
             <div className="podium-team-label">{secondTeamId ? <TeamBadge name={resolveTeam(secondTeamId).name} level={resolveTeam(secondTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
+            <div className="podium-players" aria-hidden="true"><img src={podiumPlayersHuman} alt="" className="podium-players-image" /></div>
             <div className="podium-step podium-step-second">
               <div className="podium-step-rank">2e</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-first">
             <div className="podium-team-label">{firstTeamId ? <TeamBadge name={resolveTeam(firstTeamId).name} level={resolveTeam(firstTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
+            <div className="podium-players" aria-hidden="true"><img src={podiumPlayersHuman} alt="" className="podium-players-image" /></div>
             <div className="podium-step podium-step-first">
               <div className="podium-step-rank">1er</div>
             </div>
           </div>
           <div className="podium-lane podium-lane-third">
             <div className="podium-team-label">{thirdTeamId ? <TeamBadge name={resolveTeam(thirdTeamId).name} level={resolveTeam(thirdTeamId).level} className="podium-team-badge" /> : 'À venir'}</div>
-            <div className="podium-players" aria-hidden="true"><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /><span className="podium-player" /></div>
+            <div className="podium-players" aria-hidden="true"><img src={podiumPlayersHuman} alt="" className="podium-players-image" /></div>
             <div className="podium-step podium-step-third">
               <div className="podium-step-rank">3e</div>
             </div>
