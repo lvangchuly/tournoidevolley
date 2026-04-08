@@ -10,7 +10,7 @@ import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27C';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27E';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -30,7 +30,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27C';
+const APP_VERSION = 'V27E';
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
 const NORMALIZED_LOGO_SOURCE_SIZE = 96;
@@ -5469,9 +5469,26 @@ export default function App() {
     const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
     const standingsMap = new Map((Array.isArray(standings) ? standings : []).map((entry) => [entry.pool?.id, entry]));
     const overallRanking = Array.isArray(rankingOverride) ? rankingOverride : (scope === 'brassage1' ? rankingAfterBrassage1 : scope === 'brassage2' ? rankingAfterBrassages : []);
-    const preferredPoolId = selectedBrassagePoolByScope?.[scope] || '';
     const selectedTeamId = selectedBrassageTeamByScope?.[scope] || '';
+    const selectedTeamPool = selectedTeamId
+      ? safePools.find((entry) => Array.isArray(entry.teamIds) && entry.teamIds.includes(selectedTeamId))
+      : null;
+    const preferredPoolId = selectedTeamPool?.id || selectedBrassagePoolByScope?.[scope] || '';
     const terrainMatchMap = new Map();
+    const selectTeamInScope = (teamId) => {
+      const normalizedTeamId = teamId || '';
+      const nextTeamId = normalizedTeamId && normalizedTeamId === selectedTeamId ? '' : normalizedTeamId;
+      const relatedPool = nextTeamId
+        ? safePools.find((entry) => Array.isArray(entry.teamIds) && entry.teamIds.includes(nextTeamId))
+        : null;
+      setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: nextTeamId }));
+      setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: relatedPool?.id || '' }));
+    };
+    const selectPoolInScope = (poolId) => {
+      const nextPoolId = poolId && poolId === preferredPoolId && !selectedTeamId ? '' : (poolId || '');
+      setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: nextPoolId }));
+      setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: '' }));
+    };
 
     [1, 2, 3].forEach((courtNumber) => {
       const courtMatches = safeMatches
@@ -5506,24 +5523,30 @@ export default function App() {
     return (
       <div className="compact-brassage-layout compact-brassage-layout-v24n">
         <div className="mini-card compact-brassage-pools-column-v24n">
-          {poolCards.map(({ pool, rows }) => {
+          {poolCards.map(({ pool, rows, teamIds }) => {
             const isSelected = pool.id === preferredPoolId;
+            const isHighlightedByTeam = Boolean(selectedTeamId) && teamIds.includes(selectedTeamId);
             return (
               <button
                 type="button"
                 key={pool.id}
-                className={`compact-brassage-pool-list-card-v24n ${isSelected ? 'is-selected' : ''}`.trim()}
-                onClick={() => {
-                setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: pool.id }));
-                setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: '' }));
-              }}
+                className={`compact-brassage-pool-list-card-v24n ${isSelected ? 'is-selected' : ''} ${isHighlightedByTeam ? 'is-team-highlighted' : ''}`.trim()}
+                onClick={() => selectPoolInScope(pool.id)}
               >
                 <div className="compact-brassage-pool-list-head-v24n">{formatPoolNameWithLevel(pool, teamMap)}</div>
                 <div className="compact-brassage-pool-teams-v24n">
                   {rows.map((row, rowIndex) => {
                     const fallbackTeam = resolveTeam(row.teamId);
+                    const isHighlightedRow = Boolean(selectedTeamId) && row.teamId === selectedTeamId;
                     return (
-                      <div key={row.teamId || `${pool.id}-${rowIndex}`} className="compact-brassage-pool-team-row-v24n">
+                      <div
+                        key={row.teamId || `${pool.id}-${rowIndex}`}
+                        className={`compact-brassage-pool-team-row-v24n ${isHighlightedRow ? 'is-team-highlighted' : ''}`.trim()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          selectTeamInScope(row.teamId);
+                        }}
+                      >
                         <span className="compact-rank-chip compact-rank-chip-v24n">{rowIndex + 1}</span>
                         <TeamBadge name={row.teamName || fallbackTeam.name} level={row.level || fallbackTeam.level} className="compact-brassage-pool-team-badge-v24n" />
                       </div>
@@ -5567,8 +5590,22 @@ export default function App() {
                             <span className="compact-match-chip compact-match-chip-v24n">M{index + 1}</span>
                           </div>
                           <div className="compact-match-team-row-v24n">
-                            <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge-v24n" />
-                            <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge-v24n" />
+                            <button
+                              type="button"
+                              className={`compact-team-select-button-v27c ${selectedTeamId === match.teamAId ? 'is-team-highlighted' : ''}`.trim()}
+                              onClick={() => selectTeamInScope(match.teamAId)}
+                              title={`Surligner ${teamA.name}`}
+                            >
+                              <TeamBadge name={teamA.name} level={teamA.level} className="compact-team-strip-badge-v24n" />
+                            </button>
+                            <button
+                              type="button"
+                              className={`compact-team-select-button-v27c ${selectedTeamId === match.teamBId ? 'is-team-highlighted' : ''}`.trim()}
+                              onClick={() => selectTeamInScope(match.teamBId)}
+                              title={`Surligner ${teamB.name}`}
+                            >
+                              <TeamBadge name={teamB.name} level={teamB.level} className="compact-team-strip-badge-v24n" />
+                            </button>
                           </div>
                           <div className="compact-match-score-row-v24n">
                             <label className="compact-score-box compact-score-box-v24n">
@@ -5611,12 +5648,8 @@ export default function App() {
           <div className="compact-overall-ranking-scroll compact-overall-ranking-scroll-v24n">
             {renderOverallRanking(overallRanking, scope === 'brassage2', null, {
               compact: true,
-              onTeamClick: (teamId) => {
-                const pool = safePools.find((entry) => Array.isArray(entry.teamIds) && entry.teamIds.includes(teamId));
-                if (!pool) return;
-                setSelectedBrassagePoolByScope((current) => ({ ...current, [scope]: pool.id }));
-                setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: teamId }));
-              },
+              selectedTeamId,
+              onTeamClick: (teamId) => selectTeamInScope(teamId),
             })}
           </div>
         </aside>
@@ -5948,6 +5981,7 @@ export default function App() {
   function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
     const compact = Boolean(options?.compact);
     const onTeamClick = typeof options?.onTeamClick === 'function' ? options.onTeamClick : null;
+    const selectedTeamId = options?.selectedTeamId || '';
 
     if (compact) {
       return (
@@ -5975,7 +6009,7 @@ export default function App() {
                 <button
                   key={row.teamId}
                   type="button"
-                  className="overall-ranking-row-v24p overall-ranking-row-button-v24p"
+                  className={`overall-ranking-row-v24p overall-ranking-row-button-v24p ${selectedTeamId === row.teamId ? 'is-team-highlighted' : ''}`.trim()}
                   onClick={() => onTeamClick(row.teamId)}
                 >
                   {content}
@@ -6095,16 +6129,6 @@ export default function App() {
     || singleKnockout.quarters.length > 0
     || singleKnockout.semis.length > 0
     || singleKnockout.finals.length > 0;
-
-  const reloadOrganizerHomePage = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const targetUrl = 'https://tournoidevolley.fr/';
-    if (window.location.href === targetUrl || `${window.location.origin}/` === targetUrl) {
-      window.location.reload();
-      return;
-    }
-    window.location.assign(targetUrl);
-  }, []);
 
   const tabs = isSmallTournamentMode ? [
     { id: 'dashboard', label: 'Vue d’ensemble' },
@@ -6427,22 +6451,7 @@ export default function App() {
           </div>
           <div className="hero-controls hero-controls-centered">
             <div className="hero-brand">
-              <div
-                className="hero-tag"
-                onClick={reloadOrganizerHomePage}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    reloadOrganizerHomePage();
-                  }
-                }}
-                role="button"
-                tabIndex={0}
-                title="Recharger tournoidevolley.fr"
-                style={{ cursor: 'pointer' }}
-              >
-                tournoidevolley.fr
-              </div>
+              <div className="hero-tag">tournoidevolley.fr</div>
               <div className="hero-version">Version {APP_VERSION}</div>
             </div>
             <input
