@@ -12,7 +12,7 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27AV';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27AW';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -32,7 +32,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27AV';
+const APP_VERSION = 'V27AW';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -254,7 +254,13 @@ function stampToMinutes(stamp) {
 }
 
 function estimatePhaseDurationMinutes(rule) {
-  return Math.max(6, (Number(rule?.winningScore) || 21) + 5);
+  const winningScore = Number(rule?.winningScore) || 21;
+  return winningScore >= 21 ? 20 : 15;
+}
+
+function getCurrentClockMinutes() {
+  const now = new Date();
+  return (now.getHours() * 60) + now.getMinutes();
 }
 
 function toNumber(value) {
@@ -1241,17 +1247,14 @@ function computeTournamentSchedule(stageGroups, startTime, phaseRules) {
   };
 }
 
-function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À générer') {
+function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À générer', phaseRules = {}) {
   const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []).filter(Boolean);
   if (!safeMatches.length) return emptyText;
 
-  const endMinutes = safeMatches.reduce((maxEnd, match) => {
-    const scheduledEnd = scheduleMap?.[match.id]?.endMinutes;
-    if (typeof scheduledEnd === 'number') return Math.max(maxEnd, scheduledEnd);
-    return maxEnd;
-  }, -Infinity);
+  const stageDuration = computeDynamicStageSchedule(safeMatches, 0, phaseRules).stageEnd;
+  if (!Number.isFinite(stageDuration)) return emptyText;
 
-  return Number.isFinite(endMinutes) ? minutesToTime(endMinutes) : emptyText;
+  return minutesToTime(getCurrentClockMinutes() + stageDuration);
 }
 
 function OrganizerPhaseEstimateCard({ data, compact = false }) {
@@ -3271,7 +3274,7 @@ export default function App() {
         mode: 'single',
         heading: 'Fin estimée de la phase',
         phaseLabel: currentStage.phaseLabel,
-        value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--'),
+        value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--', phaseRules),
       };
     }
 
@@ -3292,16 +3295,16 @@ export default function App() {
         heading: 'Fin estimée de la phase',
         leftTitle: 'Tableau principal',
         leftItems: [
-          { label: 'Matchs de poules principale', value: getEstimatedEndTextForMatches(visiblePrincipaleMatches, scheduleData.scheduleMap) },
-          { label: 'Quarts de finale principale', value: getEstimatedEndTextForMatches(knockout.principalQuarters, scheduleData.scheduleMap) },
-          { label: 'Demi-finales principale', value: getEstimatedEndTextForMatches(knockout.principalSemis, scheduleData.scheduleMap) },
-          { label: 'Finale / petite finale principale', value: getEstimatedEndTextForMatches(knockout.principalFinals, scheduleData.scheduleMap) },
+          { label: 'Matchs de poules principale', value: getEstimatedEndTextForMatches(visiblePrincipaleMatches, scheduleData.scheduleMap, 'À générer', phaseRules) },
+          { label: 'Quarts de finale principale', value: getEstimatedEndTextForMatches(knockout.principalQuarters, scheduleData.scheduleMap, 'À générer', phaseRules) },
+          { label: 'Demi-finales principale', value: getEstimatedEndTextForMatches(knockout.principalSemis, scheduleData.scheduleMap, 'À générer', phaseRules) },
+          { label: 'Finale / petite finale principale', value: getEstimatedEndTextForMatches(knockout.principalFinals, scheduleData.scheduleMap, 'À générer', phaseRules) },
         ],
         rightTitle: 'Tableau consolante',
         rightItems: [
-          { label: 'Matchs de poules consolante', value: getEstimatedEndTextForMatches(visibleConsolanteMatches, scheduleData.scheduleMap) },
-          { label: 'Demi-finales consolante', value: getEstimatedEndTextForMatches(knockout.consolanteSemis, scheduleData.scheduleMap) },
-          { label: 'Finale / petite finale consolante', value: getEstimatedEndTextForMatches(knockout.consolanteFinals, scheduleData.scheduleMap) },
+          { label: 'Matchs de poules consolante', value: getEstimatedEndTextForMatches(visibleConsolanteMatches, scheduleData.scheduleMap, 'À générer', phaseRules) },
+          { label: 'Demi-finales consolante', value: getEstimatedEndTextForMatches(knockout.consolanteSemis, scheduleData.scheduleMap, 'À générer', phaseRules) },
+          { label: 'Finale / petite finale consolante', value: getEstimatedEndTextForMatches(knockout.consolanteFinals, scheduleData.scheduleMap, 'À générer', phaseRules) },
         ],
       };
     }
@@ -3320,7 +3323,7 @@ export default function App() {
       mode: 'single',
       heading: 'Fin estimée de la phase',
       phaseLabel: currentStage.phaseLabel,
-      value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--'),
+      value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--', phaseRules),
     };
   }, [
     isSmallTournamentMode,
@@ -6586,7 +6589,7 @@ export default function App() {
     { id: 'equipes', label: 'Équipes' },
     { id: 'championship', label: 'Championnat' },
     ...(hasOrganizerFinalMatches ? [{ id: 'finales', label: 'Phases finales' }] : []),
-    { id: 'export', label: 'Sauvegarde' },
+    { id: 'export', label: 'Explications/Export/Import' },
   ] : [
     { id: 'dashboard', label: 'Vue d’ensemble' },
     { id: 'equipes', label: 'Équipes' },
@@ -6595,7 +6598,7 @@ export default function App() {
     ...(hasOrganizerPrincipaleMatches ? [{ id: 'principale', label: 'Principale' }] : []),
     ...(hasOrganizerConsolanteMatches ? [{ id: 'consolante', label: 'Consolante' }] : []),
     ...(hasOrganizerFinalMatches ? [{ id: 'finales', label: 'Phases finales' }] : []),
-    { id: 'export', label: 'Sauvegarde' },
+    { id: 'export', label: 'Explications/Export/Import' },
   ];
 
   useEffect(() => {
@@ -6997,7 +7000,7 @@ export default function App() {
               <OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} />
             </div>
             <div className="actions-stack hero-actions-centered">
-              <Button variant="success" onClick={() => saveTournamentState(true)}>Sauvegarder</Button>
+              <Button variant="success" onClick={() => setActiveTab('export')}>Explications/Export/Import</Button>
               <Button variant="danger" onClick={startNewTournament}>Nouveau tournoi</Button>
             </div>
             <div className="muted small banner-meta">Identifiant du tournoi : <strong>{sharedTournamentId}</strong></div>
@@ -7295,11 +7298,11 @@ export default function App() {
           )}
 
           {activeTab === 'export' && (
-            <Section title="Sauvegarde" subtitle="Export, import et sauvegarde locale du tournoi." right={<><Button onClick={exportState}>Exporter JSON</Button>{shouldHideRandomTeamsButton ? null : <Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button>}<Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button></>}>
+            <Section title="Explications" subtitle={null} right={<><Button onClick={exportState}>Exporter JSON</Button>{shouldHideRandomTeamsButton ? null : <Button variant="secondary" onClick={randomizeTeamsAndLevels}>ALEAT</Button>}<Button variant="secondary" onClick={randomizeCurrentPhaseScores}>Score aléatoire</Button><Button variant="secondary" onClick={() => importRef.current?.click()}>Importer JSON</Button></>}>
               <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={handleImport} />
               <div className="cards-grid two-up public-rankings-grid">
                 <div className="mini-card public-ranking-card">
-                  <div className="mini-card-head">Fonctionnements</div>
+                  <div className="mini-card-head">Déroulement</div>
                   <ul className="simple-list">
                     {buildSaveModeFunctionnements().map((item) => <li key={item}>{item}</li>)}
                   </ul>
@@ -7307,7 +7310,6 @@ export default function App() {
                 <div className="mini-card public-ranking-card">
                   <div className="mini-card-head">Sauvegarde et export</div>
                   <ul className="simple-list">
-                    <li>Sauvegarde locale automatique et bouton de sauvegarde manuelle</li>
                     <li>Partage OVHcloud via JSON commun pour organisateur et arbitres</li>
                     <li>Nom du tournoi intégré au nom du fichier JSON exporté</li>
                     <li>Date et heure de sauvegarde intégrées au nom du fichier</li>
