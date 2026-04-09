@@ -12,7 +12,7 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27AW';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27AX';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
@@ -32,7 +32,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27AW';
+const APP_VERSION = 'V27AX';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -1247,6 +1247,15 @@ function computeTournamentSchedule(stageGroups, startTime, phaseRules) {
   };
 }
 
+function formatDurationLabel(totalMinutes) {
+  if (!Number.isFinite(totalMinutes) || totalMinutes <= 0) return '';
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours <= 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} h`;
+  return `${hours} h ${String(minutes).padStart(2, '0')}`;
+}
+
 function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À générer', phaseRules = {}) {
   const safeMatches = dedupeMatches(Array.isArray(matches) ? matches : []).filter(Boolean);
   if (!safeMatches.length) return emptyText;
@@ -1254,7 +1263,9 @@ function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À gé
   const stageDuration = computeDynamicStageSchedule(safeMatches, 0, phaseRules).stageEnd;
   if (!Number.isFinite(stageDuration)) return emptyText;
 
-  return minutesToTime(getCurrentClockMinutes() + stageDuration);
+  const estimatedEnd = minutesToTime(getCurrentClockMinutes() + stageDuration);
+  const durationLabel = formatDurationLabel(stageDuration);
+  return durationLabel ? `${estimatedEnd} (${durationLabel})` : estimatedEnd;
 }
 
 function OrganizerPhaseEstimateCard({ data, compact = false }) {
@@ -2036,6 +2047,7 @@ export default function App() {
   const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME));
   const [disableBrassage2, setDisableBrassage2] = useState(Boolean(initial?.settings?.disableBrassage2));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
+  const [lastAutomaticSaveFilename, setLastAutomaticSaveFilenameState] = useState(initial?.meta?.lastAutomaticSaveFilename || '');
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
   const [remoteSyncMessage, setRemoteSyncMessage] = useState('');
   const [isRemoteSyncing, setIsRemoteSyncing] = useState(false);
@@ -2065,6 +2077,7 @@ export default function App() {
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
   const autoRefereeSyncTimeoutRef = useRef(null);
+  const lastAutomaticSaveFilenameRef = useRef(initial?.meta?.lastAutomaticSaveFilename || '');
   const backgroundCloudSaveTimeoutRef = useRef(null);
   const realtimeEventSourceRef = useRef(null);
   const realtimeRefreshTimeoutRef = useRef(null);
@@ -2249,6 +2262,12 @@ export default function App() {
     allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
+  function setLastAutomaticSaveFilename(nextValue) {
+    const safeValue = String(nextValue || '');
+    lastAutomaticSaveFilenameRef.current = safeValue;
+    setLastAutomaticSaveFilenameState(safeValue);
+  }
+
   function getPersistedStateSnapshot(savedAt = lastSavedAt, overrides = {}) {
     return {
       teams: safeClone(overrides.teams ?? teamsRef.current, []),
@@ -2266,6 +2285,7 @@ export default function App() {
         createdAt: overrides.createdAt ?? createdAtRef.current,
         lastSavedAt: savedAt,
         remoteSavedAt: overrides.remoteSavedAt ?? remoteSavedAtRef.current,
+        lastAutomaticSaveFilename: overrides.lastAutomaticSaveFilename ?? lastAutomaticSaveFilenameRef.current,
       },
       brassage1: safeClone(overrides.brassage1 ?? brassage1Ref.current, {}),
       brassage2: safeClone(overrides.brassage2 ?? brassage2Ref.current, {}),
@@ -2308,6 +2328,7 @@ export default function App() {
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'createdAt')) setCreatedAt(parsed.meta?.createdAt || new Date().toISOString());
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
+    if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastAutomaticSaveFilename')) setLastAutomaticSaveFilename(parsed.meta?.lastAutomaticSaveFilename || '');
     if (parsed.brassage1) setBrassage1(normalizeLeagueState(parsed.brassage1));
     if (parsed.brassage2) setBrassage2(normalizeLeagueState(parsed.brassage2));
     if (parsed.mainStage) setMainStage(normalizeMainStageState(parsed.mainStage));
@@ -4185,7 +4206,7 @@ export default function App() {
         sharedTournamentId: nextSharedTournamentId,
         disableBrassage2: false,
       },
-      meta: { createdAt: new Date().toISOString(), lastSavedAt: '', remoteSavedAt: '' },
+      meta: { createdAt: new Date().toISOString(), lastSavedAt: '', remoteSavedAt: '', lastAutomaticSaveFilename: '' },
       brassage1: { pools: [], matches: [] },
       brassage2: { pools: [], matches: [] },
       mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
@@ -4245,7 +4266,7 @@ export default function App() {
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
       ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: false, resetLevelsToL: true }),
-      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
+      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '', lastAutomaticSaveFilename: '' },
     };
     applyPersistedState(freshState);
     restoreOrganizerFreshView();
@@ -4552,7 +4573,7 @@ export default function App() {
     markPendingLocalMutation(resetStartedAt);
     const freshState = {
       ...buildFreshTournamentState({ preserveSharedId: false, preservePassword: false, resetLevelsToL: true }),
-      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '' },
+      meta: { lastSavedAt: resetStartedAt, remoteSavedAt: '', lastAutomaticSaveFilename: '' },
     };
     applyPersistedState(freshState);
     restoreOrganizerFreshView();
@@ -4639,6 +4660,15 @@ export default function App() {
       setActiveTab('championship');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({
+        championshipLeg1: { pools, matches },
+        championshipLeg2: { pools: [], matches: [] },
+        singleKnockout: { quarters: [], semis: [], finals: [] },
+        brassage1: { pools: [], matches: [] },
+        brassage2: { pools: [], matches: [] },
+        mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
+        knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] },
+      });
       return true;
     }
     if (readyTeams.length > TEAM_TARGET) {
@@ -4673,6 +4703,15 @@ export default function App() {
     setActiveTab('brassage1');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({
+      brassage1: nextBrassage1,
+      brassage2: nextBrassage2,
+      mainStage: nextMainStage,
+      knockout: nextKnockout,
+      championshipLeg1: nextChampionshipLeg1,
+      championshipLeg2: nextChampionshipLeg2,
+      singleKnockout: nextSingleKnockout,
+    });
   }
 
   function generateBrassage2() {
@@ -4708,6 +4747,10 @@ export default function App() {
       setActiveTab('championship');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({
+        championshipLeg2: nextChampionshipLeg2,
+        singleKnockout: nextSingleKnockout,
+      });
       return;
     }
     const currentBrassage1 = brassage1Ref.current;
@@ -4777,6 +4820,11 @@ export default function App() {
     setActiveTab('brassage2');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({
+      brassage2: nextBrassage2,
+      mainStage: nextMainStage,
+      knockout: nextKnockout,
+    });
     } catch (error) {
       console.error('Erreur lors de la génération du Brassage 2', error);
       window.alert(`Impossible de générer le Brassage 2 : ${error?.message || 'erreur interne'}.`);
@@ -4821,6 +4869,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ singleKnockout: singleKnockoutRef.current });
   }
 
   function generateSmallKnockoutStage2() {
@@ -4846,6 +4895,7 @@ export default function App() {
     setSingleKnockout(nextSingleKnockout);
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ singleKnockout: nextSingleKnockout });
   }
 
   function generateSmallKnockoutStage3() {
@@ -4881,6 +4931,7 @@ export default function App() {
     setSingleKnockout(nextSingleKnockout);
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ singleKnockout: nextSingleKnockout });
   }
 
   function generateMainStage(forceDirectFromBrassage1 = false) {
@@ -4942,6 +4993,7 @@ export default function App() {
       setActiveTab('finales');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({ mainStage: nextMainStage, knockout: nextKnockout });
       return true;
     }
 
@@ -4963,6 +5015,7 @@ export default function App() {
       setActiveTab(consolanteMatches.length > 0 ? 'consolante' : 'finales');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({ mainStage: nextMainStage, knockout: nextKnockout });
       return true;
     }
 
@@ -4984,6 +5037,7 @@ export default function App() {
       setActiveTab('finales');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({ mainStage: nextMainStage, knockout: nextKnockout });
       return true;
     }
 
@@ -5013,6 +5067,7 @@ export default function App() {
     setActiveTab(nextMainStage.principaleMatches.length > 0 ? 'principale' : (nextMainStage.consolanteMatches.length > 0 ? 'consolante' : 'finales'));
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ mainStage: nextMainStage, knockout: nextKnockout });
     return true;
   }
 
@@ -5067,6 +5122,7 @@ export default function App() {
       setActiveTab('finales');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
+      triggerAutomaticBackup({ knockout: nextKnockout });
       return;
     }
 
@@ -5094,6 +5150,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ knockout: nextKnockout });
     return true;
   }
 
@@ -5161,6 +5218,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ knockout: nextKnockout });
     return true;
   }
 
@@ -5208,6 +5266,7 @@ export default function App() {
     setKnockout(nextKnockout);
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ knockout: nextKnockout });
   }
 
   function generateConsolanteFinals() {
@@ -5251,6 +5310,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ knockout: nextKnockout });
   }
 
   function generatePrincipalFinals() {
@@ -5295,6 +5355,7 @@ export default function App() {
     setActiveTab('finales');
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ knockout: nextKnockout });
   }
 
   function updateMatchesInScope(scope, updater) {
@@ -5784,8 +5845,7 @@ export default function App() {
     setRefereeSelectedMatch(null);
   }
 
-  function formatExportFilename() {
-    const sourceDate = new Date();
+  function formatExportFilename(sourceDate = new Date()) {
     const day = String(sourceDate.getDate()).padStart(2, '0');
     const month = String(sourceDate.getMonth() + 1).padStart(2, '0');
     const year = sourceDate.getFullYear();
@@ -5802,6 +5862,22 @@ export default function App() {
     const savedAt = new Date().toISOString();
     setLastSavedAt(savedAt);
     downloadJson(formatExportFilename(), getPersistedState(savedAt));
+  }
+
+  function triggerAutomaticBackup(overrides = {}) {
+    const sourceDate = new Date();
+    const savedAt = sourceDate.toISOString();
+    const fileName = formatExportFilename(sourceDate);
+    const snapshot = getPersistedStateSnapshot(savedAt, {
+      ...overrides,
+      lastAutomaticSaveFilename: fileName,
+    });
+    setLastSavedAt(savedAt);
+    setLastAutomaticSaveFilename(fileName);
+    downloadJson(fileName, snapshot);
+    if (typeof window !== 'undefined') {
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(snapshot));
+    }
   }
 
   async function copyState() {
@@ -7000,10 +7076,10 @@ export default function App() {
               <OrganizerPhaseEstimateCard data={organizerPhaseEstimateData} />
             </div>
             <div className="actions-stack hero-actions-centered">
-              <Button variant="success" onClick={() => setActiveTab('export')}>Explications/Export/Import</Button>
               <Button variant="danger" onClick={startNewTournament}>Nouveau tournoi</Button>
             </div>
             <div className="muted small banner-meta">Identifiant du tournoi : <strong>{sharedTournamentId}</strong></div>
+            {lastAutomaticSaveFilename ? <div className="muted small banner-meta">Dernière sauvegarde automatique : <strong>{lastAutomaticSaveFilename}</strong></div> : null}
           </div>
           <div className="banner-side banner-right">
             <AccessQrCode
