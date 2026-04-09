@@ -32,7 +32,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27AN';
+const APP_VERSION = 'V27AO';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -6596,10 +6596,16 @@ export default function App() {
     setActiveTab(tabs[0].id);
   }, [tabs, activeTab]);
 
+  const previousBrassage2CompleteRef = useRef(stageValidation.brassage2Complete);
+
   useEffect(() => {
+    const wasBrassage2Complete = previousBrassage2CompleteRef.current;
+    previousBrassage2CompleteRef.current = stageValidation.brassage2Complete;
+
     if (isSmallTournamentMode) return;
     if (activeTab !== 'brassage2') return;
     if (!stageValidation.brassage2Complete) return;
+    if (wasBrassage2Complete) return;
 
     if (hasOrganizerPrincipaleMatches) {
       setActiveTab('principale');
