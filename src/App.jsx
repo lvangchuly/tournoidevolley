@@ -32,7 +32,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27BC';
+const APP_VERSION = 'V27BD';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -6471,7 +6471,10 @@ export default function App() {
     const phaseRule = getRuleForMatch(match, phaseRules);
     const winningScore = Number(phaseRule?.winningScore) || 21;
     const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
-    const contextText = `${match.group} • Terrain ${match.court} • Début prévu : ${schedule?.startText || match.time}`;
+    const estimatedDurationMinutes = estimatePhaseDurationMinutes(phaseRule);
+    const refereeStartMinutes = stampToMinutes(match.submittedAt) ?? schedule?.startMinutes ?? parseTimeToMinutes(match.time || '09:00');
+    const estimatedRefereeEndText = minutesToTime(refereeStartMinutes + estimatedDurationMinutes);
+    const contextText = `${match.group} • Terrain ${match.court} • Fin estimée : ${estimatedRefereeEndText}`;
     const phaseCaption = (match.phase || title || '').toUpperCase();
 
     return (
