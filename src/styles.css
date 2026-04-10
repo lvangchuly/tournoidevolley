@@ -3929,27 +3929,24 @@ tbody tr:last-child td { border-bottom: none; }
 
 .home-announcement-card {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  width: min(470px, 30vw);
-  min-height: 220px;
+  top: 14px;
+  right: 16px;
+  width: min(460px, 30vw);
+  min-height: 230px;
   border: 5px solid #e10505;
   border-radius: 34px;
-  background: rgba(6, 22, 55, 0.78);
+  background: rgba(5, 20, 55, 0.92);
   color: #ffffff;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
-  padding: 28px 30px;
+  padding: 12px 16px 14px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  text-align: left;
   cursor: default;
   z-index: 2;
-}
-
-.home-announcement-card:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.65);
-  outline-offset: 4px;
+  box-sizing: border-box;
 }
 
 .home-announcement-editing {
@@ -3958,11 +3955,17 @@ tbody tr:last-child td { border-bottom: none; }
 
 .home-announcement-text {
   width: 100%;
+  min-height: 146px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.10);
+  padding: 18px 18px;
   font-size: 1.22rem;
   line-height: 1.55;
   font-weight: 800;
   white-space: pre-wrap;
   word-break: break-word;
+  box-sizing: border-box;
 }
 
 .home-announcement-empty {
@@ -3971,17 +3974,18 @@ tbody tr:last-child td { border-bottom: none; }
 
 .home-announcement-textarea {
   width: 100%;
-  min-height: 132px;
-  resize: vertical;
+  min-height: 146px;
+  resize: none;
   border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.10);
   color: #ffffff;
-  padding: 16px 18px;
-  font-size: 1.06rem;
-  font-weight: 700;
-  line-height: 1.5;
+  padding: 18px 18px;
+  font-size: 1.22rem;
+  font-weight: 800;
+  line-height: 1.55;
   box-sizing: border-box;
+  outline: none;
 }
 
 .home-announcement-textarea::placeholder {
@@ -3989,18 +3993,19 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .home-announcement-actions {
-  margin-top: 14px;
+  margin-top: 12px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 10px;
 }
 
 .home-announcement-action {
   border: none;
   border-radius: 999px;
-  padding: 10px 18px;
-  font-size: 0.98rem;
+  padding: 6px 14px;
+  font-size: 0.75rem;
   font-weight: 800;
+  line-height: 1;
   cursor: pointer;
 }
 
