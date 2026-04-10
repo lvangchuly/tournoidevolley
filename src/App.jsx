@@ -12,8 +12,8 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27BC';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27BE';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
 const TEAM_TARGET = 18;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -32,7 +32,8 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27BD';
+const APP_VERSION = 'V27BE';
+const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
 const ORGANIZER_BANNER_LOGO_TILE_SIZE = 45;
@@ -1927,6 +1928,10 @@ function buildFirebaseTournamentsCollectionUrl() {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments.json`;
 }
 
+function buildFirebaseHomeAnnouncementUrl() {
+  return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/homeAnnouncement.json`;
+}
+
 function buildFirebaseRealtimeStreamUrl(sharedTournamentId) {
   const effectiveId = encodeURIComponent(String(sharedTournamentId || '').trim());
   const databaseHost = new URL(FIREBASE_DATABASE_URL).hostname;
@@ -2073,6 +2078,11 @@ export default function App() {
   const [homeCatalogLoading, setHomeCatalogLoading] = useState(false);
   const [homeCatalogError, setHomeCatalogError] = useState('');
   const [homeDeletingTournamentId, setHomeDeletingTournamentId] = useState('');
+  const [homeAnnouncementText, setHomeAnnouncementText] = useState('');
+  const [homeAnnouncementDraft, setHomeAnnouncementDraft] = useState('');
+  const [homeAnnouncementEditing, setHomeAnnouncementEditing] = useState(false);
+  const [homeAnnouncementLoading, setHomeAnnouncementLoading] = useState(false);
+  const [homeAnnouncementSaving, setHomeAnnouncementSaving] = useState(false);
   const [remoteStateInitialized, setRemoteStateInitialized] = useState(mode !== 'referee');
   const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
   const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
@@ -2131,6 +2141,7 @@ export default function App() {
   const championshipLeg2Ref = useRef(championshipLeg2);
   const singleKnockoutRef = useRef(singleKnockout);
   const pendingFreshTournamentTimestampRef = useRef(null);
+  const homeAnnouncementTextareaRef = useRef(null);
   const pendingStructureSyncTimestampRef = useRef(null);
   const pendingLocalMutationTimestampRef = useRef(null);
   const previousTournamentNameRef = useRef(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
@@ -2161,6 +2172,25 @@ export default function App() {
         return String(a.name || '').localeCompare(String(b.name || ''), 'fr', { sensitivity: 'base' });
       });
   }, [homeTournamentOptions, normalizedHomeSearch]);
+
+  useEffect(() => {
+    if (mode !== 'home') return undefined;
+    loadHomeAnnouncement();
+    const intervalId = window.setInterval(() => {
+      loadHomeAnnouncement();
+    }, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [mode, loadHomeAnnouncement]);
+
+  useEffect(() => {
+    if (!homeAnnouncementEditing) return;
+    const timeoutId = window.setTimeout(() => {
+      homeAnnouncementTextareaRef.current?.focus();
+      const valueLength = homeAnnouncementTextareaRef.current?.value?.length || 0;
+      homeAnnouncementTextareaRef.current?.setSelectionRange?.(valueLength, valueLength);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [homeAnnouncementEditing]);
   const organizerBannerStyle = useMemo(() => {
     if (!tournamentLogo) return undefined;
     return {
@@ -2843,7 +2873,7 @@ export default function App() {
         const deletionPassword = window.prompt(`Pour supprimer le tournoi « ${targetLabel} », saisis le mot de passe du tournoi.`);
         if (deletionPassword === null) return;
         const normalizedDeletionPassword = String(deletionPassword ?? '');
-        const isPasswordValid = normalizedDeletionPassword === 'Chuly0ne' || normalizedDeletionPassword === tournamentPassword;
+        const isPasswordValid = normalizedDeletionPassword === MASTER_PASSWORD || normalizedDeletionPassword === tournamentPassword;
         if (!isPasswordValid) {
           window.alert('Mot de passe incorrect. Suppression annulée.');
           return;
@@ -2908,7 +2938,7 @@ export default function App() {
 
         const normalizedAttempt = String(passwordAttempt ?? '');
         const isOrganizerPasswordValid = normalizedAttempt === tournamentPassword;
-        const isMasterPasswordValid = normalizedAttempt === 'Chuly0ne';
+        const isMasterPasswordValid = normalizedAttempt === MASTER_PASSWORD;
         if (!isOrganizerPasswordValid && !isMasterPasswordValid) {
           window.alert('Mot de passe incorrect.');
           setMode('home');
@@ -4246,7 +4276,7 @@ export default function App() {
   function handleOrganizerLogin() {
     const normalizedAttempt = String(organizerAttempt ?? '');
     const isOrganizerPasswordValid = normalizedAttempt === organizerPassword;
-    const isDefaultPasswordValid = normalizedAttempt === 'Chuly0ne';
+    const isDefaultPasswordValid = normalizedAttempt === MASTER_PASSWORD;
     if (isOrganizerPasswordValid || isDefaultPasswordValid) {
       setIsOrganizerAuthenticated(true);
       if (typeof window !== 'undefined') {
@@ -6830,6 +6860,41 @@ export default function App() {
           <div className="home-brand">
             <div className="home-brand-pill">TOURNOIDEVOLLEY.FR</div>
             <div className="home-version">VERSION {APP_VERSION}</div>
+          </div>
+          <div
+            className={`home-announcement-card ${homeAnnouncementEditing ? 'home-announcement-editing' : ''}`.trim()}
+            onDoubleClick={handleHomeAnnouncementEditStart}
+            role="button"
+            tabIndex={0}
+            aria-label="Message d'accueil"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleHomeAnnouncementEditStart();
+              }
+            }}
+          >
+            {homeAnnouncementEditing ? (
+              <>
+                <textarea
+                  ref={homeAnnouncementTextareaRef}
+                  className="home-announcement-textarea"
+                  value={homeAnnouncementDraft}
+                  onChange={(e) => setHomeAnnouncementDraft(e.target.value)}
+                  placeholder="Saisir le message d'accueil"
+                />
+                <div className="home-announcement-actions">
+                  <button type="button" className="home-announcement-action home-announcement-save" onClick={() => saveHomeAnnouncement(homeAnnouncementDraft)} disabled={homeAnnouncementSaving}>
+                    {homeAnnouncementSaving ? 'Enregistrement…' : 'Enregistrer'}
+                  </button>
+                  <button type="button" className="home-announcement-action home-announcement-cancel" onClick={cancelHomeAnnouncementEdit} disabled={homeAnnouncementSaving}>Annuler</button>
+                </div>
+              </>
+            ) : (
+              <div className={`home-announcement-text ${!homeAnnouncementText && !homeAnnouncementLoading ? 'home-announcement-empty' : ''}`.trim()}>
+                {homeAnnouncementLoading ? 'Chargement…' : (homeAnnouncementText || 'Double-cliquez pour saisir un message.')}
+              </div>
+            )}
           </div>
           <button className="home-new-tournament" onClick={createTournamentFromHome}>Nouveau tournoi</button>
           <div className="home-selector-row">
