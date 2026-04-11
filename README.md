@@ -4,7 +4,7 @@ Application web React/Vite prête à déployer pour `tournoidevolley.fr`.
 
 ## Fonctionnalités
 
-- 18 équipes avec niveaux `N / PN / R / D / L`
+- Jusqu'à 24 équipes avec niveaux `N / PN / R / D / L`
 - Brassage 1 : 6 poules de 3 selon le niveau
 - Brassage 2 : 6 poules de 3 selon les points cumulés du brassage 1
 - Principale : 12 équipes, 4 poules de 3, puis quarts, demies, finale et petite finale
