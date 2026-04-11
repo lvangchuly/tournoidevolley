@@ -12,10 +12,11 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V27BI';
+const STORAGE_KEY = 'tournoidevolley-react-vite-V27BH';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const MAX_ACTIVE_COURTS = 3;
-const TEAM_TARGET = 18;
+const DEFAULT_TEAM_COUNT = 18;
+const TEAM_TARGET = 24;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, PN: 4, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', PN: 'team-level-pn', NP: 'team-level-pn', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
@@ -32,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V27BI';
+const APP_VERSION = 'V27BH';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -65,7 +66,9 @@ function getPreferredBrassagePoolCount(teamCount) {
   if (teamCount === 15) return 5;
   if (teamCount === 16) return 4;
   if (teamCount === 17) return 5;
-  return 6;
+  if (teamCount === 18) return 6;
+  if (teamCount <= 20) return 4;
+  return 5;
 }
 
 function getBrassagePoolSummary(teamCount) {
@@ -494,7 +497,7 @@ function loadState() {
 
 function defaultTeams(defaultLevelMap = null, fallbackLevel = 'D') {
   const defaults = Array.isArray(defaultLevelMap) ? defaultLevelMap : ['N', 'N', 'PN', 'PN', 'R', 'R', 'R', 'D', 'D', 'D', 'D', 'L', 'L', 'L', 'L', 'PN', 'R', 'D'];
-  return Array.from({ length: TEAM_TARGET }, (_, index) => ({
+  return Array.from({ length: defaults.length || DEFAULT_TEAM_COUNT }, (_, index) => ({
     id: uid('team'),
     name: `Équipe ${index + 1}`,
     level: normalizeLevelValue(defaults[index], fallbackLevel),
@@ -504,7 +507,7 @@ function defaultTeams(defaultLevelMap = null, fallbackLevel = 'D') {
 }
 
 function defaultTeamsAllLevelL() {
-  return defaultTeams(Array.from({ length: TEAM_TARGET }, () => 'L'), 'L');
+  return defaultTeams(Array.from({ length: DEFAULT_TEAM_COUNT }, () => 'L'), 'L');
 }
 
 function sortTeamsForSeeding(teams) {
@@ -1808,6 +1811,12 @@ function buildSaveModeFunctionnements() {
     "Pour 16 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 4 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 4 équipes, puis en demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 17 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale consolante et la petite finale consolante.",
     "Pour 18 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes du classement vont en phase principale et les 6 autres en phase consolante. La principale débute par 4 poules de 3 équipes et les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale. Les gagnantes des demi-finales vont en finale principale et les perdantes en petite finale principale. La consolante débute par 2 poules de 3 équipes et les 2 meilleures équipes de chaque poule forment les demi-finales consolante. Les gagnantes des demi-finales consolante vont en finale consolante et les perdantes en petite finale consolante.",
+    "Pour 19 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 4 à 5 équipes au brassage 1, puis en 4 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; la 19e équipe n’est pas qualifiée pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 20 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 5 équipes au brassage 1, puis en 4 poules de 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 2 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 21 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 3 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 22 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 4 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 23 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 5 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 24 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 6 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
   ];
 }
 
@@ -2258,10 +2267,6 @@ export default function App() {
         }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await loadHomeAnnouncement();
-      setHomeAnnouncementText(normalizedValue);
-      setHomeAnnouncementDraft(normalizedValue);
-      setHomeAnnouncementEditing(false);
     } catch (error) {
       console.error("Impossible d'enregistrer le message d'accueil.", error);
       setHomeAnnouncementText(previousText);
@@ -2271,7 +2276,7 @@ export default function App() {
     } finally {
       setHomeAnnouncementSaving(false);
     }
-  }, [homeAnnouncementText, loadHomeAnnouncement]);
+  }, [homeAnnouncementText]);
 
   const handleHomeAnnouncementEditStart = useCallback(() => {
     if (homeAnnouncementSaving) return;
