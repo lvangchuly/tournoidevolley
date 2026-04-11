@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28B';
+const APP_VERSION = 'V28C';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2236,6 +2236,8 @@ export default function App() {
   const saveHomeAnnouncement = useCallback(async (nextValue) => {
     const normalizedValue = String(nextValue || '').trim();
     const previousText = homeAnnouncementText || '';
+
+    setHomeAnnouncementLoading(false);
     setHomeAnnouncementText(normalizedValue);
     setHomeAnnouncementDraft(normalizedValue);
     setHomeAnnouncementEditing(false);
@@ -2267,8 +2269,17 @@ export default function App() {
         }),
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      setHomeAnnouncementLoading(false);
+      setHomeAnnouncementText(normalizedValue);
+      setHomeAnnouncementDraft(normalizedValue);
+
+      window.setTimeout(() => {
+        loadHomeAnnouncement();
+      }, 0);
     } catch (error) {
       console.error("Impossible d'enregistrer le message d'accueil.", error);
+      setHomeAnnouncementLoading(false);
       setHomeAnnouncementText(previousText);
       setHomeAnnouncementDraft(normalizedValue);
       setHomeAnnouncementEditing(true);
@@ -2276,7 +2287,7 @@ export default function App() {
     } finally {
       setHomeAnnouncementSaving(false);
     }
-  }, [homeAnnouncementText]);
+  }, [homeAnnouncementText, loadHomeAnnouncement]);
 
   const handleHomeAnnouncementEditStart = useCallback(() => {
     if (homeAnnouncementSaving) return;
