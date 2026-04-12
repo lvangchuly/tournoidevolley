@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28H';
+const APP_VERSION = 'V28I';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -986,6 +986,9 @@ function buildWaitingTimeRowsForPhase(pools, matches, resolveTeam) {
       return (a.court || 0) - (b.court || 0);
     });
 
+  const orderedSlots = [...new Set(safeMatches.map((match) => Number(match?.slot || 0)).filter((slot) => slot > 0))].sort((a, b) => a - b);
+  const localSlotIndex = new Map(orderedSlots.map((slot, index) => [slot, index + 1]));
+
   const poolNameByTeamId = new Map();
   safePools.forEach((pool) => {
     const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
@@ -1012,10 +1015,11 @@ function buildWaitingTimeRowsForPhase(pools, matches, resolveTeam) {
 
   safeMatches.forEach((match) => {
     const slot = Number(match?.slot || 0);
+    const normalizedSlot = localSlotIndex.get(slot) || slot;
     const teamARow = ensureRow(match?.teamAId, match?.teamAName || '');
     const teamBRow = ensureRow(match?.teamBId, match?.teamBName || '');
-    if (teamARow) teamARow.slots.push(slot);
-    if (teamBRow) teamBRow.slots.push(slot);
+    if (teamARow) teamARow.slots.push(normalizedSlot);
+    if (teamBRow) teamBRow.slots.push(normalizedSlot);
   });
 
   return Array.from(rowsByTeam.values())
