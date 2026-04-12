@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28G';
+const APP_VERSION = 'V28H';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1045,6 +1045,7 @@ function buildWaitingTimeRowsForPhase(pools, matches, resolveTeam) {
     });
 }
 
+
 function scheduleBrassageMatches(pools, phase, startSlot) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
   if (!safePools.length) return [];
@@ -1055,18 +1056,15 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     .map((pool, originalIndex) => ({
       pool,
       originalIndex,
-      preferredCourts: courts,
       matches: createThreeTeamPoolMatches(pool, phase),
       nextIndex: 0,
       lastSlot: null,
-      firstSlot: null,
       teamIds: Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [],
       teamCount: Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean).length : 0,
     }));
 
   if (!descriptors.length) return [];
 
-  const scheduled = [];
   const teamStats = new Map();
   descriptors.forEach((entry) => {
     entry.teamIds.forEach((teamId) => {
@@ -1081,89 +1079,119 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     });
   });
 
-  let slot = startSlot + 1;
-
-  const countTeamsWithoutFirstMatch = (entry) => entry.teamIds.reduce((sum, teamId) => {
+  const countNeverPlayed = (entry) => entry.teamIds.reduce((sum, teamId) => {
     const stat = teamStats.get(teamId);
     return sum + (stat && stat.firstSlot === null ? 1 : 0);
   }, 0);
 
-  const scoreDescriptor = (entry) => {
-    const match = entry.matches[entry.nextIndex];
-    if (!match) return Number.POSITIVE_INFINITY;
+  const getWaitPenalty = (stat, slot) => {
+    if (!stat) return 0;
 
-    const teamA = teamStats.get(match.teamAId) || { firstSlot: null, lastSlot: null, playCount: 0 };
-    const teamB = teamStats.get(match.teamBId) || { firstSlot: null, lastSlot: null, playCount: 0 };
-    const waitingTeams = [teamA, teamB];
-    const unsatisfiedTeams = countTeamsWithoutFirstMatch(entry);
+    if (stat.firstSlot === null) {
+      const beforeFirst = Math.max(0, slot - startSlot - 2);
+      if (beforeFirst >= 5) return 20000 + ((beforeFirst - 5) * 6000);
+      return beforeFirst * 500;
+    }
 
-    const firstWaitPenalty = waitingTeams.reduce((sum, stat) => {
-      if (stat.firstSlot !== null) return sum;
-      const waitBeforeFirst = Math.max(0, slot - startSlot - 2);
-      const hardPenalty = waitBeforeFirst >= 5 ? 2000 + ((waitBeforeFirst - 5) * 800) : 0;
-      return sum + (waitBeforeFirst * 180) + hardPenalty;
-    }, 0);
-
-    const replayPenalty = waitingTeams.reduce((sum, stat) => {
-      if (stat.lastSlot === null) return sum;
-      const gap = slot - stat.lastSlot - 1;
-      if (gap < 0) return sum + 4000;
-      if (gap === 0) return sum + 700;
-      if (gap === 1) return sum + 90;
-      if (gap === 2) return sum + 8;
-      if (gap <= 5) return sum + ((gap - 2) * 18);
-      return sum + 120 + ((gap - 5) * 260);
-    }, 0);
-
-    const poolLateStartPenalty = unsatisfiedTeams > 0
-      ? (Math.max(0, slot - startSlot - 1) * 120 * unsatisfiedTeams)
-      : 0;
-
-    const poolRepeatPenalty = entry.lastSlot === null ? 0 : Math.max(0, 3 - (slot - entry.lastSlot)) * 28;
-    const teamLoadPenalty = waitingTeams.reduce((sum, stat) => sum + (stat.playCount * 7), 0);
-    const orderPenalty = entry.nextIndex * 4;
-    const poolSizeBonus = -(entry.teamCount || 0) * 3;
-
-    return firstWaitPenalty + replayPenalty + poolLateStartPenalty + poolRepeatPenalty + teamLoadPenalty + orderPenalty + poolSizeBonus;
+    const gap = slot - stat.lastSlot - 1;
+    if (gap < 0) return 50000;
+    if (gap === 0) return 1800;
+    if (gap === 1) return 180;
+    if (gap === 2) return 30;
+    if (gap === 3) return 90;
+    if (gap === 4) return 250;
+    if (gap === 5) return 1200;
+    return 12000 + ((gap - 5) * 4000);
   };
 
+  const getUrgency = (entry, slot) => {
+    const neverPlayedCount = countNeverPlayed(entry);
+    const worstFirst = entry.teamIds.reduce((maxValue, teamId) => {
+      const stat = teamStats.get(teamId);
+      const value = stat?.firstSlot === null ? slot : stat.firstSlot;
+      return Math.max(maxValue, value);
+    }, 0);
+    const idleGap = entry.lastSlot === null ? 999 : (slot - entry.lastSlot);
+    return { neverPlayedCount, worstFirst, idleGap };
+  };
+
+  const computeCandidateScore = (entry, match, slot) => {
+    const teamAStat = teamStats.get(match.teamAId);
+    const teamBStat = teamStats.get(match.teamBId);
+    const neverPlayedCount = countNeverPlayed(entry);
+    const poolIdleGap = entry.lastSlot === null ? 999 : (slot - entry.lastSlot);
+
+    const teamPenalty = getWaitPenalty(teamAStat, slot) + getWaitPenalty(teamBStat, slot);
+    const poolFirstPenalty = neverPlayedCount > 0 ? Math.max(0, slot - startSlot - 1) * 260 * neverPlayedCount : 0;
+    const poolGapPenalty = entry.lastSlot === null ? 0 : Math.max(0, poolIdleGap - 2) * 170;
+    const loadPenalty = ((teamAStat?.playCount || 0) + (teamBStat?.playCount || 0)) * 8 + (entry.nextIndex * 6);
+    const biggerPoolBonus = -(entry.teamCount || 0) * 4;
+
+    return teamPenalty + poolFirstPenalty + poolGapPenalty + loadPenalty + biggerPoolBonus;
+  };
+
+  const scheduled = [];
+  let slot = startSlot + 1;
+
   while (descriptors.some((entry) => entry.nextIndex < entry.matches.length)) {
-    const usedTeamIds = new Set();
-    const usedPoolIds = new Set();
+    const usedPools = new Set();
+    const usedTeams = new Set();
     let scheduledThisSlot = 0;
 
+    const orderedDescriptors = descriptors
+      .filter((entry) => entry.nextIndex < entry.matches.length)
+      .map((entry) => ({ entry, urgency: getUrgency(entry, slot) }))
+      .sort((a, b) => {
+        if (a.urgency.neverPlayedCount !== b.urgency.neverPlayedCount) {
+          return b.urgency.neverPlayedCount - a.urgency.neverPlayedCount;
+        }
+        if (a.urgency.worstFirst !== b.urgency.worstFirst) {
+          return b.urgency.worstFirst - a.urgency.worstFirst;
+        }
+        if (a.urgency.idleGap !== b.urgency.idleGap) {
+          return b.urgency.idleGap - a.urgency.idleGap;
+        }
+        if ((a.entry.teamCount || 0) !== (b.entry.teamCount || 0)) {
+          return (b.entry.teamCount || 0) - (a.entry.teamCount || 0);
+        }
+        return (a.entry.originalIndex || 0) - (b.entry.originalIndex || 0);
+      });
+
     courts.forEach((court) => {
-      const candidates = descriptors
-        .filter((entry) => entry.nextIndex < entry.matches.length)
-        .map((entry) => ({ entry, match: entry.matches[entry.nextIndex], score: scoreDescriptor(entry) }))
-        .filter(({ entry, match }) => {
-          if (!match) return false;
-          if (usedPoolIds.has(entry.pool.id)) return false;
-          return !usedTeamIds.has(match.teamAId) && !usedTeamIds.has(match.teamBId);
+      const candidates = orderedDescriptors
+        .map(({ entry }) => {
+          if (usedPools.has(entry.pool.id)) return null;
+          const match = entry.matches[entry.nextIndex];
+          if (!match) return null;
+          if (usedTeams.has(match.teamAId) || usedTeams.has(match.teamBId)) return null;
+          return { entry, match, score: computeCandidateScore(entry, match, slot) };
         })
+        .filter(Boolean)
         .sort((a, b) => {
-          const aUnsatisfied = countTeamsWithoutFirstMatch(a.entry);
-          const bUnsatisfied = countTeamsWithoutFirstMatch(b.entry);
-          if (aUnsatisfied !== bUnsatisfied) return bUnsatisfied - aUnsatisfied;
+          const aNever = countNeverPlayed(a.entry);
+          const bNever = countNeverPlayed(b.entry);
+          if (aNever !== bNever) return bNever - aNever;
           if (a.score !== b.score) return a.score - b.score;
-          if ((a.entry.teamCount || 0) !== (b.entry.teamCount || 0)) return (b.entry.teamCount || 0) - (a.entry.teamCount || 0);
-          if (a.entry.nextIndex !== b.entry.nextIndex) return a.entry.nextIndex - b.entry.nextIndex;
+          if ((a.entry.teamCount || 0) !== (b.entry.teamCount || 0)) {
+            return (b.entry.teamCount || 0) - (a.entry.teamCount || 0);
+          }
           return (a.entry.originalIndex || 0) - (b.entry.originalIndex || 0);
         });
 
-      const candidate = candidates[0];
-      if (!candidate) return;
+      const chosen = candidates[0];
+      if (!chosen) return;
 
-      const { entry, match } = candidate;
+      const { entry, match } = chosen;
       entry.nextIndex += 1;
       entry.lastSlot = slot;
-      if (entry.firstSlot === null) entry.firstSlot = slot;
-      usedPoolIds.add(entry.pool.id);
-      usedTeamIds.add(match.teamAId);
-      usedTeamIds.add(match.teamBId);
+
+      usedPools.add(entry.pool.id);
+      usedTeams.add(match.teamAId);
+      usedTeams.add(match.teamBId);
 
       const teamAStat = teamStats.get(match.teamAId);
       const teamBStat = teamStats.get(match.teamBId);
+
       if (teamAStat) {
         if (teamAStat.firstSlot === null) teamAStat.firstSlot = slot;
         teamAStat.lastSlot = slot;
@@ -1174,6 +1202,7 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
         teamBStat.lastSlot = slot;
         teamBStat.playCount += 1;
       }
+
       if (match.refereeTeamId && teamStats.has(match.refereeTeamId)) {
         const refereeStat = teamStats.get(match.refereeTeamId);
         refereeStat.refereeCount += 1;
@@ -1190,19 +1219,28 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     });
 
     if (!scheduledThisSlot) {
-      const fallbackEntry = descriptors
-        .filter((entry) => entry.nextIndex < entry.matches.length)
-        .sort((a, b) => {
-          const aUnsatisfied = countTeamsWithoutFirstMatch(a);
-          const bUnsatisfied = countTeamsWithoutFirstMatch(b);
-          if (aUnsatisfied !== bUnsatisfied) return bUnsatisfied - aUnsatisfied;
-          return (a.originalIndex || 0) - (b.originalIndex || 0);
-        })[0];
-      if (!fallbackEntry) break;
-      const match = fallbackEntry.matches[fallbackEntry.nextIndex];
-      fallbackEntry.nextIndex += 1;
-      fallbackEntry.lastSlot = slot;
-      if (fallbackEntry.firstSlot === null) fallbackEntry.firstSlot = slot;
+      const fallback = orderedDescriptors[0]?.entry;
+      if (!fallback) break;
+      const match = fallback.matches[fallback.nextIndex];
+      if (!match) break;
+
+      fallback.nextIndex += 1;
+      fallback.lastSlot = slot;
+
+      const teamAStat = teamStats.get(match.teamAId);
+      const teamBStat = teamStats.get(match.teamBId);
+
+      if (teamAStat) {
+        if (teamAStat.firstSlot === null) teamAStat.firstSlot = slot;
+        teamAStat.lastSlot = slot;
+        teamAStat.playCount += 1;
+      }
+      if (teamBStat) {
+        if (teamBStat.firstSlot === null) teamBStat.firstSlot = slot;
+        teamBStat.lastSlot = slot;
+        teamBStat.playCount += 1;
+      }
+
       scheduled.push({
         ...match,
         court: 1,
@@ -1220,6 +1258,7 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     return (a.court || 0) - (b.court || 0);
   });
 }
+
 
 
 function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
