@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28E';
+const APP_VERSION = 'V28F';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -974,6 +974,7 @@ function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
   });
 }
 
+
 function scheduleBrassageMatches(pools, phase, startSlot) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
   if (!safePools.length) return [];
@@ -1010,9 +1011,12 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     });
   });
 
-  const totalTeams = Array.from(teamStats.keys()).length;
-  const averageFirstSlot = totalTeams > 0 ? ((Math.ceil(totalTeams / 2) - 1) / 2) : 0;
   let slot = startSlot + 1;
+
+  const countTeamsWithoutFirstMatch = (entry) => entry.teamIds.reduce((sum, teamId) => {
+    const stat = teamStats.get(teamId);
+    return sum + (stat && stat.firstSlot === null ? 1 : 0);
+  }, 0);
 
   const scoreDescriptor = (entry) => {
     const match = entry.matches[entry.nextIndex];
@@ -1021,27 +1025,36 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     const teamA = teamStats.get(match.teamAId) || { firstSlot: null, lastSlot: null, playCount: 0 };
     const teamB = teamStats.get(match.teamBId) || { firstSlot: null, lastSlot: null, playCount: 0 };
     const waitingTeams = [teamA, teamB];
+    const unsatisfiedTeams = countTeamsWithoutFirstMatch(entry);
 
     const firstWaitPenalty = waitingTeams.reduce((sum, stat) => {
       if (stat.firstSlot !== null) return sum;
-      return sum + Math.max(0, slot - averageFirstSlot) * 18;
+      const waitBeforeFirst = Math.max(0, slot - startSlot - 2);
+      const hardPenalty = waitBeforeFirst >= 5 ? 2000 + ((waitBeforeFirst - 5) * 800) : 0;
+      return sum + (waitBeforeFirst * 180) + hardPenalty;
     }, 0);
 
     const replayPenalty = waitingTeams.reduce((sum, stat) => {
       if (stat.lastSlot === null) return sum;
-      const gap = slot - stat.lastSlot;
-      if (gap <= 1) return sum + 120;
-      if (gap === 2) return sum + 18;
-      if (gap === 3) return sum + 4;
-      return sum + Math.max(0, gap - 3) * 8;
+      const gap = slot - stat.lastSlot - 1;
+      if (gap < 0) return sum + 4000;
+      if (gap === 0) return sum + 700;
+      if (gap === 1) return sum + 90;
+      if (gap === 2) return sum + 8;
+      if (gap <= 5) return sum + ((gap - 2) * 18);
+      return sum + 120 + ((gap - 5) * 260);
     }, 0);
 
-    const poolRepeatPenalty = entry.lastSlot === null ? 0 : Math.max(0, 3 - (slot - entry.lastSlot)) * 22;
-    const teamLoadPenalty = waitingTeams.reduce((sum, stat) => sum + (stat.playCount * 6), 0);
-    const poolSizeBonus = -(entry.teamCount || 0);
-    const orderPenalty = entry.nextIndex;
+    const poolLateStartPenalty = unsatisfiedTeams > 0
+      ? (Math.max(0, slot - startSlot - 1) * 120 * unsatisfiedTeams)
+      : 0;
 
-    return firstWaitPenalty + replayPenalty + poolRepeatPenalty + teamLoadPenalty + orderPenalty + poolSizeBonus;
+    const poolRepeatPenalty = entry.lastSlot === null ? 0 : Math.max(0, 3 - (slot - entry.lastSlot)) * 28;
+    const teamLoadPenalty = waitingTeams.reduce((sum, stat) => sum + (stat.playCount * 7), 0);
+    const orderPenalty = entry.nextIndex * 4;
+    const poolSizeBonus = -(entry.teamCount || 0) * 3;
+
+    return firstWaitPenalty + replayPenalty + poolLateStartPenalty + poolRepeatPenalty + teamLoadPenalty + orderPenalty + poolSizeBonus;
   };
 
   while (descriptors.some((entry) => entry.nextIndex < entry.matches.length)) {
@@ -1059,6 +1072,9 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
           return !usedTeamIds.has(match.teamAId) && !usedTeamIds.has(match.teamBId);
         })
         .sort((a, b) => {
+          const aUnsatisfied = countTeamsWithoutFirstMatch(a.entry);
+          const bUnsatisfied = countTeamsWithoutFirstMatch(b.entry);
+          if (aUnsatisfied !== bUnsatisfied) return bUnsatisfied - aUnsatisfied;
           if (a.score !== b.score) return a.score - b.score;
           if ((a.entry.teamCount || 0) !== (b.entry.teamCount || 0)) return (b.entry.teamCount || 0) - (a.entry.teamCount || 0);
           if (a.entry.nextIndex !== b.entry.nextIndex) return a.entry.nextIndex - b.entry.nextIndex;
@@ -1104,7 +1120,14 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     });
 
     if (!scheduledThisSlot) {
-      const fallbackEntry = descriptors.find((entry) => entry.nextIndex < entry.matches.length);
+      const fallbackEntry = descriptors
+        .filter((entry) => entry.nextIndex < entry.matches.length)
+        .sort((a, b) => {
+          const aUnsatisfied = countTeamsWithoutFirstMatch(a);
+          const bUnsatisfied = countTeamsWithoutFirstMatch(b);
+          if (aUnsatisfied !== bUnsatisfied) return bUnsatisfied - aUnsatisfied;
+          return (a.originalIndex || 0) - (b.originalIndex || 0);
+        })[0];
       if (!fallbackEntry) break;
       const match = fallbackEntry.matches[fallbackEntry.nextIndex];
       fallbackEntry.nextIndex += 1;
@@ -1127,6 +1150,7 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
     return (a.court || 0) - (b.court || 0);
   });
 }
+
 
 function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
   const safePrincipalePools = Array.isArray(principalePools) ? principalePools.filter(Boolean) : [];
