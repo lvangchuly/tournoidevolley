@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28J';
+const APP_VERSION = 'V28K';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2351,6 +2351,7 @@ export default function App() {
   const [organizerMatchTeamFilter, setOrganizerMatchTeamFilter] = useState('');
   const [selectedBrassagePoolByScope, setSelectedBrassagePoolByScope] = useState({ brassage1: '', brassage2: '', principale: '', consolante: '' });
   const [selectedBrassageTeamByScope, setSelectedBrassageTeamByScope] = useState({ brassage1: '', brassage2: '', principale: '', consolante: '' });
+  const [waitingTimePhaseView, setWaitingTimePhaseView] = useState('auto');
   const importRef = useRef(null);
   const tournamentLogoInputRef = useRef(null);
   const organizerLoginInputRef = useRef(null);
@@ -4522,10 +4523,20 @@ export default function App() {
       selectedScope.length > 0 ||
       (brassage2.matches.length > 0 && brassage1.matches.length > 0 && activeTab !== 'dashboard');
 
-    if (brassage2IsSelected && brassage2.matches.length > 0) {
+    const defaultPhase = brassage2IsSelected && brassage2.matches.length > 0 ? 'brassage2' : 'brassage1';
+    const requestedPhase = waitingTimePhaseView === 'auto' ? defaultPhase : waitingTimePhaseView;
+    const resolvedPhase =
+      requestedPhase === 'brassage2' && brassage2.matches.length > 0
+        ? 'brassage2'
+        : 'brassage1';
+
+    if (resolvedPhase === 'brassage2' && brassage2.matches.length > 0) {
       return {
         title: 'Temps d\'attente — Brassage 2',
         rows: waitingTimeRowsBrassage2,
+        phase: 'brassage2',
+        canToggle: brassage1.matches.length > 0,
+        toggleLabel: 'Voir Brassage 1',
       };
     }
 
@@ -4533,12 +4544,18 @@ export default function App() {
       return {
         title: 'Temps d\'attente — Brassage 1',
         rows: waitingTimeRowsBrassage1,
+        phase: 'brassage1',
+        canToggle: brassage2.matches.length > 0,
+        toggleLabel: 'Voir Brassage 2',
       };
     }
 
     return {
       title: 'Temps d\'attente',
       rows: [],
+      phase: 'brassage1',
+      canToggle: false,
+      toggleLabel: '',
     };
   }, [
     activeTab,
@@ -4546,9 +4563,19 @@ export default function App() {
     brassage2.matches.length,
     selectedBrassagePoolByScope,
     selectedBrassageTeamByScope,
+    waitingTimePhaseView,
     waitingTimeRowsBrassage1,
     waitingTimeRowsBrassage2,
   ]);
+
+  useEffect(() => {
+    if (waitingTimePhaseView === 'brassage2' && brassage2.matches.length === 0) {
+      setWaitingTimePhaseView('brassage1');
+    }
+    if (waitingTimePhaseView === 'brassage1' && brassage1.matches.length === 0) {
+      setWaitingTimePhaseView(brassage2.matches.length > 0 ? 'brassage2' : 'auto');
+    }
+  }, [waitingTimePhaseView, brassage1.matches.length, brassage2.matches.length]);
 
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
@@ -7951,7 +7978,18 @@ export default function App() {
                   </ul>
                   {waitingTimeSectionData.rows.length ? (
                     <div className="waiting-time-explanations">
-                      <div className="mini-card-head waiting-time-title">{waitingTimeSectionData.title}</div>
+                      <div className="waiting-time-toolbar">
+                        <div className="mini-card-head waiting-time-title">{waitingTimeSectionData.title}</div>
+                        {waitingTimeSectionData.canToggle ? (
+                          <button
+                            type="button"
+                            className="secondary-button waiting-time-toggle-button"
+                            onClick={() => setWaitingTimePhaseView(waitingTimeSectionData.phase === 'brassage2' ? 'brassage1' : 'brassage2')}
+                          >
+                            {waitingTimeSectionData.toggleLabel}
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="waiting-time-list">
                         {waitingTimeSectionData.rows.map((entry) => (
                           <div key={entry.teamId} className="waiting-time-card">
