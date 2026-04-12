@@ -121,3 +121,8 @@ Cette version améliore la synchro distante :
 Sans authentification Firebase, il n'est pas possible de sécuriser finement la base tout en laissant l'accès web aux organisateurs, arbitres et public.
 
 Le fichier `firebase-rtdb-rules-v27.json` fournit donc une base minimale de règles pour laisser fonctionner l'application actuelle, mais une vraie sécurisation nécessite ensuite l'ajout d'une authentification ou d'un proxy serveur.
+
+
+## Ordonnancement avancé des brassages
+
+La V28E améliore le brassage 1 et le brassage 2 avec un ordonnancement avancé qui équilibre mieux l'attente avant le premier match, les temps entre deux matchs et l'alternance des poules sur 3 terrains.

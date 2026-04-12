@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28D';
+const APP_VERSION = 'V28E';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -979,52 +979,153 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
   if (!safePools.length) return [];
 
   const courts = [1, 2, 3];
-  const poolMeta = safePools.map((pool, originalIndex) => {
-    const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
-    const matches = createThreeTeamPoolMatches(pool, phase);
-    return {
+  const descriptors = safePools
+    .filter((pool) => Array.isArray(pool?.teamIds) && pool.teamIds.filter(Boolean).length >= 2)
+    .map((pool, originalIndex) => ({
       pool,
       originalIndex,
-      teamIds,
-      teamCount: teamIds.length,
-      matchCount: matches.length,
-    };
+      preferredCourts: courts,
+      matches: createThreeTeamPoolMatches(pool, phase),
+      nextIndex: 0,
+      lastSlot: null,
+      firstSlot: null,
+      teamIds: Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [],
+      teamCount: Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean).length : 0,
+    }));
+
+  if (!descriptors.length) return [];
+
+  const scheduled = [];
+  const teamStats = new Map();
+  descriptors.forEach((entry) => {
+    entry.teamIds.forEach((teamId) => {
+      if (!teamStats.has(teamId)) {
+        teamStats.set(teamId, {
+          firstSlot: null,
+          lastSlot: null,
+          playCount: 0,
+          refereeCount: 0,
+        });
+      }
+    });
   });
 
-  const maxTeamCount = Math.max(...poolMeta.map((entry) => entry.teamCount || 0), 0);
-  const courtLoads = new Map(courts.map((court) => [court, 0]));
-  const preferredCourtByPoolId = new Map();
+  const totalTeams = Array.from(teamStats.keys()).length;
+  const averageFirstSlot = totalTeams > 0 ? ((Math.ceil(totalTeams / 2) - 1) / 2) : 0;
+  let slot = startSlot + 1;
 
-  poolMeta
-    .slice()
-    .sort((a, b) => {
-      if ((a.teamCount || 0) !== (b.teamCount || 0)) return (b.teamCount || 0) - (a.teamCount || 0);
-      if ((a.matchCount || 0) !== (b.matchCount || 0)) return (b.matchCount || 0) - (a.matchCount || 0);
-      return a.originalIndex - b.originalIndex;
-    })
-    .forEach((entry) => {
-      const sortedCourts = courts.slice().sort((a, b) => {
-        const loadDiff = (courtLoads.get(a) || 0) - (courtLoads.get(b) || 0);
-        if (loadDiff !== 0) return loadDiff;
-        return a - b;
+  const scoreDescriptor = (entry) => {
+    const match = entry.matches[entry.nextIndex];
+    if (!match) return Number.POSITIVE_INFINITY;
+
+    const teamA = teamStats.get(match.teamAId) || { firstSlot: null, lastSlot: null, playCount: 0 };
+    const teamB = teamStats.get(match.teamBId) || { firstSlot: null, lastSlot: null, playCount: 0 };
+    const waitingTeams = [teamA, teamB];
+
+    const firstWaitPenalty = waitingTeams.reduce((sum, stat) => {
+      if (stat.firstSlot !== null) return sum;
+      return sum + Math.max(0, slot - averageFirstSlot) * 18;
+    }, 0);
+
+    const replayPenalty = waitingTeams.reduce((sum, stat) => {
+      if (stat.lastSlot === null) return sum;
+      const gap = slot - stat.lastSlot;
+      if (gap <= 1) return sum + 120;
+      if (gap === 2) return sum + 18;
+      if (gap === 3) return sum + 4;
+      return sum + Math.max(0, gap - 3) * 8;
+    }, 0);
+
+    const poolRepeatPenalty = entry.lastSlot === null ? 0 : Math.max(0, 3 - (slot - entry.lastSlot)) * 22;
+    const teamLoadPenalty = waitingTeams.reduce((sum, stat) => sum + (stat.playCount * 6), 0);
+    const poolSizeBonus = -(entry.teamCount || 0);
+    const orderPenalty = entry.nextIndex;
+
+    return firstWaitPenalty + replayPenalty + poolRepeatPenalty + teamLoadPenalty + orderPenalty + poolSizeBonus;
+  };
+
+  while (descriptors.some((entry) => entry.nextIndex < entry.matches.length)) {
+    const usedTeamIds = new Set();
+    const usedPoolIds = new Set();
+    let scheduledThisSlot = 0;
+
+    courts.forEach((court) => {
+      const candidates = descriptors
+        .filter((entry) => entry.nextIndex < entry.matches.length)
+        .map((entry) => ({ entry, match: entry.matches[entry.nextIndex], score: scoreDescriptor(entry) }))
+        .filter(({ entry, match }) => {
+          if (!match) return false;
+          if (usedPoolIds.has(entry.pool.id)) return false;
+          return !usedTeamIds.has(match.teamAId) && !usedTeamIds.has(match.teamBId);
+        })
+        .sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          if ((a.entry.teamCount || 0) !== (b.entry.teamCount || 0)) return (b.entry.teamCount || 0) - (a.entry.teamCount || 0);
+          if (a.entry.nextIndex !== b.entry.nextIndex) return a.entry.nextIndex - b.entry.nextIndex;
+          return (a.entry.originalIndex || 0) - (b.entry.originalIndex || 0);
+        });
+
+      const candidate = candidates[0];
+      if (!candidate) return;
+
+      const { entry, match } = candidate;
+      entry.nextIndex += 1;
+      entry.lastSlot = slot;
+      if (entry.firstSlot === null) entry.firstSlot = slot;
+      usedPoolIds.add(entry.pool.id);
+      usedTeamIds.add(match.teamAId);
+      usedTeamIds.add(match.teamBId);
+
+      const teamAStat = teamStats.get(match.teamAId);
+      const teamBStat = teamStats.get(match.teamBId);
+      if (teamAStat) {
+        if (teamAStat.firstSlot === null) teamAStat.firstSlot = slot;
+        teamAStat.lastSlot = slot;
+        teamAStat.playCount += 1;
+      }
+      if (teamBStat) {
+        if (teamBStat.firstSlot === null) teamBStat.firstSlot = slot;
+        teamBStat.lastSlot = slot;
+        teamBStat.playCount += 1;
+      }
+      if (match.refereeTeamId && teamStats.has(match.refereeTeamId)) {
+        const refereeStat = teamStats.get(match.refereeTeamId);
+        refereeStat.refereeCount += 1;
+      }
+
+      scheduled.push({
+        ...match,
+        court,
+        slot,
+        time: '',
+        validatedAt: match.validatedAt || null,
       });
-      const preferredCourt = sortedCourts[0];
-      preferredCourtByPoolId.set(entry.pool.id, preferredCourt);
-      courtLoads.set(preferredCourt, (courtLoads.get(preferredCourt) || 0) + (entry.matchCount || 0));
+      scheduledThisSlot += 1;
     });
 
-  const descriptors = safePools.flatMap((pool) => buildPoolMatchDescriptors([pool], phase, [preferredCourtByPoolId.get(pool.id) || 1], {
-    getPreferredCourts: (currentPool, baseCourts, teamIds) => {
-      const teamCount = teamIds?.length || 0;
-      if (safePools.length >= 6) return baseCourts;
-      if (teamCount < maxTeamCount) return baseCourts;
-      if (teamCount <= 3) return baseCourts;
-      const fallbackCourts = courts.filter((court) => !baseCourts.includes(court));
-      return [...baseCourts, ...fallbackCourts];
-    },
-  }));
+    if (!scheduledThisSlot) {
+      const fallbackEntry = descriptors.find((entry) => entry.nextIndex < entry.matches.length);
+      if (!fallbackEntry) break;
+      const match = fallbackEntry.matches[fallbackEntry.nextIndex];
+      fallbackEntry.nextIndex += 1;
+      fallbackEntry.lastSlot = slot;
+      if (fallbackEntry.firstSlot === null) fallbackEntry.firstSlot = slot;
+      scheduled.push({
+        ...match,
+        court: 1,
+        slot,
+        time: '',
+        validatedAt: match.validatedAt || null,
+      });
+    }
 
-  return schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot);
+    slot += 1;
+  }
+
+  return scheduled.sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
 }
 
 function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
