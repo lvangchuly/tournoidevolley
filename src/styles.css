@@ -3445,6 +3445,12 @@ tbody tr:last-child td { border-bottom: none; }
   box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.24), 0 14px 30px rgba(220, 38, 38, 0.20);
   background: linear-gradient(180deg, #ffffff 0%, #fff1f2 100%);
 }
+.compact-match-card-v24n.is-referee-highlighted {
+  border-color: #16a34a;
+  border-width: 4px;
+  box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.22), 0 14px 30px rgba(22, 163, 74, 0.18);
+  background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+}
 .compact-match-header-v24n {
   display: grid;
   grid-template-columns: 30px minmax(0, 1fr) 30px;

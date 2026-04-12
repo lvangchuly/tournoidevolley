@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28C';
+const APP_VERSION = 'V28D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6324,10 +6324,14 @@ export default function App() {
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
                       const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
-                      const isHighlightedMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId || refereeTeamId === selectedTeamId);
+                      const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
+                      const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
+                      const matchHighlightClass = isSelectedTeamPlayingMatch
+                        ? 'is-team-highlighted'
+                        : (isSelectedTeamRefereeMatch ? 'is-referee-highlighted' : '');
 
                       return (
-                        <div key={match.id} id={`match-card-${match.id}`} className={`compact-match-card-v24n ${isHighlightedMatch ? 'is-team-highlighted' : ''}`.trim()}>
+                        <div key={match.id} id={`match-card-${match.id}`} className={`compact-match-card-v24n ${matchHighlightClass}`.trim()}>
                           <div className="compact-match-header-v24n">
                             <span className="compact-match-chip compact-match-chip-v24n">T{match.court || courtNumber}</span>
                             <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-match-referee-badge-v24n" />
