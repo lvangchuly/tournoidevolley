@@ -4414,3 +4414,48 @@ tbody tr:last-child td { border-bottom: none; }
     font-size: 1rem;
   }
 }
+
+
+.waiting-time-explanations {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
+}
+
+.waiting-time-title {
+  margin-bottom: 10px;
+}
+
+.waiting-time-list {
+  display: grid;
+  gap: 10px;
+}
+
+.waiting-time-card {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.waiting-time-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.waiting-time-header span {
+  font-size: 0.9rem;
+  opacity: 0.76;
+}
+
+.waiting-time-body {
+  display: grid;
+  gap: 4px;
+}
+
+.waiting-time-line {
+  line-height: 1.35;
+}

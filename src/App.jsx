@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28F';
+const APP_VERSION = 'V28G';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -974,6 +974,76 @@ function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
   });
 }
 
+
+
+function buildWaitingTimeRowsForPhase(pools, matches, resolveTeam) {
+  const safePools = Array.isArray(pools) ? pools : [];
+  const safeMatches = (Array.isArray(matches) ? matches : [])
+    .filter(Boolean)
+    .slice()
+    .sort((a, b) => {
+      if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+      return (a.court || 0) - (b.court || 0);
+    });
+
+  const poolNameByTeamId = new Map();
+  safePools.forEach((pool) => {
+    const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
+    teamIds.forEach((teamId) => {
+      poolNameByTeamId.set(teamId, pool?.name || '');
+    });
+  });
+
+  const rowsByTeam = new Map();
+
+  const ensureRow = (teamId, fallbackName = '') => {
+    if (!teamId) return null;
+    if (!rowsByTeam.has(teamId)) {
+      const team = typeof resolveTeam === 'function' ? resolveTeam(teamId) : null;
+      rowsByTeam.set(teamId, {
+        teamId,
+        teamName: team?.name || fallbackName || 'À définir',
+        poolName: poolNameByTeamId.get(teamId) || '',
+        slots: [],
+      });
+    }
+    return rowsByTeam.get(teamId);
+  };
+
+  safeMatches.forEach((match) => {
+    const slot = Number(match?.slot || 0);
+    const teamARow = ensureRow(match?.teamAId, match?.teamAName || '');
+    const teamBRow = ensureRow(match?.teamBId, match?.teamBName || '');
+    if (teamARow) teamARow.slots.push(slot);
+    if (teamBRow) teamBRow.slots.push(slot);
+  });
+
+  return Array.from(rowsByTeam.values())
+    .map((row) => {
+      const slots = row.slots.slice().sort((a, b) => a - b);
+      const waits = slots.map((slot, index) => {
+        if (index === 0) {
+          if (slot <= 1) return "Joue le premier match (M1)";
+          const beforeCount = Math.max(0, slot - 1);
+          return `${beforeCount} match${beforeCount > 1 ? 's' : ''} avant de jouer le premier match`;
+        }
+        const previousSlot = slots[index - 1];
+        const gap = Math.max(0, slot - previousSlot - 1);
+        if (gap === 0) return `Aucune attente entre M${index} et M${index + 1}`;
+        return `${gap} match${gap > 1 ? 's' : ''} d'attente entre M${index} et M${index + 1}`;
+      });
+
+      return {
+        ...row,
+        slots,
+        waits,
+      };
+    })
+    .sort((a, b) => {
+      if ((a.poolName || '') !== (b.poolName || '')) return String(a.poolName || '').localeCompare(String(b.poolName || ''));
+      return String(a.teamName || '').localeCompare(String(b.teamName || ''));
+    });
+}
 
 function scheduleBrassageMatches(pools, phase, startSlot) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
@@ -4393,6 +4463,57 @@ export default function App() {
     return brassage2.matches.length === 0;
   }, [isSmallTournamentMode, championshipLeg2.matches.length, brassage2.matches.length]);
 
+
+  const waitingTimeRowsBrassage1 = useMemo(() => (
+    buildWaitingTimeRowsForPhase(brassage1.pools, brassage1.matches, resolveTeam)
+  ), [brassage1.pools, brassage1.matches, teamMap]);
+
+  const waitingTimeRowsBrassage2 = useMemo(() => (
+    buildWaitingTimeRowsForPhase(brassage2.pools, brassage2.matches, resolveTeam)
+  ), [brassage2.pools, brassage2.matches, teamMap]);
+
+  const waitingTimeSectionData = useMemo(() => {
+    const hasMainStage =
+      mainStage.principaleMatches.length > 0 ||
+      mainStage.consolanteMatches.length > 0 ||
+      knockout.principalQuarters.length > 0 ||
+      knockout.principalSemis.length > 0 ||
+      knockout.principalFinals.length > 0 ||
+      knockout.consolanteSemis.length > 0 ||
+      knockout.consolanteFinals.length > 0;
+
+    if (brassage2.matches.length > 0 && !hasMainStage) {
+      return {
+        title: 'Temps d\'attente — Brassage 2',
+        rows: waitingTimeRowsBrassage2,
+      };
+    }
+
+    if (brassage1.matches.length > 0 && brassage2.matches.length === 0) {
+      return {
+        title: 'Temps d\'attente — Brassage 1',
+        rows: waitingTimeRowsBrassage1,
+      };
+    }
+
+    return {
+      title: 'Temps d\'attente',
+      rows: [],
+    };
+  }, [
+    brassage1.matches.length,
+    brassage2.matches.length,
+    mainStage.principaleMatches.length,
+    mainStage.consolanteMatches.length,
+    knockout.principalQuarters.length,
+    knockout.principalSemis.length,
+    knockout.principalFinals.length,
+    knockout.consolanteSemis.length,
+    knockout.consolanteFinals.length,
+    waitingTimeRowsBrassage1,
+    waitingTimeRowsBrassage2,
+  ]);
+
   const phaseRuleLocks = useMemo(() => ({
     brassage1: {
       locked: hasAnyValidMatch([...brassage1.matches, ...brassage2.matches, ...mainStage.principaleMatches, ...mainStage.consolanteMatches, ...knockout.principalQuarters, ...knockout.principalSemis, ...knockout.principalFinals, ...knockout.consolanteSemis, ...knockout.consolanteFinals]),
@@ -7792,6 +7913,28 @@ export default function App() {
                     <li>Date et heure de sauvegarde intégrées au nom du fichier</li>
                     <li>Import complet depuis un export JSON précédent</li>
                   </ul>
+                  {waitingTimeSectionData.rows.length ? (
+                    <div className="waiting-time-explanations">
+                      <div className="mini-card-head waiting-time-title">{waitingTimeSectionData.title}</div>
+                      <div className="waiting-time-list">
+                        {waitingTimeSectionData.rows.map((entry) => (
+                          <div key={entry.teamId} className="waiting-time-card">
+                            <div className="waiting-time-header">
+                              <strong>{entry.teamName}</strong>
+                              <span>{entry.poolName || 'Poule'}</span>
+                            </div>
+                            <div className="waiting-time-body">
+                              {entry.waits.map((text, index) => (
+                                <div key={`${entry.teamId}-${index}`} className="waiting-time-line">
+                                  {index === 0 ? text : `Après M${index} : ${text}`}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </Section>
