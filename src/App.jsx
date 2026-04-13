@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28R';
+const APP_VERSION = 'V28S';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -57,6 +57,13 @@ const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 
 function getPreferredBrassagePoolCount(teamCount) {
   if (teamCount < 8) return 0;
+  if (teamCount === 18) return 6;
+  if (teamCount === 19) return 4;
+  if (teamCount === 20) return 6;
+  if (teamCount === 21) return 7;
+  if (teamCount === 22) return 7;
+  if (teamCount === 23) return 7;
+  if (teamCount === 24) return 8;
   return Math.ceil(teamCount / 3);
 }
 
@@ -74,106 +81,23 @@ function getBrassagePoolSummary(teamCount) {
 }
 
 function getMainStageDistribution(teamCount) {
-  if (teamCount >= 18) return {
-    principaleCount: 12,
-    consolanteCount: 6,
-    normalizedRanking: false,
-    consolanteMode: 'pools',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: CONSOLANTE_POOL_NAMES,
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 8 || teamCount === 9 || teamCount === 10) return {
-    principaleCount: 8,
-    consolanteCount: 0,
-    normalizedRanking: true,
-    consolanteMode: 'pools',
-    principalePoolNames: [],
-    consolantePoolNames: [],
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 12) return {
-    principaleCount: 8,
-    consolanteCount: 4,
-    normalizedRanking: true,
-    consolanteMode: 'direct-podium',
-    principalePoolNames: [],
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 11) return {
-    principaleCount: 8,
-    consolanteCount: 3,
-    normalizedRanking: true,
-    consolanteMode: 'pools',
-    principalePoolNames: [],
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: false,
-    directPrincipalQuarters: true,
-  };
-  if (teamCount === 17) return {
-    principaleCount: 12,
-    consolanteCount: 5,
-    normalizedRanking: true,
-    consolanteMode: 'championship',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 16) return {
-    principaleCount: 12,
-    consolanteCount: 4,
-    normalizedRanking: true,
-    consolanteMode: 'championship',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 15) return {
-    principaleCount: 12,
-    consolanteCount: 3,
-    normalizedRanking: true,
-    consolanteMode: 'championship',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: false,
-  };
-  if (teamCount === 14) return {
-    principaleCount: 8,
-    consolanteCount: 6,
-    normalizedRanking: true,
-    consolanteMode: 'pools',
-    principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2),
-    consolantePoolNames: CONSOLANTE_POOL_NAMES,
-    directPrincipalSemis: true,
-  };
-  if (teamCount === 13) return {
-    principaleCount: 8,
-    consolanteCount: 5,
-    normalizedRanking: true,
-    consolanteMode: 'championship',
-    principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2),
-    consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]],
-    directPrincipalSemis: true,
-  };
-  if (teamCount >= 13) return {
-    principaleCount: 8,
-    consolanteCount: Math.max(0, teamCount - 8),
-    normalizedRanking: true,
-    consolanteMode: 'pools',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: CONSOLANTE_POOL_NAMES,
-    directPrincipalSemis: false,
-  };
-  return {
-    principaleCount: 0,
-    consolanteCount: 0,
-    normalizedRanking: false,
-    consolanteMode: 'pools',
-    principalePoolNames: PRINCIPALE_POOL_NAMES,
-    consolantePoolNames: CONSOLANTE_POOL_NAMES,
-    directPrincipalSemis: false,
-  };
+  if (teamCount === 24) return { principaleCount: 12, consolanteCount: 12, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C', 'Consolante D'], directPrincipalSemis: false };
+  if (teamCount === 23) return { principaleCount: 12, consolanteCount: 11, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 22) return { principaleCount: 12, consolanteCount: 10, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 21) return { principaleCount: 12, consolanteCount: 9, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 20) return { principaleCount: 12, consolanteCount: 8, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
+  if (teamCount === 19) return { principaleCount: 12, consolanteCount: 7, normalizedRanking: false, consolanteMode: 'mixed43', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
+  if (teamCount === 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
+  if (teamCount === 8 || teamCount === 9 || teamCount === 10) return { principaleCount: 8, consolanteCount: 0, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [], directPrincipalSemis: false };
+  if (teamCount === 12) return { principaleCount: 8, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'direct-podium', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 11) return { principaleCount: 8, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false, directPrincipalQuarters: true };
+  if (teamCount === 17) return { principaleCount: 12, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 16) return { principaleCount: 12, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 15) return { principaleCount: 12, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 14) return { principaleCount: 8, consolanteCount: 6, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2), consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: true };
+  if (teamCount === 13) return { principaleCount: 8, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: true };
+  if (teamCount >= 13) return { principaleCount: 8, consolanteCount: Math.max(0, teamCount - 8), normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
+  return { principaleCount: 0, consolanteCount: 0, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
 }
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
@@ -429,6 +353,7 @@ function normalizeKnockoutState(input) {
     principalQuarters: dedupeMatches(Array.isArray(input?.principalQuarters) ? input.principalQuarters : []),
     principalSemis: dedupeMatches(Array.isArray(input?.principalSemis) ? input.principalSemis : []),
     principalFinals: dedupeMatches(Array.isArray(input?.principalFinals) ? input.principalFinals : []),
+    consolanteQuarters: dedupeMatches(Array.isArray(input?.consolanteQuarters) ? input.consolanteQuarters : []),
     consolanteSemis: dedupeMatches(Array.isArray(input?.consolanteSemis) ? input.consolanteSemis : []),
     consolanteFinals: dedupeMatches(Array.isArray(input?.consolanteFinals) ? input.consolanteFinals : []),
   };
@@ -452,6 +377,7 @@ function countMatchesInPersistedState(payload) {
     payload?.knockout?.principalQuarters,
     payload?.knockout?.principalSemis,
     payload?.knockout?.principalFinals,
+    payload?.knockout?.consolanteQuarters,
     payload?.knockout?.consolanteSemis,
     payload?.knockout?.consolanteFinals,
     payload?.championshipLeg1?.matches,
@@ -617,6 +543,23 @@ function createSmallBracketSeeds(rankedIds) {
     seeds[index + 1] = teamId;
   });
   return seeds;
+}
+
+
+function buildConsolanteQuarterMatchesFromRanking(rankedIds) {
+  const seeds = createSmallBracketSeeds(rankedIds);
+  return SMALL_QUARTER_PAIRINGS.map(([seedA, seedB], index) => {
+    const teamAId = seeds[seedA] || null;
+    const teamBId = seeds[seedB] || null;
+    return teamAId && teamBId ? makeKnockoutMatch('Tableau consolante', `Quart ${index + 1}`, teamAId, teamBId) : null;
+  }).filter(Boolean);
+}
+
+function buildConsolanteSemisFromQuarters(rankedIds, quarterMatches, phaseRules) {
+  return [
+    makeKnockoutMatch('Tableau consolante', 'Demi 1', resolveQuarterSlotWinner(rankedIds, quarterMatches, 0, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 1, phaseRules)),
+    makeKnockoutMatch('Tableau consolante', 'Demi 2', resolveQuarterSlotWinner(rankedIds, quarterMatches, 2, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 3, phaseRules)),
+  ].filter((match) => match.teamAId && match.teamBId);
 }
 
 function buildQuarterMatchesFromRanking(rankedIds) {
@@ -1977,7 +1920,7 @@ function buildSaveModeFunctionnements() {
     "Pour 16 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 4 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 4 équipes, puis en demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 17 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale consolante et la petite finale consolante.",
     "Pour 18 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes du classement vont en phase principale et les 6 autres en phase consolante. La principale débute par 4 poules de 3 équipes et les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale. Les gagnantes des demi-finales vont en finale principale et les perdantes en petite finale principale. La consolante débute par 2 poules de 3 équipes et les 2 meilleures équipes de chaque poule forment les demi-finales consolante. Les gagnantes des demi-finales consolante vont en finale consolante et les perdantes en petite finale consolante.",
-    "Pour 19 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 4 à 5 équipes au brassage 1, puis en 4 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; la 19e équipe n’est pas qualifiée pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 19 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 4 à 5 équipes au brassage 1, puis en 4 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante. La 19e équipe n’est pas qualifiée pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 1 poule de 3 équipes et 1 poule de 4 équipes, puis les 4 meilleures équipes du classement des 2 poules vont en demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 20 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 2 poules de 4 et 4 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 8 suivantes en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 4 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 21 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 7 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 9 suivantes en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 3 poules de 3 équipes, puis les 8 meilleures équipes du classement général des trois poules iront en quarts de finale consolante, demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 22 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 1 poule de 4 et 6 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 10 suivantes en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes et 1 poule de 4 équipes puis les 8 meilleures équipes du classement général des trois poules iront en quarts de finale consolante, puis demi-finales consolante, finale consolante et petite finale consolante.",
@@ -2269,7 +2212,7 @@ export default function App() {
   const [brassage1, setBrassage1] = useState(normalizeLeagueState(safeClone(initial?.brassage1, { pools: [], matches: [] })));
   const [brassage2, setBrassage2] = useState(normalizeLeagueState(safeClone(initial?.brassage2, { pools: [], matches: [] })));
   const [mainStage, setMainStage] = useState(normalizeMainStageState(safeClone(initial?.mainStage, { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] })));
-  const [knockout, setKnockout] = useState(normalizeKnockoutState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] })));
+  const [knockout, setKnockout] = useState(normalizeKnockoutState(safeClone(initial?.knockout, { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] })));
   const [championshipLeg1, setChampionshipLeg1] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg1, { pools: [], matches: [] })));
   const [championshipLeg2, setChampionshipLeg2] = useState(normalizeLeagueState(safeClone(initial?.championshipLeg2, { pools: [], matches: [] })));
   const [singleKnockout, setSingleKnockout] = useState(normalizeSingleKnockoutState(safeClone(initial?.singleKnockout, { quarters: [], semis: [], finals: [] })));
@@ -3050,6 +2993,7 @@ export default function App() {
         principalQuarters: Array.isArray(payload.knockout?.principalQuarters) ? mergeRemoteMatches(current.principalQuarters, payload.knockout.principalQuarters, payload.knockout.principalQuarters.length === 0) : current.principalQuarters,
         principalSemis: Array.isArray(payload.knockout?.principalSemis) ? mergeRemoteMatches(current.principalSemis, payload.knockout.principalSemis, payload.knockout.principalSemis.length === 0) : current.principalSemis,
         principalFinals: Array.isArray(payload.knockout?.principalFinals) ? mergeRemoteMatches(current.principalFinals, payload.knockout.principalFinals, payload.knockout.principalFinals.length === 0) : current.principalFinals,
+        consolanteQuarters: Array.isArray(payload.knockout?.consolanteQuarters) ? mergeRemoteMatches(current.consolanteQuarters, payload.knockout.consolanteQuarters, payload.knockout.consolanteQuarters.length === 0) : current.consolanteQuarters,
         consolanteSemis: Array.isArray(payload.knockout?.consolanteSemis) ? mergeRemoteMatches(current.consolanteSemis, payload.knockout.consolanteSemis, payload.knockout.consolanteSemis.length === 0) : current.consolanteSemis,
         consolanteFinals: Array.isArray(payload.knockout?.consolanteFinals) ? mergeRemoteMatches(current.consolanteFinals, payload.knockout.consolanteFinals, payload.knockout.consolanteFinals.length === 0) : current.consolanteFinals,
       }));
@@ -4683,7 +4627,7 @@ export default function App() {
       brassage1: { pools: [], matches: [] },
       brassage2: { pools: [], matches: [] },
       mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
-      knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] },
+      knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] },
       championshipLeg1: { pools: [], matches: [] },
       championshipLeg2: { pools: [], matches: [] },
       singleKnockout: { quarters: [], semis: [], finals: [] },
@@ -4852,7 +4796,7 @@ export default function App() {
     setBrassage1({ pools, matches });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] });
     markPendingStructureSync();
     queueBackgroundCloudSave(250);
   }
@@ -5023,7 +4967,7 @@ export default function App() {
     setBrassage1({ pools: [], matches: [] });
     setBrassage2({ pools: [], matches: [] });
     setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+    setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] });
     setChampionshipLeg1({ pools: [], matches: [] });
     setChampionshipLeg2({ pools: [], matches: [] });
     setSingleKnockout({ quarters: [], semis: [], finals: [] });
@@ -5129,7 +5073,7 @@ export default function App() {
       setBrassage1({ pools: [], matches: [] });
       setBrassage2({ pools: [], matches: [] });
       setMainStage({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
-      setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] });
+      setKnockout({ principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] });
       setActiveTab('championship');
       markPendingStructureSync();
       queueBackgroundCloudSave(250);
@@ -5141,7 +5085,7 @@ export default function App() {
         brassage1: { pools: [], matches: [] },
         brassage2: { pools: [], matches: [] },
         mainStage: { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] },
-        knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] },
+        knockout: { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] },
       });
       return true;
     }
@@ -5156,7 +5100,7 @@ export default function App() {
     const nextBrassage1 = { pools, matches };
     const nextBrassage2 = { pools: [], matches: [] };
     const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
-    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
     const nextChampionshipLeg1 = { pools: [], matches: [] };
     const nextChampionshipLeg2 = { pools: [], matches: [] };
     const nextSingleKnockout = { quarters: [], semis: [], finals: [] };
@@ -5286,7 +5230,7 @@ export default function App() {
     const matches = scheduleBrassageMatches(pools, 'Brassage 2', stageSlotCount(currentBrassage1.matches.length));
     const nextBrassage2 = { pools, matches };
     const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
-    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
     brassage2Ref.current = nextBrassage2;
     mainStageRef.current = nextMainStage;
     knockoutRef.current = nextKnockout;
@@ -5536,7 +5480,7 @@ export default function App() {
       consolantePools,
       consolanteMatches: scheduled.filter((match) => match.phase === 'Consolante'),
     };
-    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+    const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
     mainStageRef.current = nextMainStage;
     knockoutRef.current = nextKnockout;
     setMainStage(nextMainStage);
@@ -6044,7 +5988,7 @@ export default function App() {
     if (currentStageLevel < 1) {
       const nextBrassage2 = { pools: [], matches: [] };
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
-      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
       brassage2Ref.current = nextBrassage2;
       mainStageRef.current = nextMainStage;
       knockoutRef.current = nextKnockout;
@@ -6055,7 +5999,7 @@ export default function App() {
     }
     if (currentStageLevel < 2) {
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
-      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
       mainStageRef.current = nextMainStage;
       knockoutRef.current = nextKnockout;
       setMainStage(nextMainStage);
@@ -6063,7 +6007,7 @@ export default function App() {
       return;
     }
     if (currentStageLevel < 3) {
-      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
+      const nextKnockout = { principalQuarters: [], principalSemis: [], principalFinals: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
       knockoutRef.current = nextKnockout;
       setKnockout(nextKnockout);
       return;
