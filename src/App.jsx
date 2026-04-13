@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28S';
+const APP_VERSION = 'V28W';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7795,7 +7795,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  {(finalsPrincipalQuarterOnlyMatches.length > 0 || finalsConsolanteQuarterOnlyMatches.length > 0) ? (
+                  {(finalsPrincipalQuarterOnlyMatches.length > 0 || finalsConsolanteQuarterOnlyMatches.length > 0 || (mainStageDistribution.consolanteMode === 'quarter-pools' && finalsConsolanteFinalsMatches.length === 0)) ? (
                     <Section title="Quarts de finale" right={<Button variant="secondary" onClick={() => printRemainingBrassageMatches('Quarts de finale — matchs restants', [...finalsPrincipalQuarterOnlyMatches, ...finalsConsolanteQuarterOnlyMatches], [], resolveTeam, phaseRules)}>🖨️</Button>}>
                       <div className={`cards-grid ${finalsPrincipalQuarterOnlyMatches.length > 0 && finalsConsolanteQuarterOnlyMatches.length > 0 ? 'two-up' : 'one-up'} finals-dual-grid`}>
                         {finalsPrincipalQuarterOnlyMatches.length > 0 ? (
