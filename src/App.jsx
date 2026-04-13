@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28N';
+const APP_VERSION = 'V28O';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7930,7 +7930,7 @@ export default function App() {
                 <>
                   {(finalsPrincipalQuarterOnlyMatches.length > 0 || finalsConsolanteQuarterOnlyMatches.length > 0) ? (
                     <Section title="Quarts de finale" right={<Button variant="secondary" onClick={() => printRemainingBrassageMatches('Quarts de finale — matchs restants', [...finalsPrincipalQuarterOnlyMatches, ...finalsConsolanteQuarterOnlyMatches], [], resolveTeam, phaseRules)}>🖨️</Button>}>
-                      <div className={`cards-grid ${finalsPrincipalQuarterOnlyMatches.length > 0 && finalsConsolanteQuarterOnlyMatches.length > 0 ? 'two-up' : 'one-up'} knockout-step-grid finals-dual-grid`}>
+                      <div className={`cards-grid ${finalsPrincipalQuarterOnlyMatches.length > 0 && finalsConsolanteQuarterOnlyMatches.length > 0 ? 'two-up' : 'one-up'} finals-dual-grid`}>
                         {finalsPrincipalQuarterOnlyMatches.length > 0 ? (
                           <div className="knockout-panel">
                             <h3>{`Quarts principale : ${formatRemainingMatchesLabel(finalsPrincipalQuarterOnlyMatches, phaseRules)}`}</h3>
@@ -7949,7 +7949,7 @@ export default function App() {
 
                   {(finalsPrincipalSemisMatches.length > 0 || finalsConsolanteSemisMatches.length > 0) ? (
                     <Section title="Demi-finales" right={<Button variant="secondary" onClick={() => printRemainingBrassageMatches('Demi-finales — matchs restants', [...finalsPrincipalSemisMatches, ...finalsConsolanteSemisMatches], [], resolveTeam, phaseRules)}>🖨️</Button>}>
-                      <div className={`cards-grid ${finalsPrincipalSemisMatches.length > 0 && finalsConsolanteSemisMatches.length > 0 ? 'two-up' : 'one-up'} knockout-step-grid finals-dual-grid`}>
+                      <div className={`cards-grid ${finalsPrincipalSemisMatches.length > 0 && finalsConsolanteSemisMatches.length > 0 ? 'two-up' : 'one-up'} finals-dual-grid`}>
                         {finalsPrincipalSemisMatches.length > 0 ? (
                           <div className="knockout-panel">
                             <h3>{`Demi-finales principale : ${formatRemainingMatchesLabel(finalsPrincipalSemisMatches, phaseRules)}`}</h3>
@@ -7968,7 +7968,7 @@ export default function App() {
 
                   {(finalsPrincipalSmallFinalMatches.length > 0 || finalsConsolanteSmallFinalMatches.length > 0) ? (
                     <Section title="Petites finales" right={<Button variant="secondary" onClick={() => printRemainingBrassageMatches('Petites finales — matchs restants', [...finalsPrincipalSmallFinalMatches, ...finalsConsolanteSmallFinalMatches], [], resolveTeam, phaseRules)}>🖨️</Button>}>
-                      <div className={`cards-grid ${finalsPrincipalSmallFinalMatches.length > 0 && finalsConsolanteSmallFinalMatches.length > 0 ? 'two-up' : 'one-up'} knockout-step-grid finals-dual-grid`}>
+                      <div className={`cards-grid ${finalsPrincipalSmallFinalMatches.length > 0 && finalsConsolanteSmallFinalMatches.length > 0 ? 'two-up' : 'one-up'} finals-dual-grid`}>
                         {finalsPrincipalSmallFinalMatches.length > 0 ? (
                           <div className="knockout-panel">
                             <h3>{`Petite finale principale : ${formatRemainingMatchesLabel(finalsPrincipalSmallFinalMatches, phaseRules)}`}</h3>
@@ -7987,7 +7987,7 @@ export default function App() {
 
                   {(finalsPrincipalFinalOnlyMatches.length > 0 || finalsConsolanteFinalOnlyMatches.length > 0) ? (
                     <Section title="Finales" right={<Button variant="secondary" onClick={() => printRemainingBrassageMatches('Finales — matchs restants', [...finalsPrincipalFinalOnlyMatches, ...finalsConsolanteFinalOnlyMatches], [], resolveTeam, phaseRules)}>🖨️</Button>}>
-                      <div className={`cards-grid ${finalsPrincipalFinalOnlyMatches.length > 0 && finalsConsolanteFinalOnlyMatches.length > 0 ? 'two-up' : 'one-up'} knockout-step-grid finals-dual-grid`}>
+                      <div className={`cards-grid ${finalsPrincipalFinalOnlyMatches.length > 0 && finalsConsolanteFinalOnlyMatches.length > 0 ? 'two-up' : 'one-up'} finals-dual-grid`}>
                         {finalsPrincipalFinalOnlyMatches.length > 0 ? (
                           <div className="knockout-panel">
                             <h3>{`Finale principale : ${formatRemainingMatchesLabel(finalsPrincipalFinalOnlyMatches, phaseRules)}`}</h3>

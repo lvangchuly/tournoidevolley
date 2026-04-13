@@ -4489,3 +4489,29 @@ tbody tr:last-child td { border-bottom: none; }
 .finals-dual-grid .public-ranking-card {
   height: 100%;
 }
+
+
+.finals-dual-grid.cards-grid.two-up {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.finals-dual-grid.cards-grid.one-up {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .finals-dual-grid.cards-grid.two-up {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.finals-dual-grid .knockout-panel,
+.finals-dual-grid .public-ranking-card {
+  min-width: 0;
+}
