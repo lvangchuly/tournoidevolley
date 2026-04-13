@@ -4473,3 +4473,9 @@ tbody tr:last-child td { border-bottom: none; }
   flex: 0 0 auto;
   white-space: nowrap;
 }
+
+
+.save-mode-explanation-active {
+  color: #2563eb;
+  font-weight: 700;
+}

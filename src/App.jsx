@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28L';
+const APP_VERSION = 'V28M';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2035,6 +2035,11 @@ function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSk
 
 
 
+function getSaveModeExplanationTeamCount(item) {
+  const match = String(item || '').match(/^Pour\s+(\d+)\s+équipes?\s*:/i);
+  return match ? Number(match[1]) : null;
+}
+
 function buildSaveModeFunctionnements() {
   return [
     "Pour 1 à 7 équipes : le tournoi se joue en championnat aller, puis en championnat retour à partir de 5 équipes. Le classement général qualifie ensuite les équipes pour une phase finale adaptée : pas de tableau final à 2 équipes, demi-finales à 3 ou 4 équipes, et quarts de finale à partir de 5 équipes.",
@@ -2589,6 +2594,8 @@ export default function App() {
     return !!normalizedName && (duplicateTeamNameMap.get(normalizedName) || 0) > 1;
   }, [duplicateTeamNameMap]);
   const allTeamIds = useMemo(() => activeTeams.map((team) => team.id), [activeTeams]);
+  const tournamentTeamCount = activeTeams.length;
+
   const isSmallTournamentMode = activeTeams.length > 0 && activeTeams.length < 8;
   const mainStageDistribution = useMemo(() => getMainStageDistribution(activeTeams.length), [activeTeams.length]);
   const useNormalizedPoolRanking = !isSmallTournamentMode;
@@ -7965,7 +7972,15 @@ export default function App() {
                 <div className="mini-card public-ranking-card">
                   <div className="mini-card-head">Déroulement</div>
                   <ul className="simple-list">
-                    {buildSaveModeFunctionnements().map((item) => <li key={item}>{item}</li>)}
+                    {buildSaveModeFunctionnements().map((item) => {
+                      const explanationTeamCount = getSaveModeExplanationTeamCount(item);
+                      const isActiveExplanation = explanationTeamCount === tournamentTeamCount;
+                      return (
+                        <li key={item} className={isActiveExplanation ? 'save-mode-explanation-active' : ''}>
+                          {item}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
                 <div className="mini-card public-ranking-card">
