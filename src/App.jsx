@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28O';
+const APP_VERSION = 'V28P';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -58,17 +58,23 @@ const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
 function getPreferredBrassagePoolCount(teamCount) {
   if (teamCount < 8) return 0;
   if (teamCount === 8) return 2;
-  if (teamCount === 9) return 2;
-  if (teamCount === 10) return 2;
+  if (teamCount === 9) return 3;
+  if (teamCount === 10) return 3;
   if (teamCount === 11) return 3;
-  if (teamCount === 12) return 3;
-  if (teamCount === 13 || teamCount === 14) return 4;
+  if (teamCount === 12) return 4;
+  if (teamCount === 13) return 4;
+  if (teamCount === 14) return 4;
   if (teamCount === 15) return 5;
-  if (teamCount === 16) return 4;
+  if (teamCount === 16) return 5;
   if (teamCount === 17) return 5;
   if (teamCount === 18) return 6;
-  if (teamCount <= 20) return 4;
-  return 5;
+  if (teamCount === 19) return 6;
+  if (teamCount === 20) return 6;
+  if (teamCount === 21) return 7;
+  if (teamCount === 22) return 7;
+  if (teamCount === 23) return 7;
+  if (teamCount === 24) return 8;
+  return Math.max(0, Math.ceil(teamCount / 3));
 }
 
 function getBrassagePoolSummary(teamCount) {
@@ -564,31 +570,8 @@ function createPoolsFromAssignments(assignments, names) {
 }
 
 function createBrassage1PoolsFromOrderedTeams(orderedTeams, names) {
-  const poolCount = names.length;
   const teamIds = (Array.isArray(orderedTeams) ? orderedTeams : []).map((team) => team?.id).filter(Boolean);
-  const assignments = Array.from({ length: poolCount }, () => []);
-
-  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
-    if (teamIds[poolIndex]) assignments[poolIndex].push(teamIds[poolIndex]);
-  }
-
-  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
-    const reverseIndex = teamIds.length - 1 - poolIndex;
-    if (reverseIndex >= poolCount && teamIds[reverseIndex]) assignments[poolIndex].push(teamIds[reverseIndex]);
-  }
-
-  for (let poolIndex = 0; poolIndex < poolCount; poolIndex += 1) {
-    const middleIndex = poolCount + poolIndex;
-    if (middleIndex < teamIds.length - poolCount && teamIds[middleIndex]) assignments[poolIndex].push(teamIds[middleIndex]);
-  }
-
-  const usedIds = new Set(assignments.flat());
-  const leftovers = teamIds.filter((teamId) => !usedIds.has(teamId));
-  leftovers.forEach((teamId, index) => {
-    assignments[index % poolCount]?.push(teamId);
-  });
-
-  return createPoolsFromAssignments(assignments, names);
+  return createPools(teamIds, names);
 }
 
 function getOrderedPoolTeamIds(pool, standings) {
@@ -602,66 +585,15 @@ function createBrassage2PoolsFromBrassage1(sourcePools, standings, names) {
   const poolCount = Array.isArray(names) ? names.length : 0;
   const safeSourcePools = Array.isArray(sourcePools) ? sourcePools : [];
   const orderedByPool = Array.from({ length: poolCount }, (_, index) => getOrderedPoolTeamIds(safeSourcePools[index], standings));
-  const targetSizes = Array.from({ length: poolCount }, (_, index) => {
-    const teamIds = Array.isArray(safeSourcePools[index]?.teamIds) ? safeSourcePools[index].teamIds.filter(Boolean) : [];
-    return Math.max(0, teamIds.length);
-  });
-  const totalTeams = targetSizes.reduce((sum, size) => sum + size, 0);
+  const rankedTeamIds = [];
 
-  if (totalTeams >= 13 && totalTeams <= 17) {
-    const rankedTeamIds = [];
-    orderedByPool.forEach((teamIds) => {
-      teamIds.forEach((teamId) => {
-        if (teamId && !rankedTeamIds.includes(teamId)) rankedTeamIds.push(teamId);
-      });
+  orderedByPool.forEach((teamIds) => {
+    teamIds.forEach((teamId) => {
+      if (teamId && !rankedTeamIds.includes(teamId)) rankedTeamIds.push(teamId);
     });
-
-    const assignments = Array.from({ length: poolCount }, () => []);
-    let cursor = 0;
-    targetSizes.forEach((size, poolIndex) => {
-      for (let slot = 0; slot < size; slot += 1) {
-        const teamId = rankedTeamIds[cursor] || null;
-        if (teamId) assignments[poolIndex].push(teamId);
-        cursor += 1;
-      }
-    });
-
-    return createPoolsFromAssignments(assignments, names);
-  }
-
-  const assignments = names.map(() => []);
-  const assignedIds = new Set();
-
-  const tryAssign = (targetIndex, teamId) => {
-    if (!teamId) return;
-    if (assignedIds.has(teamId)) return;
-    if (assignments[targetIndex].length >= targetSizes[targetIndex]) return;
-    assignments[targetIndex].push(teamId);
-    assignedIds.add(teamId);
-  };
-
-  for (let index = 0; index < poolCount; index += 1) {
-    tryAssign(index, orderedByPool[index]?.[0] || null);
-  }
-
-  for (let index = 0; index < poolCount; index += 1) {
-    tryAssign(index, orderedByPool[(index + 1) % poolCount]?.[1] || null);
-  }
-
-  for (let index = 0; index < poolCount; index += 1) {
-    tryAssign(index, orderedByPool[(index - 1 + poolCount) % poolCount]?.[2] || null);
-  }
-
-  const leftovers = orderedByPool.flat().filter((teamId) => teamId && !assignedIds.has(teamId));
-  leftovers.forEach((teamId) => {
-    const targetIndex = assignments.findIndex((teamIds, index) => teamIds.length < targetSizes[index]);
-    if (targetIndex >= 0) {
-      assignments[targetIndex].push(teamId);
-      assignedIds.add(teamId);
-    }
   });
 
-  return createPoolsFromAssignments(assignments, names);
+  return createPools(rankedTeamIds, names);
 }
 
 function createNumberedNames(prefix, count) {
@@ -2030,7 +1962,7 @@ function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSk
       : 'quarts de finale puis demi-finales, finale et petite finale';
   }
 
-  return `${levelText} Avec ${teamCount} équipes, les phases prévues sont : ${phases.join(' → ')}. Les équipes sont réparties automatiquement en poules de 3 à 5 selon l’effectif, puis le classement moyen par match alimente ${finalsText}.`;
+  return `${levelText} Avec ${teamCount} équipes, les phases prévues sont : ${phases.join(' → ')}. Les brassages sont répartis automatiquement en privilégiant des poules de 3 équipes, puis des poules de 4 si nécessaire afin de limiter la durée du tournoi sur 3 terrains ; les poules de 5 sont évitées. L’équilibrage du Brassage 1 se fait en serpent selon les niveaux saisis, puis le Brassage 2 se recompose aussi en serpent selon le classement cumulé par match avant d’alimenter ${finalsText}.`;
 }
 
 
@@ -2054,12 +1986,12 @@ function buildSaveModeFunctionnements() {
     "Pour 16 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 4 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 4 équipes, puis en demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 17 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale consolante et la petite finale consolante.",
     "Pour 18 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes du classement vont en phase principale et les 6 autres en phase consolante. La principale débute par 4 poules de 3 équipes et les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale. Les gagnantes des demi-finales vont en finale principale et les perdantes en petite finale principale. La consolante débute par 2 poules de 3 équipes et les 2 meilleures équipes de chaque poule forment les demi-finales consolante. Les gagnantes des demi-finales consolante vont en finale consolante et les perdantes en petite finale consolante.",
-    "Pour 19 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 4 à 5 équipes au brassage 1, puis en 4 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; la 19e équipe n’est pas qualifiée pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
-    "Pour 20 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 4 poules de 5 équipes au brassage 1, puis en 4 poules de 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 2 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
-    "Pour 21 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 3 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
-    "Pour 22 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 4 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
-    "Pour 23 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 5 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
-    "Pour 24 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Les équipes sont réparties en 5 poules de 4 à 5 équipes au brassage 1, puis en 5 poules de 4 à 5 équipes au brassage 2. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 6 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 19 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 1 poule de 4 et 5 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; la 19e équipe n’est pas qualifiée pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 20 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 2 poules de 4 et 4 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 2 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 21 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 7 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 3 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 22 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 1 poule de 4 et 6 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 4 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 23 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 2 poules de 4 et 5 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 5 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 24 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 8 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 6 suivantes en phase consolante ; les 6 dernières équipes ne sont pas qualifiées pour la suite. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes, puis demi-finales consolante, finale consolante et petite finale consolante.",
   ];
 }
 
