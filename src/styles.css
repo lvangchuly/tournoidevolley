@@ -4479,3 +4479,13 @@ tbody tr:last-child td { border-bottom: none; }
   color: #2563eb;
   font-weight: 700;
 }
+
+
+.finals-dual-grid {
+  align-items: start;
+}
+
+.finals-dual-grid .knockout-panel,
+.finals-dual-grid .public-ranking-card {
+  height: 100%;
+}
