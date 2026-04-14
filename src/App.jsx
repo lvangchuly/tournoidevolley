@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29G';
+const APP_VERSION = 'V29H';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2777,6 +2777,7 @@ export default function App() {
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
+          pendingResultSentAt: null,
           refereeInProgress: false,
           matchInProgress: false,
         };
@@ -2790,6 +2791,7 @@ export default function App() {
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
+          pendingResultSentAt: null,
           refereeInProgress: false,
           matchInProgress: false,
         };
@@ -2799,6 +2801,7 @@ export default function App() {
           submittedScoreA: remoteMatch.submittedScoreA ?? '',
           submittedScoreB: remoteMatch.submittedScoreB ?? '',
           submittedAt: remoteMatch.submittedAt ?? null,
+          pendingResultSentAt: remoteMatch.pendingResultSentAt ?? localMatch.pendingResultSentAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : remoteMatchInProgress,
         };
@@ -2808,6 +2811,7 @@ export default function App() {
           submittedScoreA: localMatch.submittedScoreA ?? nextMatch.submittedScoreA ?? '',
           submittedScoreB: localMatch.submittedScoreB ?? nextMatch.submittedScoreB ?? '',
           submittedAt: localMatch.submittedAt ?? nextMatch.submittedAt ?? null,
+          pendingResultSentAt: localMatch.pendingResultSentAt ?? nextMatch.pendingResultSentAt ?? null,
           refereeInProgress: false,
           matchInProgress: localMatchInProgress || remoteMatchInProgress,
         };
@@ -2817,6 +2821,7 @@ export default function App() {
           submittedScoreA: localMatch.submittedScoreA ?? '',
           submittedScoreB: localMatch.submittedScoreB ?? '',
           submittedAt: localMatch.submittedAt ?? null,
+          pendingResultSentAt: localMatch.pendingResultSentAt ?? nextMatch.pendingResultSentAt ?? null,
           refereeInProgress: localMatch.refereeInProgress ?? nextMatch.refereeInProgress ?? false,
           matchInProgress: localMatch.matchInProgress ?? nextMatch.matchInProgress ?? false,
         };
@@ -6054,8 +6059,8 @@ export default function App() {
     const pendingStatus = getPendingStatus(match);
     if (pendingStatus === 'Match en cours') {
       return {
-        text: 'Match en cours',
-        className: match.refereeInProgress ? 'badge-danger' : 'badge-neutral',
+        text: match.pendingResultSentAt ? 'Résultat envoyé' : 'Match en cours',
+        className: match.pendingResultSentAt ? 'badge-info' : (match.refereeInProgress ? 'badge-danger' : 'badge-neutral'),
       };
     }
     return { text: 'À saisir', className: 'badge-neutral' };
