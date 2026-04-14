@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29P';
+const APP_VERSION = 'V29Q';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6429,10 +6429,18 @@ export default function App() {
     if (typeof window !== 'undefined') {
       window.setTimeout(() => {
         saveTournamentToCloud(false, true);
-      }, 20);
+      }, 0);
       window.setTimeout(() => {
         saveTournamentToCloud(false, true);
-      }, 180);
+      }, 40);
+      window.setTimeout(() => {
+        saveTournamentToCloud(false, true);
+      }, 140);
+      window.setTimeout(() => {
+        if (sharedTournamentIdRef.current) {
+          loadTournamentFromCloud(sharedTournamentIdRef.current, false);
+        }
+      }, 80);
       window.setTimeout(() => {
         if (sharedTournamentIdRef.current) {
           loadTournamentFromCloud(sharedTournamentIdRef.current, false);
@@ -6859,7 +6867,7 @@ export default function App() {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress))) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress) && pendingA !== null && pendingB !== null)) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -6981,7 +6989,7 @@ export default function App() {
                     const pendingA = toNumber(match.submittedScoreA);
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
-                    const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress))) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress) && pendingA !== null && pendingB !== null)) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                     const matchNumber = index + 1;
 
                     return (
@@ -7079,7 +7087,7 @@ export default function App() {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress))) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const canApprovePending = !isValid && (Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress) && pendingA !== null && pendingB !== null)) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
