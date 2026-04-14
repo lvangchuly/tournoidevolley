@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28Z';
+const APP_VERSION = 'V29C';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1714,6 +1714,7 @@ function clearMatchScores(match) {
     submittedScoreA: '',
     submittedScoreB: '',
     submittedAt: null,
+    pendingResultSentAt: null,
     validatedAt: null,
     manualOverrideAt: null,
     refereeInProgress: false,
@@ -1734,6 +1735,12 @@ function hasLiveMatchData(match) {
     || Boolean(match?.validatedAt)
     || Boolean(match?.manualOverrideAt)
     || Boolean(match?.submittedAt);
+}
+
+function isRefereePendingResultReady(match, phaseRules) {
+  if (!match) return false;
+  const snapshot = getPendingMatchSnapshot(match);
+  return isMatchResultValid(snapshot, phaseRules);
 }
 
 function shouldPreserveLocalMatchIdentity(localMatch, remoteMatch) {
@@ -6177,7 +6184,7 @@ export default function App() {
     if (!secondConfirmation) return false;
     clearStagesAfterScope(scope);
     markPendingStructureSync();
-    queueBackgroundCloudSave(20, editTimestamp);
+
     return true;
   }
 
@@ -6205,6 +6212,7 @@ export default function App() {
         submittedScoreA: '',
         submittedScoreB: '',
         submittedAt: null,
+        pendingResultSentAt: null,
         refereeInProgress: false,
         matchInProgress: false,
         manualOverrideAt: officialEditTimestamp,
@@ -6254,6 +6262,7 @@ export default function App() {
     }));
     recentRefereeLocalEditsRef.current.set(matchId, {
       ...localPendingSnapshot,
+      pendingResultSentAt: fallbackMatch?.pendingResultSentAt ?? null,
       until: Date.now() + 90000,
     });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
@@ -6264,11 +6273,62 @@ export default function App() {
         submittedScoreA: nextScoreA,
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
+        pendingResultSentAt: null,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(20, editTimestamp);
+
+  }
+
+
+  function submitRefereeMatchResult(scope, matchId) {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return false;
+    if (!isRefereePendingResultReady(fallbackMatch, phaseRulesRef.current)) {
+      window.alert("Le score doit être gagnant avant d'envoyer le résultat.");
+      return false;
+    }
+
+    const displayedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
+      ? refereeSelectedScoreDraftRef.current
+      : (refereeScoreDraftsRef.current?.[matchId] || null);
+
+    const forcedScoreA = String(displayedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const forcedScoreB = String(displayedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const submittedAt = displayedDraft?.submittedAt || fallbackMatch.submittedAt || new Date().toISOString();
+    const sendTimestamp = markPendingLocalMutation(new Date().toISOString());
+
+    const forcedSnapshot = {
+      submittedScoreA: forcedScoreA,
+      submittedScoreB: forcedScoreB,
+      submittedAt,
+      pendingResultSentAt: sendTimestamp,
+      until: Date.now() + 90000,
+    };
+    recentRefereeLocalEditsRef.current.set(matchId, forcedSnapshot);
+
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
+      return {
+        ...match,
+        submittedScoreA: forcedScoreA,
+        submittedScoreB: forcedScoreB,
+        submittedAt,
+        pendingResultSentAt: sendTimestamp,
+        refereeInProgress: true,
+        matchInProgress: true,
+      };
+    }));
+
+    queueBackgroundCloudSave(0, sendTimestamp);
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        saveTournamentToCloud(false, true);
+      }, 20);
+    }
+    return true;
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
@@ -6313,6 +6373,7 @@ export default function App() {
     }));
     recentRefereeLocalEditsRef.current.set(matchId, {
       ...localPendingSnapshot,
+      pendingResultSentAt: fallbackMatch?.pendingResultSentAt ?? null,
       until: Date.now() + 90000,
     });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
@@ -6323,11 +6384,12 @@ export default function App() {
         submittedScoreA: nextScoreA,
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
+        pendingResultSentAt: null,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(20, editTimestamp);
+
   }
 
   function approveRefereeScore(scope, matchId) {
@@ -6350,6 +6412,7 @@ export default function App() {
         submittedScoreA: '',
         submittedScoreB: '',
         submittedAt: null,
+        pendingResultSentAt: null,
         refereeInProgress: false,
         matchInProgress: false,
       };
@@ -6401,7 +6464,7 @@ export default function App() {
     if (!hasStarted && getMatchStatusLabel(entry.match, phaseRules) !== 'Valide') {
       updateMatchesInScope(entry.scope, (matches) => matches.map((match) => (
         match.id === entry.match.id
-          ? { ...match, refereeInProgress: false, matchInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString() }
+          ? { ...match, refereeInProgress: false, matchInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString(), pendingResultSentAt: null }
           : match
       )));
       queueBackgroundCloudSave(20);
@@ -6650,7 +6713,7 @@ export default function App() {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -6772,7 +6835,7 @@ export default function App() {
                     const pendingA = toNumber(match.submittedScoreA);
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
-                    const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                     const matchNumber = index + 1;
 
                     return (
@@ -6870,7 +6933,7 @@ export default function App() {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && match.refereeInProgress && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -6948,16 +7011,26 @@ export default function App() {
     const pendingB = toNumber(displayScoreB !== '' ? displayScoreB : match.submittedScoreB);
     const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
     const canChooseAnotherMatch = !hasStarted;
+    const pendingResultReady = !isLocked && isRefereePendingResultReady({
+      ...match,
+      submittedScoreA: displayScoreA !== '' ? displayScoreA : match.submittedScoreA,
+      submittedScoreB: displayScoreB !== '' ? displayScoreB : match.submittedScoreB,
+    }, phaseRules);
+    const resultAlreadySent = Boolean(match.pendingResultSentAt);
     const badgeText = officialStatus === 'Valide'
       ? 'Valide'
-      : pendingStatus === 'Match en cours'
-        ? 'Match en cours'
-        : 'À saisir';
+      : pendingResultReady
+        ? (resultAlreadySent ? 'Résultat envoyé' : 'Envoyer le résultat')
+        : pendingStatus === 'Match en cours'
+          ? 'Match en cours'
+          : 'À saisir';
     const badgeClass = officialStatus === 'Valide'
       ? 'badge-success'
-      : match.refereeInProgress
-        ? 'badge-danger'
-        : 'badge-neutral';
+      : pendingResultReady
+        ? 'badge-info'
+        : match.refereeInProgress
+          ? 'badge-danger'
+          : 'badge-neutral';
     const phaseRule = getRuleForMatch(match, phaseRules);
     const winningScore = Number(phaseRule?.winningScore) || 21;
     const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
@@ -7052,6 +7125,16 @@ export default function App() {
             )}
             <div className="status-cell center-status">
               <span className={`badge ${badgeClass}`}>{badgeText}</span>
+              {!isLocked && pendingResultReady && !resultAlreadySent ? (
+                <div className="actions-row compact-actions">
+                  <Button variant="success" onClick={() => submitRefereeMatchResult(scope, match.id)}>
+                    Envoyer le résultat
+                  </Button>
+                </div>
+              ) : null}
+              {!isLocked && pendingResultReady && resultAlreadySent ? (
+                <span className="muted tiny">Résultat final envoyé à l’organisateur</span>
+              ) : null}
               {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : null}
             </div>
           </div>
@@ -7599,7 +7682,7 @@ export default function App() {
                                 if (!canSelect) return;
                                 const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
-                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt } : item
+                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt, pendingResultSentAt: null } : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
                                   submittedScoreA: match.submittedScoreA ?? '',
