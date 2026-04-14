@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29R';
+const APP_VERSION = 'V29S';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1375,9 +1375,7 @@ function getEstimatedEndTextForMatches(matches, scheduleMap, emptyText = 'À gé
   const stageDuration = computeDynamicStageSchedule(safeMatches, 0, phaseRules).stageEnd;
   if (!Number.isFinite(stageDuration)) return emptyText;
 
-  const estimatedEnd = minutesToTime(getCurrentClockMinutes() + stageDuration);
-  const durationLabel = formatDurationLabel(stageDuration);
-  return durationLabel ? `${estimatedEnd} (${durationLabel})` : estimatedEnd;
+  return formatDurationLabel(stageDuration) || emptyText;
 }
 
 function OrganizerPhaseEstimateCard({ data, compact = false }) {
@@ -3683,7 +3681,7 @@ export default function App() {
 
       return {
         mode: 'single',
-        heading: 'Fin estimée de la phase',
+        heading: 'Durée estimée de la phase',
         phaseLabel: currentStage.phaseLabel,
         value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--', phaseRules),
       };
@@ -3703,7 +3701,7 @@ export default function App() {
     if (hasMainStageOrFinals) {
       return {
         mode: 'split',
-        heading: 'Fin estimée de la phase',
+        heading: 'Durée estimée de la phase',
         leftTitle: 'Tableau principal',
         leftItems: [
           { label: 'Matchs de poules principale', value: getEstimatedEndTextForMatches(visiblePrincipaleMatches, scheduleData.scheduleMap, 'À générer', phaseRules) },
@@ -3732,7 +3730,7 @@ export default function App() {
 
     return {
       mode: 'single',
-      heading: 'Fin estimée de la phase',
+      heading: 'Durée estimée de la phase',
       phaseLabel: currentStage.phaseLabel,
       value: getEstimatedEndTextForMatches(currentStage.matches, scheduleData.scheduleMap, '--', phaseRules),
     };
@@ -7219,7 +7217,7 @@ export default function App() {
     const estimatedDurationMinutes = estimatePhaseDurationMinutes(phaseRule);
     const refereeStartMinutes = stampToMinutes(match.submittedAt) ?? schedule?.startMinutes ?? parseTimeToMinutes(match.time || '09:00');
     const estimatedRefereeEndText = minutesToTime(refereeStartMinutes + estimatedDurationMinutes);
-    const contextText = `${match.group || 'Match'} • Terrain ${match.court || '?'} • Fin estimée : ${estimatedRefereeEndText}`;
+    const contextText = `${match.group || 'Match'} • Terrain ${match.court || '?'} • Durée estimée : ${estimatedRefereeEndText}`;
     const phaseCaption = String(match.phase || title || '').toUpperCase();
 
     const badgeText = isLocked
@@ -7750,7 +7748,7 @@ export default function App() {
             </div>
             <div className="hero-controls">
               <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : 'public-pill-light'}`.trim()}>
-                <span>Fin estimée de la phase</span>
+                <span>Durée estimée de la phase</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
               <div className="actions-stack">
@@ -7831,7 +7829,7 @@ export default function App() {
             </div>
             <div className="hero-controls">
               <div className={`hero-pill ${tournamentLogo ? 'public-pill-on-logo' : ''}`.trim()}>
-                <span>Fin estimée de la phase</span>
+                <span>Durée estimée de la phase</span>
                 <strong>{estimatedTournamentEnd}</strong>
               </div>
               <div className="actions-stack">
