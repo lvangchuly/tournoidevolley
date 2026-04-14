@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29F';
+const APP_VERSION = 'V29G';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6295,16 +6295,33 @@ export default function App() {
   function submitRefereeMatchResult(scope, matchId) {
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return false;
-    if (!isRefereePendingResultReady(fallbackMatch, phaseRulesRef.current)) {
+
+    const displayedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
+      ? refereeSelectedScoreDraftRef.current
+      : (refereeScoreDraftsRef.current?.[matchId] || null);
+
+    const forcedScoreA = String(displayedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+    const forcedScoreB = String(displayedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+    const forcedSnapshot = {
+      ...fallbackMatch,
+      submittedScoreA: forcedScoreA,
+      submittedScoreB: forcedScoreB,
+      scoreA: forcedScoreA === '' ? null : Number(forcedScoreA),
+      scoreB: forcedScoreB === '' ? null : Number(forcedScoreB),
+    };
+
+    if (!isMatchResultValid(forcedSnapshot, phaseRulesRef.current)) {
       window.alert("Le score doit être gagnant avant d'envoyer le résultat.");
       return false;
     }
 
+    const submittedAt = displayedDraft?.submittedAt || fallbackMatch.submittedAt || new Date().toISOString();
     const sendTimestamp = markPendingLocalMutation(new Date().toISOString());
+
     recentRefereeLocalEditsRef.current.set(matchId, {
-      submittedScoreA: fallbackMatch.submittedScoreA ?? '',
-      submittedScoreB: fallbackMatch.submittedScoreB ?? '',
-      submittedAt: fallbackMatch.submittedAt ?? sendTimestamp,
+      submittedScoreA: forcedScoreA,
+      submittedScoreB: forcedScoreB,
+      submittedAt,
       pendingResultSentAt: sendTimestamp,
       until: Date.now() + 90000,
     });
@@ -6314,12 +6331,20 @@ export default function App() {
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
       return {
         ...match,
+        submittedScoreA: forcedScoreA,
+        submittedScoreB: forcedScoreB,
+        submittedAt,
         pendingResultSentAt: sendTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(10, sendTimestamp);
+    queueBackgroundCloudSave(0, sendTimestamp);
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        saveTournamentToCloud(false, true);
+      }, 20);
+    }
     return true;
   }
 
@@ -6705,7 +6730,7 @@ export default function App() {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -6827,7 +6852,7 @@ export default function App() {
                     const pendingA = toNumber(match.submittedScoreA);
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
-                    const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                     const matchNumber = index + 1;
 
                     return (
@@ -6925,7 +6950,7 @@ export default function App() {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && match.refereeInProgress && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -7032,7 +7057,7 @@ export default function App() {
     const badgeText = isLocked
       ? 'Valide'
       : pendingResultReady
-        ? (resultAlreadySent ? 'Résultat envoyé' : 'Envoyer le résultat')
+        ? (resultAlreadySent ? 'Résultat envoyé' : 'Match en cours')
         : ((match.refereeInProgress || match.matchInProgress) ? 'Match en cours' : 'À saisir');
 
     const badgeClass = isLocked
