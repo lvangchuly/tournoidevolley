@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29Q';
+const APP_VERSION = 'V29R';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1628,6 +1628,23 @@ function printMatchCard(matchId) {
   window.setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
 }
 
+function printQrCode(url, title = 'QR Code') {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(url)}`;
+  const printWindow = window.open('', '_blank', 'width=700,height=700');
+  if (!printWindow) return;
+  const safeTitle = escapeHtml(title);
+  printWindow.document.write(`<!doctype html><html><head><title>${safeTitle}</title><style>
+    @page { margin: 1cm; }
+    html,body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}
+    .page{min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .qr-wrap{width:5cm;height:5cm;display:flex;align-items:center;justify-content:center}
+    .qr-wrap img{width:5cm;height:5cm;display:block;object-fit:contain}
+  </style></head><body><div class="page"><div class="qr-wrap"><img src="${qrSrc}" alt="${safeTitle}" /></div></div><script>window.addEventListener('load',function(){setTimeout(function(){window.focus();window.print();},150);});</script></body></html>`);
+  printWindow.document.close();
+}
+
+
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const remaining = dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide');
@@ -2163,6 +2180,20 @@ function AccessQrCode({ url, title, caption, alt, topImageSrc, topImageAlt, onOp
       <div className="referee-qr-title">{title}</div>
       {topImageSrc ? <img className="referee-qr-top-image" src={topImageSrc} alt={topImageAlt || ''} /> : null}
       <img className="referee-qr-image" src={qrSrc} alt={alt} />
+      <div className="actions-row compact-actions" style={{ justifyContent: 'center', marginTop: '8px' }}>
+        <button
+          type="button"
+          className="match-print-button-v24c"
+          title="Imprimer ce QR Code"
+          aria-label={`Imprimer ${title}`}
+          onClick={(event) => {
+            event.stopPropagation();
+            printQrCode(url, title);
+          }}
+        >
+          🖨️
+        </button>
+      </div>
       <div className="referee-qr-caption">{caption}</div>
       <a className="referee-qr-link" href={url} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{url}</a>
     </div>
