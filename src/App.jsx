@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29C';
+const APP_VERSION = 'V29D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -4140,7 +4140,9 @@ export default function App() {
     if (!refereeSelectedMatch) return null;
     const group = refereeMatchGroups.find((item) => item.scope === refereeSelectedMatch.scope);
     if (!group) return null;
-    const match = group.matches.find((item) => item.id === refereeSelectedMatch.matchId);
+    const visibleMatch = group.matches.find((item) => item.id === refereeSelectedMatch.matchId);
+    const fullScopeMatch = findMatchInScope(refereeSelectedMatch.scope, refereeSelectedMatch.matchId);
+    const match = visibleMatch || fullScopeMatch || null;
     return match ? { ...group, match } : null;
   }, [refereeSelectedMatch, refereeMatchGroups]);
 
@@ -4216,18 +4218,26 @@ export default function App() {
   }, [refereeSelectedMatch, refereeSelectedEntry]);
 
   useEffect(() => {
-    if (!refereeSelectedEntry?.match) {
+    if (!refereeSelectedEntry?.match || !refereeSelectedEntry.match.id) {
       setRefereeSelectedScoreDraft(null);
       return;
     }
     const match = refereeSelectedEntry.match;
     const baseScoreA = match.submittedScoreA ?? '';
     const baseScoreB = match.submittedScoreB ?? '';
-    setRefereeSelectedScoreDraft({
-      matchId: match.id,
-      scoreA: baseScoreA,
-      scoreB: baseScoreB,
-      submittedAt: match.submittedAt ?? null,
+    setRefereeSelectedScoreDraft((current) => {
+      if (current?.matchId === match.id) {
+        return {
+          ...current,
+          submittedAt: current.submittedAt ?? match.submittedAt ?? null,
+        };
+      }
+      return {
+        matchId: match.id,
+        scoreA: baseScoreA,
+        scoreB: baseScoreB,
+        submittedAt: match.submittedAt ?? null,
+      };
     });
     commitRefereeScoreDrafts((current) => {
       if (current[match.id]) return current;
@@ -6290,44 +6300,26 @@ export default function App() {
       return false;
     }
 
-    const displayedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
-      ? refereeSelectedScoreDraftRef.current
-      : (refereeScoreDraftsRef.current?.[matchId] || null);
-
-    const forcedScoreA = String(displayedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
-    const forcedScoreB = String(displayedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
-    const submittedAt = displayedDraft?.submittedAt || fallbackMatch.submittedAt || new Date().toISOString();
     const sendTimestamp = markPendingLocalMutation(new Date().toISOString());
-
-    const forcedSnapshot = {
-      submittedScoreA: forcedScoreA,
-      submittedScoreB: forcedScoreB,
-      submittedAt,
+    recentRefereeLocalEditsRef.current.set(matchId, {
+      submittedScoreA: fallbackMatch.submittedScoreA ?? '',
+      submittedScoreB: fallbackMatch.submittedScoreB ?? '',
+      submittedAt: fallbackMatch.submittedAt ?? sendTimestamp,
       pendingResultSentAt: sendTimestamp,
       until: Date.now() + 90000,
-    };
-    recentRefereeLocalEditsRef.current.set(matchId, forcedSnapshot);
+    });
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
       return {
         ...match,
-        submittedScoreA: forcedScoreA,
-        submittedScoreB: forcedScoreB,
-        submittedAt,
         pendingResultSentAt: sendTimestamp,
         refereeInProgress: true,
         matchInProgress: true,
       };
     }));
-
-    queueBackgroundCloudSave(0, sendTimestamp);
-    if (typeof window !== 'undefined') {
-      window.setTimeout(() => {
-        saveTournamentToCloud(false, true);
-      }, 20);
-    }
+    queueBackgroundCloudSave(10, sendTimestamp);
     return true;
   }
 
@@ -7689,6 +7681,12 @@ export default function App() {
                                   submittedScoreB: match.submittedScoreB ?? '',
                                   submittedAt: refereeLockAt,
                                   until: Date.now() + 90000,
+                                });
+                                setRefereeSelectedScoreDraft({
+                                  matchId: match.id,
+                                  scoreA: match.submittedScoreA ?? '',
+                                  scoreB: match.submittedScoreB ?? '',
+                                  submittedAt: refereeLockAt,
                                 });
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
                                 queueBackgroundCloudSave(20, refereeLockAt);
