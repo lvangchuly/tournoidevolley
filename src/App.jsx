@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29I';
+const APP_VERSION = 'V29J';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2666,7 +2666,7 @@ export default function App() {
   async function fetchTournamentFromCloudRaw(targetId = sharedTournamentId) {
     const effectiveId = String(targetId || '').trim();
     if (!effectiveId) return null;
-    const response = await fetch(buildFirebaseTournamentUrl(effectiveId));
+    const response = await fetch(buildFirebaseTournamentUrl(effectiveId), { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(response.status === 404 ? 'Aucune sauvegarde distante trouvée pour cet identifiant.' : 'Impossible de charger le tournoi depuis Firebase.');
     }
@@ -3020,6 +3020,7 @@ export default function App() {
         finals: Array.isArray(payload.singleKnockout?.finals) ? mergeRemoteMatches(current.finals, payload.singleKnockout.finals, payload.singleKnockout.finals.length === 0) : current.finals,
       }));
     }
+    latestPersistedStateRef.current = safeClone(payload, {});
   }
 
   async function loadTournamentFromCloud(targetId = sharedTournamentId, showMessage = true) {
@@ -6349,9 +6350,15 @@ export default function App() {
       window.setTimeout(() => {
         saveTournamentToCloud(false, true);
       }, 20);
+      window.setTimeout(() => {
+        saveTournamentToCloud(false, true);
+      }, 180);
+      window.setTimeout(() => {
+        if (mode !== 'referee' && sharedTournamentIdRef.current) {
+          loadTournamentFromCloud(sharedTournamentIdRef.current, false);
+        }
+      }, 220);
     }
-    setRefereeSelectedScoreDraft(null);
-    setRefereeSelectedMatch(null);
     return true;
   }
 
