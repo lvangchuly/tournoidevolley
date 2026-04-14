@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V28Y';
+const APP_VERSION = 'V28Z';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -3272,8 +3272,17 @@ export default function App() {
 
   async function saveTournamentToCloud(showMessage = true, silent = false) {
     if (mode === 'referee' && !remoteStateInitialized) {
+      queuedCloudSaveRequestRef.current = { showMessage, silent: true };
       if (!silent) {
         setRemoteSyncMessage('Chargement Firebase en cours...');
+      }
+      if (typeof window !== 'undefined') {
+        if (backgroundCloudSaveTimeoutRef.current) {
+          window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
+        }
+        backgroundCloudSaveTimeoutRef.current = window.setTimeout(() => {
+          saveTournamentToCloud(false, true);
+        }, 350);
       }
       return false;
     }
@@ -5893,89 +5902,110 @@ export default function App() {
     triggerAutomaticBackup({ phaseName: 'Phases finales', knockout: nextKnockout });
   }
 
+  function refreshLatestPersistedSnapshot(savedAt = new Date().toISOString()) {
+    latestPersistedStateRef.current = getPersistedStateSnapshot(savedAt);
+    if (typeof window !== 'undefined') {
+      safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
+    }
+  }
+
   function updateMatchesInScope(scope, updater) {
     const applyUpdater = (matches) => dedupeMatches(updater(dedupeMatches(Array.isArray(matches) ? matches : [])));
     if (scope === 'championshipLeg1') {
       const next = { ...championshipLeg1Ref.current, matches: applyUpdater(championshipLeg1Ref.current?.matches) };
       championshipLeg1Ref.current = next;
       setChampionshipLeg1(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'championshipLeg2') {
       const next = { ...championshipLeg2Ref.current, matches: applyUpdater(championshipLeg2Ref.current?.matches) };
       championshipLeg2Ref.current = next;
       setChampionshipLeg2(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'quarters') {
       const next = { ...singleKnockoutRef.current, quarters: applyUpdater(singleKnockoutRef.current?.quarters) };
       singleKnockoutRef.current = next;
       setSingleKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'semis') {
       const next = { ...singleKnockoutRef.current, semis: applyUpdater(singleKnockoutRef.current?.semis) };
       singleKnockoutRef.current = next;
       setSingleKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'finals') {
       const next = { ...singleKnockoutRef.current, finals: applyUpdater(singleKnockoutRef.current?.finals) };
       singleKnockoutRef.current = next;
       setSingleKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'brassage1') {
       const next = { ...brassage1Ref.current, matches: applyUpdater(brassage1Ref.current?.matches) };
       brassage1Ref.current = next;
       setBrassage1(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'brassage2') {
       const next = { ...brassage2Ref.current, matches: applyUpdater(brassage2Ref.current?.matches) };
       brassage2Ref.current = next;
       setBrassage2(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'principale') {
       const next = { ...mainStageRef.current, principaleMatches: applyUpdater(mainStageRef.current?.principaleMatches) };
       mainStageRef.current = next;
       setMainStage(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'consolante') {
       const next = { ...mainStageRef.current, consolanteMatches: applyUpdater(mainStageRef.current?.consolanteMatches) };
       mainStageRef.current = next;
       setMainStage(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'principalQuarters') {
       const next = { ...knockoutRef.current, principalQuarters: applyUpdater(knockoutRef.current?.principalQuarters) };
       knockoutRef.current = next;
       setKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'principalSemis') {
       const next = { ...knockoutRef.current, principalSemis: applyUpdater(knockoutRef.current?.principalSemis) };
       knockoutRef.current = next;
       setKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'principalFinals') {
       const next = { ...knockoutRef.current, principalFinals: applyUpdater(knockoutRef.current?.principalFinals) };
       knockoutRef.current = next;
       setKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     if (scope === 'consolanteSemis') {
       const next = { ...knockoutRef.current, consolanteSemis: applyUpdater(knockoutRef.current?.consolanteSemis) };
       knockoutRef.current = next;
       setKnockout(next);
+      refreshLatestPersistedSnapshot();
       return;
     }
     const next = { ...knockoutRef.current, consolanteFinals: applyUpdater(knockoutRef.current?.consolanteFinals) };
     knockoutRef.current = next;
     setKnockout(next);
+    refreshLatestPersistedSnapshot();
   }
 
   function getPendingMatchSnapshot(match) {
@@ -6019,7 +6049,7 @@ export default function App() {
       scoreA: String(snapshot.scoreA ?? ''),
       scoreB: String(snapshot.scoreB ?? ''),
       officialAt: snapshot.officialAt ?? new Date().toISOString(),
-      until: Date.now() + 30000,
+      until: Date.now() + 90000,
     });
   }
 
@@ -6147,7 +6177,7 @@ export default function App() {
     if (!secondConfirmation) return false;
     clearStagesAfterScope(scope);
     markPendingStructureSync();
-    queueBackgroundCloudSave(120);
+    queueBackgroundCloudSave(20, editTimestamp);
     return true;
   }
 
@@ -6224,7 +6254,7 @@ export default function App() {
     }));
     recentRefereeLocalEditsRef.current.set(matchId, {
       ...localPendingSnapshot,
-      until: Date.now() + 30000,
+      until: Date.now() + 90000,
     });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -6238,7 +6268,7 @@ export default function App() {
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(120);
+    queueBackgroundCloudSave(20, editTimestamp);
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
@@ -6283,7 +6313,7 @@ export default function App() {
     }));
     recentRefereeLocalEditsRef.current.set(matchId, {
       ...localPendingSnapshot,
-      until: Date.now() + 30000,
+      until: Date.now() + 90000,
     });
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
@@ -6297,7 +6327,7 @@ export default function App() {
         matchInProgress: true,
       };
     }));
-    queueBackgroundCloudSave(120);
+    queueBackgroundCloudSave(20, editTimestamp);
   }
 
   function approveRefereeScore(scope, matchId) {
@@ -6374,7 +6404,7 @@ export default function App() {
           ? { ...match, refereeInProgress: false, matchInProgress: false, submittedScoreA: '', submittedScoreB: '', submittedAt: new Date().toISOString() }
           : match
       )));
-      queueBackgroundCloudSave();
+      queueBackgroundCloudSave(20);
     }
     setRefereeSelectedScoreDraft(null);
     setRefereeSelectedMatch(null);
@@ -7567,11 +7597,18 @@ export default function App() {
                               className={`referee-selector-item ${canSelect ? '' : 'referee-selector-item-disabled'}`}
                               onClick={() => {
                                 if (!canSelect) return;
+                                const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
-                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: new Date().toISOString() } : item
+                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt } : item
                                 )));
+                                recentRefereeLocalEditsRef.current.set(match.id, {
+                                  submittedScoreA: match.submittedScoreA ?? '',
+                                  submittedScoreB: match.submittedScoreB ?? '',
+                                  submittedAt: refereeLockAt,
+                                  until: Date.now() + 90000,
+                                });
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
-                                queueBackgroundCloudSave(50);
+                                queueBackgroundCloudSave(20, refereeLockAt);
                               }}
                               disabled={!canSelect}
                               title={disabledReason}
