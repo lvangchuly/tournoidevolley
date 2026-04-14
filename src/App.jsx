@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29D';
+const APP_VERSION = 'V29E';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6985,159 +6985,147 @@ export default function App() {
   }
 
   function renderRefereeSelectedMatch(entry) {
-    if (!entry?.match) return null;
-    const { scope, title, match: entryMatch } = entry;
-    const match = findMatchInScope(scope, entryMatch.id) || entryMatch;
-    const schedule = scheduleData.scheduleMap[match.id];
-    const pendingStatus = getPendingStatus(match);
-    const officialStatus = getMatchStatusLabel(match, phaseRules);
-    const isLocked = officialStatus === 'Valide';
-    const selectedDraft = refereeSelectedScoreDraft?.matchId === match.id ? refereeSelectedScoreDraft : null;
-    const preferredDraft = getPreferredRefereeDraft(match);
-    const liveStoredDraft = refereeScoreDraftsRef.current?.[match.id] || null;
-    const draftScoreA = selectedDraft?.scoreA ?? liveStoredDraft?.scoreA ?? preferredDraft?.scoreA ?? getRefereeDraftValue(match, 'scoreA');
-    const draftScoreB = selectedDraft?.scoreB ?? liveStoredDraft?.scoreB ?? preferredDraft?.scoreB ?? getRefereeDraftValue(match, 'scoreB');
-    const displayScoreA = isLocked ? (match.scoreA ?? '') : (draftScoreA !== undefined ? draftScoreA : (match.submittedScoreA ?? ''));
-    const displayScoreB = isLocked ? (match.scoreB ?? '') : (draftScoreB !== undefined ? draftScoreB : (match.submittedScoreB ?? ''));
-    const pendingA = toNumber(displayScoreA !== '' ? displayScoreA : match.submittedScoreA);
-    const pendingB = toNumber(displayScoreB !== '' ? displayScoreB : match.submittedScoreB);
-    const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
-    const canChooseAnotherMatch = !hasStarted;
-    const pendingResultReady = !isLocked && isRefereePendingResultReady({
-      ...match,
-      submittedScoreA: displayScoreA !== '' ? displayScoreA : match.submittedScoreA,
-      submittedScoreB: displayScoreB !== '' ? displayScoreB : match.submittedScoreB,
-    }, phaseRules);
-    const resultAlreadySent = Boolean(match.pendingResultSentAt);
-    const badgeText = officialStatus === 'Valide'
-      ? 'Valide'
-      : pendingResultReady
-        ? (resultAlreadySent ? 'Résultat envoyé' : 'Envoyer le résultat')
-        : pendingStatus === 'Match en cours'
-          ? 'Match en cours'
-          : 'À saisir';
-    const badgeClass = officialStatus === 'Valide'
-      ? 'badge-success'
-      : pendingResultReady
-        ? 'badge-info'
-        : match.refereeInProgress
-          ? 'badge-danger'
-          : 'badge-neutral';
-    const phaseRule = getRuleForMatch(match, phaseRules);
-    const winningScore = Number(phaseRule?.winningScore) || 21;
-    const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
-    const estimatedDurationMinutes = estimatePhaseDurationMinutes(phaseRule);
-    const refereeStartMinutes = stampToMinutes(match.submittedAt) ?? schedule?.startMinutes ?? parseTimeToMinutes(match.time || '09:00');
-    const estimatedRefereeEndText = minutesToTime(refereeStartMinutes + estimatedDurationMinutes);
-    const contextText = `${match.group} • Terrain ${match.court} • Fin estimée : ${estimatedRefereeEndText}`;
-    const phaseCaption = (match.phase || title || '').toUpperCase();
+    try {
+      if (!entry?.match) return null;
+      const { scope, title, match: entryMatch } = entry;
+      const match = findMatchInScope(scope, entryMatch?.id) || entryMatch;
+      if (!match?.id) return null;
 
-    return (
-      <div className="referee-focus-card">
-        <div className="referee-focus-head">
-          <div>
-            <div className="referee-phase-caption">{phaseCaption}</div>
-            <h2>{resolveTeam(match.teamAId).name} <span className="muted">vs</span> {resolveTeam(match.teamBId).name}</h2>
-            <p className="muted referee-match-context">{contextText}</p>
-            <p className="referee-match-format">Match en {winningScore} {modeLabel}</p>
-          </div>
-          <div className="actions-row">
-            <Button variant="secondary" onClick={() => releaseRefereeSelectedMatch(entry)} disabled={!canChooseAnotherMatch}>Choisir un autre match</Button>
-          </div>
-        </div>
+      const safeTeamA = resolveTeam(match.teamAId) || { name: 'Équipe A', level: '' };
+      const safeTeamB = resolveTeam(match.teamBId) || { name: 'Équipe B', level: '' };
+      const schedule = scheduleData?.scheduleMap?.[match.id];
+      const pendingStatus = getPendingStatus(match);
+      const officialStatus = getMatchStatusLabel(match, phaseRules);
+      const isLocked = officialStatus === 'Valide';
 
-        <div className="referee-focus-body">
-          <div className="referee-team-card">
-            <span className="muted small">Équipe A</span>
-<TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} className="team-badge-large" />
-          </div>
-          <div className="referee-big-score">
-            {isLocked ? (
-              <div className="score-readonly score-readonly-large">
-                <span className="score-chip score-chip-large">{displayScoreA === '' ? '-' : displayScoreA}</span>
-                <span className="score-separator">-</span>
-                <span className="score-chip score-chip-large">{displayScoreB === '' ? '-' : displayScoreB}</span>
-              </div>
-            ) : (
-              <div className="score-inputs score-inputs-large">
-                <div className="score-stepper">
-                  <button
-                    type="button"
-                    className="score-stepper-btn"
-                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', 1)}
-                    aria-label={`Augmenter le score de ${resolveTeam(match.teamAId).name}`}
-                  >
-                    ▲
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={displayScoreA}
-                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="score-stepper-btn"
-                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', -1)}
-                    aria-label={`Diminuer le score de ${resolveTeam(match.teamAId).name}`}
-                    disabled={(toNumber(displayScoreA) ?? 0) <= 0}
-                  >
-                    ▼
-                  </button>
-                </div>
-                <span className="score-separator">-</span>
-                <div className="score-stepper">
-                  <button
-                    type="button"
-                    className="score-stepper-btn"
-                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', 1)}
-                    aria-label={`Augmenter le score de ${resolveTeam(match.teamBId).name}`}
-                  >
-                    ▲
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={displayScoreB}
-                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="score-stepper-btn"
-                    onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', -1)}
-                    aria-label={`Diminuer le score de ${resolveTeam(match.teamBId).name}`}
-                    disabled={(toNumber(displayScoreB) ?? 0) <= 0}
-                  >
-                    ▼
-                  </button>
-                </div>
-              </div>
-            )}
-            <div className="status-cell center-status">
-              <span className={`badge ${badgeClass}`}>{badgeText}</span>
-              {!isLocked && pendingResultReady && !resultAlreadySent ? (
-                <div className="actions-row compact-actions">
-                  <Button variant="success" onClick={() => submitRefereeMatchResult(scope, match.id)}>
-                    Envoyer le résultat
-                  </Button>
-                </div>
-              ) : null}
-              {!isLocked && pendingResultReady && resultAlreadySent ? (
-                <span className="muted tiny">Résultat final envoyé à l’organisateur</span>
-              ) : null}
-              {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : null}
+      const selectedDraft = refereeSelectedScoreDraft?.matchId === match.id ? refereeSelectedScoreDraft : null;
+      const preferredDraft = getPreferredRefereeDraft(match);
+      const liveStoredDraft = refereeScoreDraftsRef.current?.[match.id] || null;
+      const draftScoreA = selectedDraft?.scoreA ?? liveStoredDraft?.scoreA ?? preferredDraft?.scoreA ?? getRefereeDraftValue(match, 'scoreA');
+      const draftScoreB = selectedDraft?.scoreB ?? liveStoredDraft?.scoreB ?? preferredDraft?.scoreB ?? getRefereeDraftValue(match, 'scoreB');
+
+      const displayScoreA = isLocked ? (match.scoreA ?? '') : (draftScoreA !== undefined ? draftScoreA : (match.submittedScoreA ?? ''));
+      const displayScoreB = isLocked ? (match.scoreB ?? '') : (draftScoreB !== undefined ? draftScoreB : (match.submittedScoreB ?? ''));
+
+      const pendingA = toNumber(displayScoreA !== '' ? displayScoreA : match.submittedScoreA);
+      const pendingB = toNumber(displayScoreB !== '' ? displayScoreB : match.submittedScoreB);
+      const hasStarted = !isLocked && (((pendingA ?? 0) !== 0) || ((pendingB ?? 0) !== 0));
+      const canChooseAnotherMatch = !hasStarted;
+
+      const pendingResultReady = !isLocked && isRefereePendingResultReady({
+        ...match,
+        submittedScoreA: displayScoreA !== '' ? displayScoreA : match.submittedScoreA,
+        submittedScoreB: displayScoreB !== '' ? displayScoreB : match.submittedScoreB,
+      }, phaseRules);
+      const resultAlreadySent = Boolean(match.pendingResultSentAt);
+
+      const badgeText = officialStatus === 'Valide'
+        ? 'Valide'
+        : pendingResultReady
+          ? (resultAlreadySent ? 'Résultat envoyé' : 'Envoyer le résultat')
+          : pendingStatus === 'Match en cours'
+            ? 'Match en cours'
+            : 'À saisir';
+
+      const badgeClass = officialStatus === 'Valide'
+        ? 'badge-success'
+        : pendingResultReady
+          ? 'badge-info'
+          : match.refereeInProgress
+            ? 'badge-danger'
+            : 'badge-neutral';
+
+      const phaseRule = getRuleForMatch(match, phaseRules);
+      const winningScore = Number(phaseRule?.winningScore) || 21;
+      const modeLabel = phaseRule?.mode === 'twoPointGap' ? 'avec 2 points d’écart' : 'sec';
+      const estimatedDurationMinutes = estimatePhaseDurationMinutes(phaseRule);
+      const refereeStartMinutes = stampToMinutes(match.submittedAt) ?? schedule?.startMinutes ?? parseTimeToMinutes(match.time || '09:00');
+      const estimatedRefereeEndText = minutesToTime(refereeStartMinutes + estimatedDurationMinutes);
+      const contextText = `${match.group || 'Match'} • Terrain ${match.court || '?'} • Fin estimée : ${estimatedRefereeEndText}`;
+      const phaseCaption = String(match.phase || title || '').toUpperCase();
+
+      return (
+        <div className="referee-focus-card">
+          <div className="referee-focus-head">
+            <div>
+              <div className="referee-phase-caption">{phaseCaption}</div>
+              <h2>{safeTeamA.name} <span className="muted">vs</span> {safeTeamB.name}</h2>
+              <p className="muted referee-match-context">{contextText}</p>
+              <p className="referee-match-format">Match en {winningScore} {modeLabel}</p>
+            </div>
+            <div className="actions-row">
+              <Button variant="secondary" onClick={() => releaseRefereeSelectedMatch(entry)} disabled={!canChooseAnotherMatch}>Choisir un autre match</Button>
             </div>
           </div>
-          <div className="referee-team-card">
-            <span className="muted small">Équipe B</span>
-<TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} className="team-badge-large" />
+
+          <div className="referee-focus-body">
+            <div className="referee-team-card">
+              <span className="muted small">Équipe A</span>
+              <TeamBadge name={safeTeamA.name} level={safeTeamA.level} className="team-badge-large" />
+            </div>
+            <div className="referee-big-score">
+              {isLocked ? (
+                <div className="score-readonly score-readonly-large">
+                  <span className="score-chip score-chip-large">{displayScoreA === '' ? '-' : displayScoreA}</span>
+                  <span className="score-separator">-</span>
+                  <span className="score-chip score-chip-large">{displayScoreB === '' ? '-' : displayScoreB}</span>
+                </div>
+              ) : (
+                <div className="score-inputs score-inputs-large">
+                  <div className="score-stepper">
+                    <button type="button" className="score-stepper-btn" onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', 1)} aria-label={`Augmenter le score de ${safeTeamA.name}`}>▲</button>
+                    <input type="number" min="0" inputMode="numeric" value={displayScoreA} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                    <button type="button" className="score-stepper-btn" onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', -1)} aria-label={`Diminuer le score de ${safeTeamA.name}`} disabled={(toNumber(displayScoreA) ?? 0) <= 0}>▼</button>
+                  </div>
+                  <span className="score-separator">-</span>
+                  <div className="score-stepper">
+                    <button type="button" className="score-stepper-btn" onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', 1)} aria-label={`Augmenter le score de ${safeTeamB.name}`}>▲</button>
+                    <input type="number" min="0" inputMode="numeric" value={displayScoreB} onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                    <button type="button" className="score-stepper-btn" onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', -1)} aria-label={`Diminuer le score de ${safeTeamB.name}`} disabled={(toNumber(displayScoreB) ?? 0) <= 0}>▼</button>
+                  </div>
+                </div>
+              )}
+              <div className="status-cell center-status">
+                <span className={`badge ${badgeClass}`}>{badgeText}</span>
+                {!isLocked && pendingResultReady && !resultAlreadySent ? (
+                  <div className="actions-row compact-actions">
+                    <Button variant="success" onClick={() => submitRefereeMatchResult(scope, match.id)}>
+                      Envoyer le résultat
+                    </Button>
+                  </div>
+                ) : null}
+                {!isLocked && pendingResultReady && resultAlreadySent ? (
+                  <span className="muted tiny">Résultat final envoyé à l’organisateur</span>
+                ) : null}
+                {isLocked ? <span className="muted tiny">Match verrouillé : déjà validé par l’organisateur</span> : null}
+              </div>
+            </div>
+            <div className="referee-team-card">
+              <span className="muted small">Équipe B</span>
+              <TeamBadge name={safeTeamB.name} level={safeTeamB.level} className="team-badge-large" />
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    } catch (error) {
+      console.error('Erreur affichage match arbitre', error);
+      return (
+        <div className="mini-card public-ranking-card">
+          <div className="mini-card-head">Match arbitre</div>
+          <p className="muted">Impossible d’afficher ce match. Reviens à la liste puis resélectionne-le.</p>
+          <div className="actions-row">
+            <Button variant="secondary" onClick={() => {
+              setRefereeSelectedScoreDraft(null);
+              setRefereeSelectedMatch(null);
+            }}>
+              Retour à la liste
+            </Button>
+          </div>
+        </div>
+      );
+    }
   }
+
 
   function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
     const compact = Boolean(options?.compact);
