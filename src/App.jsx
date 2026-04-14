@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29J';
+const APP_VERSION = 'V29K';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -3925,7 +3925,7 @@ export default function App() {
     quarterComplete: singleKnockout.quarters.length === 0 || singleKnockout.quarters.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     semiComplete: singleKnockout.semis.length === 0 || singleKnockout.semis.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
   }) : ({
-    brassage1Complete: visibleBrassage1Matches.length > 0 && visibleBrassage1Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
+    brassage1Complete: brassage1.matches.length > 0 && brassage1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     brassage2Complete: shouldSkipBrassage2 || (visibleBrassage2Matches.length > 0 && visibleBrassage2Matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide')),
     principalePoolsComplete: visiblePrincipaleMatches.length > 0 && visiblePrincipaleMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     consolantePoolsComplete: visibleConsolanteMatches.length > 0 && visibleConsolanteMatches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -5298,7 +5298,8 @@ export default function App() {
       console.error('Erreur lors de la génération du Brassage 2', error);
       window.alert(`Impossible de générer le Brassage 2 : ${error?.message || 'erreur interne'}.`);
     }
-  }
+      return true;
+}
 
 
   function generateSmallKnockoutStage1() {
@@ -6236,7 +6237,7 @@ export default function App() {
       updated.validatedAt = isMatchResultValid(updated, phaseRulesRef.current) ? officialEditTimestamp : null;
       return updated;
     }));
-    queueBackgroundCloudSave();
+    queueBackgroundCloudSave(20, approvalTimestamp);
   }
 
 
