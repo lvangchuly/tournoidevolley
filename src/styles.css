@@ -4550,3 +4550,26 @@ tbody tr:last-child td { border-bottom: none; }
   padding-top:0.28rem !important;
   padding-bottom:0.28rem !important;
 }
+
+
+.public-qualified-list-card{
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: start !important;
+}
+
+.public-qualified-list-card .compact-overall-ranking-scroll{
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.public-qualified-list-card .table-wrap{
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.public-qualified-lists-column{
+  align-self: start !important;
+}
