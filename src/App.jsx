@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30X';
+const APP_VERSION = 'V30Y';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6415,32 +6415,35 @@ export default function App() {
 
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
-    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
-    const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
-    const editTimestamp = markPendingLocalMutation(new Date().toISOString());
-    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch) return;
+    if (getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+
+    const editTimestamp = new Date().toISOString();
+    const normalized = String(value ?? '').replace(/[^0-9]/g, '').slice(0, 3);
+
+    const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
+      ? refereeSelectedScoreDraftRef.current
+      : null;
     const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
+
     const nextScoreA = field === 'scoreA'
       ? normalized
-      : (selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
+      : String(selectedDraft?.scoreA ?? storedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
     const nextScoreB = field === 'scoreB'
       ? normalized
-      : (selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+      : String(selectedDraft?.scoreB ?? storedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
+
     const nextDraft = {
       matchId,
       scoreA: nextScoreA,
       scoreB: nextScoreB,
       submittedAt: editTimestamp,
     };
-    const localPendingSnapshot = {
-      submittedScoreA: String(nextScoreA ?? ''),
-      submittedScoreB: String(nextScoreB ?? ''),
-      submittedAt: editTimestamp,
-    };
 
     refereeSelectedScoreDraftRef.current = nextDraft;
     setRefereeSelectedScoreDraft(nextDraft);
+
     commitRefereeScoreDrafts((current) => ({
       ...current,
       [matchId]: {
@@ -6450,11 +6453,15 @@ export default function App() {
         submittedAt: editTimestamp,
       },
     }));
+
     recentRefereeLocalEditsRef.current.set(matchId, {
-      ...localPendingSnapshot,
+      submittedScoreA: nextScoreA,
+      submittedScoreB: nextScoreB,
+      submittedAt: editTimestamp,
       pendingResultSentAt: fallbackMatch?.pendingResultSentAt ?? null,
       until: Date.now() + 90000,
     });
+
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
@@ -6468,7 +6475,6 @@ export default function App() {
         matchInProgress: true,
       };
     }));
-
   }
 
 
@@ -7030,8 +7036,8 @@ export default function App() {
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
-                          {!isValid && pendingStatus === 'Match en cours' ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                          {!isValid && canApprovePending ? (
+                          {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
+                          {!isValid && ((pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules)) || canApprovePending) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                           </div>
@@ -7135,8 +7141,8 @@ export default function App() {
                           <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                           <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
-                        {!isValid && pendingStatus === 'Match en cours' ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                        {!isValid && canApprovePending ? (
+                        {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
+                        {!isValid && ((pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules)) || canApprovePending) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                       </div>
@@ -7368,11 +7374,9 @@ export default function App() {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     autoComplete="off"
-                    value={displayScoreA}
-                    onChange={(e) => {
-                      const nextValue = String(e.target.value || '').replace(/[^0-9]/g, '');
-                      updateRefereeMatchScore(scope, match.id, 'scoreA', nextValue);
-                    }}
+                    enterKeyHint="done"
+                    value={String(displayScoreA ?? '')}
+                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)}
                   />
                   <button
                     type="button"
@@ -7401,11 +7405,9 @@ export default function App() {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     autoComplete="off"
-                    value={displayScoreB}
-                    onChange={(e) => {
-                      const nextValue = String(e.target.value || '').replace(/[^0-9]/g, '');
-                      updateRefereeMatchScore(scope, match.id, 'scoreB', nextValue);
-                    }}
+                    enterKeyHint="done"
+                    value={String(displayScoreB ?? '')}
+                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)}
                   />
                   <button
                     type="button"

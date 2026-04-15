@@ -5659,3 +5659,21 @@ tbody tr:last-child td { border-bottom: none; }
   color:#000 !important;
   opacity:1 !important;
 }
+
+
+/* V30Y */
+.referee-page .score-stepper{
+  position: relative !important;
+}
+.referee-page .score-stepper input{
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  position: relative !important;
+  z-index: 3 !important;
+  cursor: text !important;
+}
+.referee-page .score-stepper-btn{
+  position: relative !important;
+  z-index: 2 !important;
+}
