@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29U';
+const APP_VERSION = 'V29V';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2524,6 +2524,15 @@ export default function App() {
       .filter(Boolean);
     return computeRanking([...new Set(consolanteTeamIds)], mainStage.consolanteMatches, teamMap, phaseRules, { normalizeByMatches: useNormalizedPoolRanking });
   }, [mainStage.consolantePools, mainStage.consolanteMatches, teamMap, phaseRules, useNormalizedPoolRanking]);
+
+  const publicPrincipalQuarterTeams = useMemo(
+    () => buildQuarterQualifiedTeamRowsFromMatches(knockout.principalQuarters, principaleOverallRanking),
+    [knockout.principalQuarters, principaleOverallRanking]
+  );
+  const publicConsolanteQuarterTeams = useMemo(
+    () => buildQuarterQualifiedTeamRowsFromMatches(knockout.consolanteQuarters, consolanteOverallRanking),
+    [knockout.consolanteQuarters, consolanteOverallRanking]
+  );
   const championshipLeg1Standings = useMemo(() => computeGroupStandings(championshipLeg1.pools, championshipLeg1.matches, teamMap, phaseRules), [championshipLeg1, teamMap, phaseRules]);
   const championshipLeg2Standings = useMemo(() => computeGroupStandings(championshipLeg2.pools, championshipLeg2.matches, teamMap, phaseRules), [championshipLeg2, teamMap, phaseRules]);
   const championshipRanking = useMemo(() => computeRanking(allTeamIds, [...championshipLeg1.matches, ...championshipLeg2.matches], teamMap, phaseRules), [allTeamIds, championshipLeg1.matches, championshipLeg2.matches, teamMap, phaseRules]);
@@ -7353,7 +7362,63 @@ export default function App() {
   }
 
 
-  function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
+  
+function buildQuarterQualifiedTeamRowsFromMatches(matches, rankingRows) {
+  const rankingMap = new Map((Array.isArray(rankingRows) ? rankingRows : []).map((row) => [row.teamId, row]));
+  const seen = new Set();
+  return dedupeMatches(Array.isArray(matches) ? matches : [])
+    .flatMap((match) => [match?.teamAId, match?.teamBId])
+    .filter(Boolean)
+    .filter((teamId) => {
+      if (seen.has(teamId)) return false;
+      seen.add(teamId);
+      return true;
+    })
+    .map((teamId) => ({
+      teamId,
+      ...(rankingMap.get(teamId) || {}),
+    }));
+}
+
+function renderQualifiedTeamsList(title, rows, options = {}) {
+  const safeRows = Array.isArray(rows) ? rows.filter((row) => row?.teamId) : [];
+  const phaseLabel = options.phaseLabel || 'Points de poule';
+  const showPoints = options.showPoints !== false;
+  if (!safeRows.length) {
+    return <div className="empty-state">Aucune équipe qualifiée pour le moment.</div>;
+  }
+  return (
+    <div className="mini-card public-ranking-card">
+      <div className="mini-card-head">{title}</div>
+      <div className="compact-overall-ranking-scroll compact-overall-ranking-scroll-v24n">
+        <table className="standings-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Équipe</th>
+              {showPoints ? <th>{phaseLabel}</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {safeRows.map((row, index) => {
+              const team = resolveTeam(row.teamId);
+              const pointsValue = row.avgTournamentPoints ?? row.points ?? row.tournamentPoints ?? 0;
+              return (
+                <tr key={`${title}-${row.teamId}-${index}`}>
+                  <td>{index + 1}</td>
+                  <td>{team.name}</td>
+                  {showPoints ? <td>{Number.isFinite(pointsValue) ? pointsValue : 0}</td> : null}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, options = {}) {
     const compact = Boolean(options?.compact);
     const onTeamClick = typeof options?.onTeamClick === 'function' ? options.onTeamClick : null;
     const selectedTeamId = options?.selectedTeamId || '';
@@ -7797,13 +7862,31 @@ export default function App() {
             ) : hasGeneratedMainStagePublic ? (
               <Section title="Classements généraux" subtitle="Quand la principale et la consolante sont générées, l’affichage public montre les classements généraux de chaque tableau à la place du classement cumulé des brassages.">
                 <div className="cards-grid two-up public-rankings-grid">
-                  <div className="mini-card public-ranking-card">
-                    <div className="mini-card-head">Classement général principale</div>
-                    {renderOverallRanking(principaleOverallRanking, false, activeInProgressTeamIds)}
+                  <div className="stack-gap">
+                    {knockout.principalQuarters.length > 0 ? (
+                      <>
+                        {renderQualifiedTeamsList('Équipes en quarts de finale principale', publicPrincipalQuarterTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
+                        {renderQualifiedTeamsList('Équipes qui seront en demi-finales principale', publicPrincipalQuarterTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
+                      </>
+                    ) : (
+                      <div className="mini-card public-ranking-card">
+                        <div className="mini-card-head">Classement général principale</div>
+                        {renderOverallRanking(principaleOverallRanking, false, activeInProgressTeamIds)}
+                      </div>
+                    )}
                   </div>
-                  <div className="mini-card public-ranking-card">
-                    <div className="mini-card-head">Classement général consolante</div>
-                    {renderOverallRanking(consolanteOverallRanking, false, activeInProgressTeamIds)}
+                  <div className="stack-gap">
+                    {knockout.consolanteQuarters.length > 0 ? (
+                      <>
+                        {renderQualifiedTeamsList('Équipes en quarts de finale consolante', publicConsolanteQuarterTeams, { showPoints: false })}
+                        {renderQualifiedTeamsList('Équipes qui seront en demi-finales consolante', publicConsolanteQuarterTeams, { showPoints: false })}
+                      </>
+                    ) : (
+                      <div className="mini-card public-ranking-card">
+                        <div className="mini-card-head">Classement général consolante</div>
+                        {renderOverallRanking(consolanteOverallRanking, false, activeInProgressTeamIds)}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Section>
