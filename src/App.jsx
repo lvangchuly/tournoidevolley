@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29T';
+const APP_VERSION = 'V29U';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -3635,9 +3635,10 @@ export default function App() {
     && consolantePublicRanking.length > 0
     && knockout.consolanteSemis.length === 0
     && knockout.consolanteFinals.length === 0;
+  const hasGeneratedMainStagePublic = mainStage.principalePools.length > 0 || mainStage.principaleMatches.length > 0 || mainStage.consolantePools.length > 0 || mainStage.consolanteMatches.length > 0;
   const showSplitPublicPoolRankings = (showPublicPrincipalePoolRanking || showPublicConsolantePoolRanking);
   const hidePublicRankingSection = false;
-  const publicOverallRankingRows = showSplitPublicPoolRankings
+  const publicOverallRankingRows = (showSplitPublicPoolRankings || hasGeneratedMainStagePublic)
     ? []
     : hasStartedBrassage2PublicRanking
       ? rankingAfterBrassages
@@ -7791,6 +7792,19 @@ export default function App() {
                       {renderStandings(consolanteStandings)}
                     </div>
                   ) : null}
+                </div>
+              </Section>
+            ) : hasGeneratedMainStagePublic ? (
+              <Section title="Classements généraux" subtitle="Quand la principale et la consolante sont générées, l’affichage public montre les classements généraux de chaque tableau à la place du classement cumulé des brassages.">
+                <div className="cards-grid two-up public-rankings-grid">
+                  <div className="mini-card public-ranking-card">
+                    <div className="mini-card-head">Classement général principale</div>
+                    {renderOverallRanking(principaleOverallRanking, false, activeInProgressTeamIds)}
+                  </div>
+                  <div className="mini-card public-ranking-card">
+                    <div className="mini-card-head">Classement général consolante</div>
+                    {renderOverallRanking(consolanteOverallRanking, false, activeInProgressTeamIds)}
+                  </div>
                 </div>
               </Section>
             ) : (
