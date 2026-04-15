@@ -4515,3 +4515,38 @@ tbody tr:last-child td { border-bottom: none; }
 .finals-dual-grid .public-ranking-card {
   min-width: 0;
 }
+
+
+.public-qualified-lists-column{
+  gap:0.55rem !important;
+}
+
+.public-qualified-list-card{
+  margin:0 !important;
+  padding-top:0.45rem !important;
+  padding-bottom:0.45rem !important;
+}
+
+.public-qualified-list-card + .public-qualified-list-card{
+  margin-top:0.55rem !important;
+}
+
+.public-qualified-list-card .mini-card-head{
+  margin-bottom:0.25rem !important;
+  padding-bottom:0.15rem !important;
+}
+
+.public-qualified-list-card .compact-overall-ranking-scroll{
+  margin-top:0 !important;
+  padding-top:0 !important;
+}
+
+.public-qualified-list-card .standings-table{
+  margin-top:0 !important;
+}
+
+.public-qualified-list-card .standings-table th,
+.public-qualified-list-card .standings-table td{
+  padding-top:0.28rem !important;
+  padding-bottom:0.28rem !important;
+}

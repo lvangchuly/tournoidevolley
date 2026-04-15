@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29X';
+const APP_VERSION = 'V29Y';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7443,7 +7443,7 @@ function renderQualifiedTeamsList(title, rows, options = {}) {
     return <div className="empty-state">Aucune équipe qualifiée pour le moment.</div>;
   }
   return (
-    <div className="mini-card public-ranking-card">
+    <div className="mini-card public-ranking-card public-qualified-list-card">
       <div className="mini-card-head">{title}</div>
       <div className="compact-overall-ranking-scroll compact-overall-ranking-scroll-v24n">
         <table className="standings-table">
@@ -7896,7 +7896,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
             ))}
           </div>
 
-          <div className="stack-gap" style={{ gap: "0.9rem" }}>
+          <div className="stack-gap public-qualified-lists-column">
             {showSplitPublicPoolRankings ? (
               <Section title="Classements des poules" subtitle="Affichage par poule pour visualiser directement les équipes qualifiées. Les points du brassage ne sont pas repris dans ces classements.">
                 <div className="cards-grid two-up public-rankings-grid">
@@ -7917,7 +7917,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
             ) : hasGeneratedMainStagePublic ? (
               <Section title="Classements généraux" subtitle="Quand la principale et la consolante sont générées, l’affichage public montre les équipes encore en course dans chaque tableau à la place du classement cumulé des brassages.">
                 <div className="cards-grid two-up public-rankings-grid">
-                  <div className="stack-gap" style={{ gap: "0.9rem" }}>
+                  <div className="stack-gap public-qualified-lists-column">
                     {knockout.principalQuarters.length > 0 ? (
                       <>
                         {renderQualifiedTeamsList('Équipes en quarts de finale principale', publicPrincipalQuarterTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
