@@ -4791,3 +4791,39 @@ tbody tr:last-child td { border-bottom: none; }
 .public-qualified-list-card + .public-qualified-list-card{
   margin-top:0.45rem !important;
 }
+
+
+.referee-page .mini-card,
+.referee-page .referee-focus-card,
+.referee-page .referee-qr-card,
+.referee-page .compact-match-card-v24c,
+.referee-page .compact-match-card-v24e,
+.referee-page .compact-match-card-v24n,
+.referee-page .compact-final-stage-board-v24s,
+.referee-page .compact-terrain-column-v24n,
+.referee-page .compact-final-terrain-column-v24s{
+  background:#ffffff !important;
+  color:#000000 !important;
+}
+
+.referee-page .mini-card-head,
+.referee-page .compact-brassage-title,
+.referee-page .compact-terrain-column-title-v24n,
+.referee-page .referee-qr-title,
+.referee-page .referee-phase-caption,
+.referee-page .referee-match-context,
+.referee-page .referee-match-format{
+  color:#000000 !important;
+}
+
+.referee-page .empty-state{
+  background:#ffffff !important;
+  color:#000000 !important;
+}
+
+.referee-page .status-cell,
+.referee-page .muted,
+.referee-page .small,
+.referee-page .tiny{
+  color:inherit;
+}
