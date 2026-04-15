@@ -4724,8 +4724,70 @@ tbody tr:last-child td { border-bottom: none; }
   font-weight:700 !important;
 }
 
-.public-qualified-simple-table .team-badge{
+
+
+.public-qualified-simple-table thead th{
+  color:#fff !important;
+  background:#000 !important;
+  font-weight:700 !important;
+}
+
+.public-qualified-simple-table thead th:first-child{
+  text-align:left !important;
+}
+
+.public-qualified-simple-table thead th:last-child{
+  text-align:right !important;
+}
+
+.public-qualified-simple-table,
+.public-qualified-simple-table tbody td{
   color:#000 !important;
-  background:#fff !important;
-  border:1px solid #d1d5db !important;
+}
+
+.public-qualified-team-cell{
+  color:inherit !important;
+}
+
+.public-qualified-team-cell .team-badge{
+  color:inherit !important;
+  border:none !important;
+  box-shadow:none !important;
+  width:100% !important;
+  max-width:100% !important;
+  justify-content:flex-start !important;
+  padding-left:0.2rem !important;
+  padding-right:0.2rem !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.public-qualified-points-cell{
+  color:#000 !important;
+  font-weight:700 !important;
+  text-align:right !important;
+}
+
+.public-qualified-list-card{
+  height:auto !important;
+  min-height:0 !important;
+  align-self:start !important;
+  margin:0 !important;
+}
+
+.public-qualified-list-card .compact-overall-ranking-scroll,
+.public-qualified-list-card .table-wrap{
+  height:auto !important;
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+.public-qualified-lists-column{
+  align-self:start !important;
+  gap:0.45rem !important;
+}
+
+.public-qualified-list-card + .public-qualified-list-card{
+  margin-top:0.45rem !important;
 }
