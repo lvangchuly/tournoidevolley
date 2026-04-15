@@ -4591,3 +4591,75 @@ tbody tr:last-child td { border-bottom: none; }
 .public-qualified-list-card .team-badge{
   max-width: 24ch !important;
 }
+
+
+.public-qualified-list-card .standings-table{
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.public-qualified-list-card .standings-table th:first-child,
+.public-qualified-list-card .standings-table td:first-child{
+  width: 2rem !important;
+  min-width: 2rem !important;
+  max-width: 2rem !important;
+  padding-left: 0.2rem !important;
+  padding-right: 0.2rem !important;
+}
+
+.public-qualified-list-card .standings-table th:nth-child(2),
+.public-qualified-list-card .standings-table td:nth-child(2){
+  width: auto !important;
+  padding-left: 0.25rem !important;
+  padding-right: 0.25rem !important;
+}
+
+.public-qualified-list-card .standings-table th:last-child,
+.public-qualified-list-card .standings-table td:last-child{
+  width: 4.4rem !important;
+  min-width: 4.4rem !important;
+  max-width: 4.4rem !important;
+  padding-left: 0.2rem !important;
+  padding-right: 0.2rem !important;
+  text-align: right !important;
+}
+
+.public-qualified-list-card .standings-table th,
+.public-qualified-list-card .standings-table td{
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.public-qualified-list-card .team-badge{
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  padding-left: 0.45rem !important;
+  padding-right: 0.45rem !important;
+  font-size: 0.92rem !important;
+}
+
+.public-qualified-list-card .compact-overall-ranking-scroll,
+.public-qualified-list-card .table-wrap{
+  overflow-x: hidden !important;
+}
+
+@media (max-width: 900px){
+  .public-qualified-list-card .standings-table th:last-child,
+  .public-qualified-list-card .standings-table td:last-child{
+    width: 4rem !important;
+    min-width: 4rem !important;
+    max-width: 4rem !important;
+  }
+
+  .public-qualified-list-card .team-badge{
+    font-size: 0.88rem !important;
+    padding-left: 0.35rem !important;
+    padding-right: 0.35rem !important;
+  }
+}

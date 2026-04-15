@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30C';
+const APP_VERSION = 'V30D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7461,7 +7461,7 @@ function renderQualifiedTeamsList(title, rows, options = {}) {
               return (
                 <tr key={`${title}-${row.teamId}-${index}`}>
                   <td>{index + 1}</td>
-                  <td><TeamBadge name={(team.name || "").length > 24 ? `${team.name.slice(0, 21)}...` : team.name} level={team.level} /></td>
+                  <td><TeamBadge name={team.name} level={team.level} /></td>
                   {showPoints ? <td>{Number.isFinite(pointsValue) ? pointsValue : 0}</td> : null}
                 </tr>
               );
