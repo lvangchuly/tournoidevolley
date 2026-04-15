@@ -5611,3 +5611,51 @@ tbody tr:last-child td { border-bottom: none; }
 .referee-page .compact-terrain-match-list-v24n > *{
   background:#eaf0f7 !important;
 }
+
+
+/* V30Q : cartes de sélection arbitre fond clair sans hover */
+.referee-page .referee-selector-item,
+.referee-page .referee-selector-item:hover,
+.referee-page .referee-selector-item:focus,
+.referee-page .referee-selector-item:active,
+.referee-page .referee-selector-item.referee-selector-item-disabled,
+.referee-page .referee-selector-item.referee-selector-item-disabled:hover{
+  background:#eaf0f7 !important;
+  background-image:none !important;
+  color:#000 !important;
+  border:1px solid #8fa7c1 !important;
+  border-radius:14px !important;
+  box-shadow:none !important;
+  transform:none !important;
+  filter:none !important;
+  transition:none !important;
+}
+
+.referee-page .referee-selector-item *,
+.referee-page .referee-selector-item:hover *,
+.referee-page .referee-selector-item:focus *,
+.referee-page .referee-selector-item:active *{
+  color:#000 !important;
+  transition:none !important;
+}
+
+.referee-page .referee-selector-item .team-badge,
+.referee-page .referee-selector-item:hover .team-badge{
+  box-shadow:none !important;
+  border:none !important;
+  border-radius:10px !important;
+}
+
+.referee-page .referee-selector-item .badge,
+.referee-page .referee-selector-item:hover .badge{
+  background:#ffffff !important;
+  color:#000 !important;
+  border:1px solid #cfd8e3 !important;
+  box-shadow:none !important;
+}
+
+.referee-page .referee-selector-item .muted,
+.referee-page .referee-selector-item:hover .muted{
+  color:#000 !important;
+  opacity:1 !important;
+}
