@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30W';
+const APP_VERSION = 'V30X';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7357,22 +7357,26 @@ export default function App() {
                 <div className="score-stepper">
                   <button
                     type="button"
-                    className="score-stepper-btn"
+                    className="score-stepper-btn" tabIndex={0}
                     onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', 1)}
                     aria-label={`Augmenter le score de ${teamA.name}`}
                   >
                     ▲
                   </button>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
                     value={displayScoreA}
-                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreA', e.target.value)}
+                    onChange={(e) => {
+                      const nextValue = String(e.target.value || '').replace(/[^0-9]/g, '');
+                      updateRefereeMatchScore(scope, match.id, 'scoreA', nextValue);
+                    }}
                   />
                   <button
                     type="button"
-                    className="score-stepper-btn"
+                    className="score-stepper-btn" tabIndex={0}
                     onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreA', -1)}
                     aria-label={`Diminuer le score de ${teamA.name}`}
                     disabled={(toNumber(displayScoreA) ?? 0) <= 0}
@@ -7386,22 +7390,26 @@ export default function App() {
                 <div className="score-stepper">
                   <button
                     type="button"
-                    className="score-stepper-btn"
+                    className="score-stepper-btn" tabIndex={0}
                     onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', 1)}
                     aria-label={`Augmenter le score de ${teamB.name}`}
                   >
                     ▲
                   </button>
                   <input
-                    type="number"
-                    min="0"
+                    type="text"
                     inputMode="numeric"
+                    pattern="[0-9]*"
+                    autoComplete="off"
                     value={displayScoreB}
-                    onChange={(e) => updateRefereeMatchScore(scope, match.id, 'scoreB', e.target.value)}
+                    onChange={(e) => {
+                      const nextValue = String(e.target.value || '').replace(/[^0-9]/g, '');
+                      updateRefereeMatchScore(scope, match.id, 'scoreB', nextValue);
+                    }}
                   />
                   <button
                     type="button"
-                    className="score-stepper-btn"
+                    className="score-stepper-btn" tabIndex={0}
                     onClick={() => stepRefereeMatchScore(scope, match.id, 'scoreB', -1)}
                     aria-label={`Diminuer le score de ${teamB.name}`}
                     disabled={(toNumber(displayScoreB) ?? 0) <= 0}
