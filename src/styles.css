@@ -4674,3 +4674,23 @@ tbody tr:last-child td { border-bottom: none; }
 .public-qualified-list-card .team-badge{
   max-width: 12ch !important;
 }
+
+
+.public-qualified-simple-table th:first-child,
+.public-qualified-simple-table td:first-child{
+  width: auto !important;
+  max-width: none !important;
+}
+
+.public-qualified-simple-table th:last-child,
+.public-qualified-simple-table td:last-child{
+  width: 5rem !important;
+  min-width: 5rem !important;
+  max-width: 5rem !important;
+  text-align: right !important;
+}
+
+.public-qualified-simple-table .team-badge{
+  width: 100% !important;
+  max-width: 100% !important;
+}

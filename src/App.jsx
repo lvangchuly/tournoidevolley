@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30E';
+const APP_VERSION = 'V30F';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7446,10 +7446,9 @@ function renderQualifiedTeamsList(title, rows, options = {}) {
     <div className="mini-card public-ranking-card public-qualified-list-card">
       <div className="mini-card-head">{title}</div>
       <div className="compact-overall-ranking-scroll compact-overall-ranking-scroll-v24n">
-        <table className="standings-table">
+        <table className="standings-table public-qualified-simple-table">
           <thead>
             <tr>
-              <th>#</th>
               <th>Équipe</th>
               {showPoints ? <th>{phaseLabel}</th> : null}
             </tr>
@@ -7460,7 +7459,6 @@ function renderQualifiedTeamsList(title, rows, options = {}) {
               const pointsValue = row.avgTournamentPoints ?? row.points ?? row.tournamentPoints ?? 0;
               return (
                 <tr key={`${title}-${row.teamId}-${index}`}>
-                  <td>{index + 1}</td>
                   <td><TeamBadge name={team.name} level={team.level} /></td>
                   {showPoints ? <td>{Number.isFinite(pointsValue) ? pointsValue : 0}</td> : null}
                 </tr>
