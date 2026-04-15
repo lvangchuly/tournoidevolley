@@ -5540,3 +5540,74 @@ tbody tr:last-child td { border-bottom: none; }
   border:1px solid #cfd8e3 !important;
   box-shadow:none !important;
 }
+
+
+/* V30P : correction définitive des cartes de matchs arbitres */
+.referee-page [id^="match-card-"],
+.referee-page [id^="match-card-"]:hover,
+.referee-page [id^="match-card-"]:focus,
+.referee-page [id^="match-card-"]:active{
+  background:#eaf0f7 !important;
+  background-image:none !important;
+  color:#000 !important;
+  border:1px solid #8fa7c1 !important;
+  box-shadow:none !important;
+  transform:none !important;
+  filter:none !important;
+  transition:none !important;
+}
+
+.referee-page [id^="match-card-"] *,
+.referee-page [id^="match-card-"]:hover *,
+.referee-page [id^="match-card-"]:focus *,
+.referee-page [id^="match-card-"]:active *{
+  transition:none !important;
+}
+
+.referee-page [id^="match-card-"]::before,
+.referee-page [id^="match-card-"]::after,
+.referee-page [id^="match-card-"]:hover::before,
+.referee-page [id^="match-card-"]:hover::after{
+  display:none !important;
+  background:transparent !important;
+}
+
+.referee-page [id^="match-card-"] .compact-match-header-v24n,
+.referee-page [id^="match-card-"] .compact-match-header-v24c,
+.referee-page [id^="match-card-"] .compact-match-header-v24e,
+.referee-page [id^="match-card-"] .compact-match-header-wide-v24d,
+.referee-page [id^="match-card-"] .compact-match-header-wide-v24e{
+  background:transparent !important;
+  color:#000 !important;
+}
+
+.referee-page [id^="match-card-"] .compact-final-stage-label-v24s,
+.referee-page [id^="match-card-"] .compact-match-chip,
+.referee-page [id^="match-card-"] .compact-match-footer-v24n,
+.referee-page [id^="match-card-"] .compact-match-footer-v24c,
+.referee-page [id^="match-card-"] .compact-match-footer-v24e,
+.referee-page [id^="match-card-"] .compact-match-footer-v24n *,
+.referee-page [id^="match-card-"] .compact-match-footer-v24c *,
+.referee-page [id^="match-card-"] .compact-match-footer-v24e *{
+  background:transparent !important;
+  color:#000 !important;
+}
+
+.referee-page [id^="match-card-"] .badge,
+.referee-page [id^="match-card-"]:hover .badge{
+  background:#ffffff !important;
+  color:#000 !important;
+  border:1px solid #cfd8e3 !important;
+  box-shadow:none !important;
+}
+
+.referee-page [id^="match-card-"] .team-badge,
+.referee-page [id^="match-card-"]:hover .team-badge{
+  box-shadow:none !important;
+  border:none !important;
+}
+
+.referee-page .compact-final-terrain-match-list-v24s > *,
+.referee-page .compact-terrain-match-list-v24n > *{
+  background:#eaf0f7 !important;
+}
