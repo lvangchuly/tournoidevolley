@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30U';
+const APP_VERSION = 'V30V';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5030,7 +5030,7 @@ export default function App() {
     let updatedCount = 0;
 
     scopes.forEach((scope) => {
-      updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
         const isEditable = getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir'
           && !match.refereeInProgress
           && !match.matchInProgress
@@ -6186,7 +6186,13 @@ export default function App() {
     const next = { ...knockoutRef.current, consolanteFinals: applyUpdater(knockoutRef.current?.consolanteFinals) };
     knockoutRef.current = next;
     setKnockout(next);
-    refreshLatestPersistedSnapshot();
+    refreshLatestPersistedSnapshot();    if (scope === 'consolanteQuarters') {
+      const next = { ...knockoutRef.current, consolanteQuarters: applyUpdater(knockoutRef.current?.consolanteQuarters) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      refreshLatestPersistedSnapshot();
+      return;
+    }
   }
 
   function getPendingMatchSnapshot(match) {
@@ -6364,7 +6370,16 @@ export default function App() {
   }
 
   function updateOfficialMatchScore(scope, matchId, field, value) {
-    const fallbackMatch = findMatchInScope(scope, matchId);
+    const resolvedScope = !findMatchInScope(scope, matchId)
+      ? (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
+        : findMatchInScope('consolanteFinals', matchId) ? 'consolanteFinals'
+        : findMatchInScope('principalSemis', matchId) ? 'principalSemis'
+        : findMatchInScope('consolanteSemis', matchId) ? 'consolanteSemis'
+        : findMatchInScope('principalQuarters', matchId) ? 'principalQuarters'
+        : findMatchInScope('consolanteQuarters', matchId) ? 'consolanteQuarters'
+        : scope)
+      : scope;
+    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
     if (!fallbackMatch) return;
     const currentValue = field === 'scoreA' ? (fallbackMatch.scoreA ?? '') : (fallbackMatch.scoreB ?? '');
     const normalized = value === '' ? '' : Math.max(0, Number(value));
@@ -6379,7 +6394,7 @@ export default function App() {
       officialAt: officialEditTimestamp,
     };
     protectOrganizerLocalEdit(matchId, protectedSnapshot);
-    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+    updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const updated = {
         ...match,
@@ -6400,7 +6415,7 @@ export default function App() {
 
 
   function updateRefereeMatchScore(scope, matchId, field, value) {
-    const fallbackMatch = findMatchInScope(scope, matchId);
+    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
     if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
     const normalized = value === '' ? '' : String(Math.max(0, Number(value)));
     const editTimestamp = markPendingLocalMutation(new Date().toISOString());
@@ -6598,6 +6613,15 @@ export default function App() {
   }
 
   function approveRefereeScore(scope, matchId) {
+    const resolvedScope = !findMatchInScope(scope, matchId)
+      ? (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
+        : findMatchInScope('consolanteFinals', matchId) ? 'consolanteFinals'
+        : findMatchInScope('principalSemis', matchId) ? 'principalSemis'
+        : findMatchInScope('consolanteSemis', matchId) ? 'consolanteSemis'
+        : findMatchInScope('principalQuarters', matchId) ? 'principalQuarters'
+        : findMatchInScope('consolanteQuarters', matchId) ? 'consolanteQuarters'
+        : scope)
+      : scope;
     recentRefereeLocalEditsRef.current.delete(matchId);
     const approvalTimestamp = markPendingLocalMutation(new Date().toISOString());
     const fallbackMatch = findMatchInScope(scope, matchId);
