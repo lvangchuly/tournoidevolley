@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30S';
+const APP_VERSION = 'V30T';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6966,10 +6966,26 @@ export default function App() {
                           </div>
                           <div className="compact-match-score-row-v24n">
                             <label className="compact-score-box compact-score-box-v24n">
-                              <input type="number" min="0" inputMode="numeric" value={match.scoreA ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
+                              <input
+                              type="number"
+                              min="0"
+                              inputMode="numeric"
+                              value={match.scoreA ?? ''}
+                              onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)}
+                              placeholder=""
+                              disabled={false}
+                            />
                             </label>
                             <label className="compact-score-box compact-score-box-v24n">
-                              <input type="number" min="0" inputMode="numeric" value={match.scoreB ?? ''} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
+                              <input
+                              type="number"
+                              min="0"
+                              inputMode="numeric"
+                              value={match.scoreB ?? ''}
+                              onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)}
+                              placeholder=""
+                              disabled={false}
+                            />
                             </label>
                           </div>
                           <div className="compact-match-footer-v24n">
@@ -7054,6 +7070,7 @@ export default function App() {
                     const pendingA = toNumber(match.submittedScoreA);
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
+                    const isFinalStage = /quart|demi|finale|petite finale|petite final|principale|principal/i.test(`${match.phase || ''} ${match.group || ''}`);
                     const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) && (Boolean(match.pendingResultSentAt) || Boolean(match.matchInProgress) || Boolean(match.refereeInProgress) || isFinalStage);
                     const matchNumber = index + 1;
 
@@ -7179,7 +7196,7 @@ export default function App() {
                         {!isValid && pendingStatus === 'Match en cours' ? (
                           <>
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                            {canApprovePending ? (
+                            {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
                               <div className="actions-row compact-actions">
                                 <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                               </div>
