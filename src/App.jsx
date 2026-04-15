@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30Y';
+const APP_VERSION = 'V30Z';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6619,26 +6619,28 @@ export default function App() {
   }
 
   function approveRefereeScore(scope, matchId) {
-    const resolvedScope = !findMatchInScope(scope, matchId)
-      ? (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
+    const resolvedScope = findMatchInScope(scope, matchId)
+      ? scope
+      : (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
         : findMatchInScope('consolanteFinals', matchId) ? 'consolanteFinals'
         : findMatchInScope('principalSemis', matchId) ? 'principalSemis'
         : findMatchInScope('consolanteSemis', matchId) ? 'consolanteSemis'
         : findMatchInScope('principalQuarters', matchId) ? 'principalQuarters'
         : findMatchInScope('consolanteQuarters', matchId) ? 'consolanteQuarters'
-        : scope)
-      : scope;
+        : scope);
+
     recentRefereeLocalEditsRef.current.delete(matchId);
     const approvalTimestamp = markPendingLocalMutation(new Date().toISOString());
-    const fallbackMatch = findMatchInScope(scope, matchId);
-    if (fallbackMatch) {
-      protectOrganizerLocalEdit(matchId, {
-        scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
-        scoreB: fallbackMatch.submittedScoreB ?? fallbackMatch.scoreB ?? '',
-        officialAt: approvalTimestamp,
-      });
-    }
-    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
+    if (!fallbackMatch) return;
+
+    protectOrganizerLocalEdit(matchId, {
+      scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
+      scoreB: fallbackMatch.submittedScoreB ?? fallbackMatch.scoreB ?? '',
+      officialAt: approvalTimestamp,
+    });
+
+    updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
         ...match,
@@ -6655,6 +6657,7 @@ export default function App() {
       approved.validatedAt = isMatchResultValid(approved, phaseRulesRef.current) ? approvalTimestamp : null;
       return approved;
     }));
+
     queueBackgroundCloudSave(20, approvalTimestamp);
 
     const tryGenerateBrassage2AfterValidation = () => {
