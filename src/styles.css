@@ -4694,3 +4694,38 @@ tbody tr:last-child td { border-bottom: none; }
   width: 100% !important;
   max-width: 100% !important;
 }
+
+
+.public-qualified-simple-table,
+.public-qualified-simple-table th,
+.public-qualified-simple-table td{
+  color:#000 !important;
+}
+
+.public-qualified-simple-table th{
+  font-weight:700 !important;
+}
+
+.public-qualified-simple-table .public-qualified-team-cell{
+  color:#000 !important;
+}
+
+.public-qualified-team-name{
+  color:#000 !important;
+  font-weight:600 !important;
+}
+
+.public-qualified-team-points-inline{
+  display:none !important;
+}
+
+.public-qualified-points-cell{
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+.public-qualified-simple-table .team-badge{
+  color:#000 !important;
+  background:#fff !important;
+  border:1px solid #d1d5db !important;
+}
