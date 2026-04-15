@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30T';
+const APP_VERSION = 'V30U';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6162,8 +6162,22 @@ export default function App() {
       refreshLatestPersistedSnapshot();
       return;
     }
+    if (scope === 'principalFinals') {
+      const next = { ...knockoutRef.current, principalFinals: applyUpdater(knockoutRef.current?.principalFinals) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      refreshLatestPersistedSnapshot();
+      return;
+    }
     if (scope === 'consolanteSemis') {
       const next = { ...knockoutRef.current, consolanteSemis: applyUpdater(knockoutRef.current?.consolanteSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      refreshLatestPersistedSnapshot();
+      return;
+    }
+    if (scope === 'consolanteFinals') {
+      const next = { ...knockoutRef.current, consolanteFinals: applyUpdater(knockoutRef.current?.consolanteFinals) };
       knockoutRef.current = next;
       setKnockout(next);
       refreshLatestPersistedSnapshot();
