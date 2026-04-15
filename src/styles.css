@@ -5677,3 +5677,12 @@ tbody tr:last-child td { border-bottom: none; }
   position: relative !important;
   z-index: 2 !important;
 }
+
+
+/* V31A : entête Équipe à gauche dans les listes Public sans colonne points */
+.public-qualified-simple-table thead th:only-child,
+.public-qualified-simple-table thead th[colspan],
+.public-qualified-simple-table thead th:first-child:last-child{
+  text-align: left !important;
+  padding-left: 0.45rem !important;
+}
