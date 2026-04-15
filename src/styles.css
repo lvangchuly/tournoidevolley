@@ -4663,3 +4663,14 @@ tbody tr:last-child td { border-bottom: none; }
     padding-right: 0.35rem !important;
   }
 }
+
+
+.public-qualified-list-card .standings-table th:nth-child(2),
+.public-qualified-list-card .standings-table td:nth-child(2){
+  width: 50% !important;
+  max-width: 50% !important;
+}
+
+.public-qualified-list-card .team-badge{
+  max-width: 12ch !important;
+}
