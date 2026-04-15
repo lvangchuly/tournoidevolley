@@ -4827,3 +4827,160 @@ tbody tr:last-child td { border-bottom: none; }
 .referee-page .tiny{
   color:inherit;
 }
+
+
+/* --- V30K : style blocs Public / Arbitres proche du modèle fourni --- */
+
+.public-page .mini-card,
+.public-page .public-ranking-card,
+.public-page .public-qualified-list-card,
+.public-page .compact-final-stage-board-v24s,
+.public-page .compact-terrain-column-v24n,
+.public-page .compact-final-terrain-column-v24s,
+.referee-page .mini-card,
+.referee-page .public-ranking-card,
+.referee-page .compact-final-stage-board-v24s,
+.referee-page .compact-terrain-column-v24n,
+.referee-page .compact-final-terrain-column-v24s,
+.referee-page .referee-focus-card{
+  background:#f5f5f5 !important;
+  border:1px solid #d9d9d9 !important;
+  border-radius:16px !important;
+  box-shadow:none !important;
+}
+
+.public-page .mini-card-head,
+.public-page .compact-brassage-title,
+.referee-page .mini-card-head,
+.referee-page .compact-brassage-title{
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+.public-qualified-simple-table,
+.public-qualified-simple-table thead,
+.public-qualified-simple-table tbody{
+  background:#f5f5f5 !important;
+}
+
+.public-qualified-simple-table thead th{
+  background:#4fa8c6 !important;
+  color:#000 !important;
+  font-weight:400 !important;
+  border:none !important;
+  padding-top:0.35rem !important;
+  padding-bottom:0.35rem !important;
+}
+
+.public-qualified-simple-table thead th:first-child{
+  border-top-left-radius:0 !important;
+}
+
+.public-qualified-simple-table thead th:last-child{
+  border-top-right-radius:0 !important;
+}
+
+.public-qualified-simple-table tbody tr{
+  background:#f5f5f5 !important;
+}
+
+.public-qualified-simple-table tbody td{
+  background:#f5f5f5 !important;
+  border-bottom:1px solid #d4d4d4 !important;
+  padding-top:0.22rem !important;
+  padding-bottom:0.22rem !important;
+}
+
+.public-qualified-team-cell{
+  padding-left:0.2rem !important;
+  padding-right:0.2rem !important;
+}
+
+.public-qualified-team-cell .team-badge{
+  border-radius:16px !important;
+  min-height:28px !important;
+  padding-top:0.22rem !important;
+  padding-bottom:0.22rem !important;
+  padding-left:0.55rem !important;
+  padding-right:0.55rem !important;
+  font-weight:600 !important;
+  box-shadow:none !important;
+}
+
+.public-qualified-points-cell{
+  width:5.4rem !important;
+  min-width:5.4rem !important;
+  max-width:5.4rem !important;
+  text-align:right !important;
+  color:#000 !important;
+  font-weight:600 !important;
+  padding-right:0.35rem !important;
+}
+
+.public-qualified-list-card .compact-overall-ranking-scroll{
+  padding-top:0 !important;
+}
+
+.public-qualified-list-card{
+  padding-top:0.45rem !important;
+  padding-bottom:0.45rem !important;
+}
+
+.public-qualified-lists-column{
+  gap:0.4rem !important;
+}
+
+.public-qualified-list-card + .public-qualified-list-card{
+  margin-top:0.4rem !important;
+}
+
+.public-page .standings-table,
+.referee-page .standings-table{
+  border-collapse:collapse !important;
+}
+
+.public-page .standings-table th,
+.public-page .standings-table td,
+.referee-page .standings-table th,
+.referee-page .standings-table td{
+  color:#000 !important;
+}
+
+.referee-page .compact-match-card-v24c,
+.referee-page .compact-match-card-v24e,
+.referee-page .compact-match-card-v24n{
+  background:#f5f5f5 !important;
+  border:1px solid #d9d9d9 !important;
+  border-radius:16px !important;
+  box-shadow:none !important;
+}
+
+.referee-page .compact-match-header-v24c,
+.referee-page .compact-match-header-wide-v24d,
+.referee-page .compact-match-header-wide-v24e,
+.referee-page .compact-match-header-wide-v24n,
+.referee-page .compact-terrain-column-title-v24n{
+  background:#4fa8c6 !important;
+  color:#000 !important;
+  border-radius:10px !important;
+}
+
+.referee-page .compact-match-team-row-v24c .team-badge,
+.referee-page .compact-match-team-row-v24e .team-badge,
+.referee-page .compact-match-team-row-v24n .team-badge{
+  border-radius:16px !important;
+  box-shadow:none !important;
+}
+
+.public-page .section,
+.referee-page .section{
+  margin-bottom:0.65rem !important;
+}
+
+.public-page .empty-state,
+.referee-page .empty-state{
+  background:#f5f5f5 !important;
+  color:#000 !important;
+  border:1px solid #d9d9d9 !important;
+  border-radius:16px !important;
+}
