@@ -5396,3 +5396,67 @@ tbody tr:last-child td { border-bottom: none; }
     min-width:0 !important;
   }
 }
+
+
+/* V30N : cartes de matchs arbitre en fond clair comme le modèle du bas */
+
+.referee-page .compact-match-card-v24n,
+.referee-page .compact-match-card-v24c,
+.referee-page .compact-match-card-v24e,
+.referee-page .compact-final-match-card-v24s,
+.referee-page .compact-final-terrain-match-list-v24s .compact-match-card-v24n,
+.referee-page .compact-final-terrain-match-list-v24s .compact-match-card-v24c,
+.referee-page .compact-final-terrain-match-list-v24s .compact-match-card-v24e{
+  background:#eaf0f7 !important;
+  background-image:none !important;
+  color:#000 !important;
+  border:1px solid #8fa7c1 !important;
+  border-radius:14px !important;
+  box-shadow:none !important;
+}
+
+.referee-page .compact-match-header-v24n,
+.referee-page .compact-match-header-v24c,
+.referee-page .compact-match-header-v24e,
+.referee-page .compact-match-header-wide-v24d,
+.referee-page .compact-match-header-wide-v24e{
+  background:transparent !important;
+  color:#000 !important;
+}
+
+.referee-page .compact-final-stage-label-v24s,
+.referee-page .compact-match-chip,
+.referee-page .compact-match-footer-v24n,
+.referee-page .compact-match-footer-v24c,
+.referee-page .compact-match-footer-v24e{
+  color:#000 !important;
+  background:transparent !important;
+}
+
+.referee-page .compact-match-team-row-v24n,
+.referee-page .compact-match-team-row-v24c,
+.referee-page .compact-match-team-row-v24e{
+  background:transparent !important;
+}
+
+.referee-page .compact-team-strip-badge-v24n,
+.referee-page .compact-team-strip-badge-v24c,
+.referee-page .compact-team-strip-badge-v24e{
+  box-shadow:none !important;
+  border:none !important;
+}
+
+.referee-page .badge-neutral,
+.referee-page .badge-danger,
+.referee-page .badge-info,
+.referee-page .badge-success{
+  background:#ffffff !important;
+  color:#000 !important;
+  border:1px solid #cfd8e3 !important;
+}
+
+.referee-page .compact-final-stage-board-v24s,
+.referee-page .compact-final-terrain-column-v24s,
+.referee-page .compact-terrain-column-v24n{
+  background:#f5f5f5 !important;
+}
