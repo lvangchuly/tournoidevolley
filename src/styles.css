@@ -4573,3 +4573,21 @@ tbody tr:last-child td { border-bottom: none; }
 .public-qualified-lists-column{
   align-self: start !important;
 }
+
+
+.public-qualified-list-card .standings-table th:last-child,
+.public-qualified-list-card .standings-table td:last-child{
+  width: 6.2rem !important;
+  min-width: 6.2rem !important;
+  max-width: 6.2rem !important;
+  text-align: right !important;
+}
+
+.public-qualified-list-card .standings-table th:nth-child(2),
+.public-qualified-list-card .standings-table td:nth-child(2){
+  width: auto !important;
+}
+
+.public-qualified-list-card .team-badge{
+  max-width: 24ch !important;
+}
