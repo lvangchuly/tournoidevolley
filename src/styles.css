@@ -4984,3 +4984,149 @@ tbody tr:last-child td { border-bottom: none; }
   border:1px solid #d9d9d9 !important;
   border-radius:16px !important;
 }
+
+
+/* --- V30L : cartes de matchs style image utilisateur --- */
+
+.public-page .large-public-match,
+.public-page .public-match-card,
+.public-page .compact-final-stage-board-v24s .compact-match-card-v24c,
+.public-page .compact-final-stage-board-v24s .compact-match-card-v24e,
+.public-page .compact-final-stage-board-v24s .compact-match-card-v24n,
+.referee-page .compact-match-card-v24c,
+.referee-page .compact-match-card-v24e,
+.referee-page .compact-match-card-v24n{
+  background:#e9edf2 !important;
+  border:1px solid #9eb1c8 !important;
+  border-radius:14px !important;
+  box-shadow:none !important;
+}
+
+.public-page .compact-match-header-v24c,
+.public-page .compact-match-header-wide-v24d,
+.public-page .compact-match-header-wide-v24e,
+.public-page .compact-match-header-wide-v24n,
+.referee-page .compact-match-header-v24c,
+.referee-page .compact-match-header-wide-v24d,
+.referee-page .compact-match-header-wide-v24e,
+.referee-page .compact-match-header-wide-v24n{
+  background:transparent !important;
+  color:#000 !important;
+  border-radius:0 !important;
+  padding-bottom:0.15rem !important;
+}
+
+.public-page .compact-terrain-column-title-v24n,
+.referee-page .compact-terrain-column-title-v24n{
+  background:transparent !important;
+  color:#000 !important;
+  font-weight:700 !important;
+}
+
+.public-page .compact-match-team-row-v24c,
+.public-page .compact-match-team-row-v24e,
+.public-page .compact-match-team-row-v24n,
+.referee-page .compact-match-team-row-v24c,
+.referee-page .compact-match-team-row-v24e,
+.referee-page .compact-match-team-row-v24n{
+  gap:0.3rem !important;
+}
+
+.public-page .compact-match-team-row-v24c .team-badge,
+.public-page .compact-match-team-row-v24e .team-badge,
+.public-page .compact-match-team-row-v24n .team-badge,
+.referee-page .compact-match-team-row-v24c .team-badge,
+.referee-page .compact-match-team-row-v24e .team-badge,
+.referee-page .compact-match-team-row-v24n .team-badge{
+  border-radius:10px !important;
+  min-height:28px !important;
+  padding:0.3rem 0.7rem !important;
+  box-shadow:none !important;
+  border:none !important;
+  width:auto !important;
+  max-width:16rem !important;
+  display:inline-flex !important;
+  justify-content:flex-start !important;
+}
+
+.public-page .compact-match-footer-v24c,
+.public-page .compact-match-footer-v24e,
+.public-page .compact-match-footer-v24n,
+.referee-page .compact-match-footer-v24c,
+.referee-page .compact-match-footer-v24e,
+.referee-page .compact-match-footer-v24n{
+  background:transparent !important;
+  color:#000 !important;
+  border-top:none !important;
+  padding-top:0.15rem !important;
+}
+
+.public-page .compact-match-chip,
+.referee-page .compact-match-chip{
+  background:transparent !important;
+  color:#000 !important;
+  border:none !important;
+  padding:0 !important;
+  min-height:auto !important;
+}
+
+.public-page .badge,
+.referee-page .badge{
+  box-shadow:none !important;
+}
+
+.public-page .badge-neutral,
+.referee-page .badge-neutral{
+  background:#d8dde6 !important;
+  color:#000 !important;
+}
+
+.public-page .badge-danger,
+.referee-page .badge-danger{
+  background:#d8dde6 !important;
+  color:#000 !important;
+}
+
+.public-page .compact-final-terrain-column-v24s,
+.referee-page .compact-final-terrain-column-v24s,
+.public-page .compact-terrain-column-v24n,
+.referee-page .compact-terrain-column-v24n{
+  background:#f5f5f5 !important;
+  border:1px solid #d9d9d9 !important;
+  border-radius:16px !important;
+  box-shadow:none !important;
+}
+
+.public-page .compact-terrain-match-list-v24n,
+.referee-page .compact-terrain-match-list-v24n{
+  gap:0.45rem !important;
+}
+
+.public-page .compact-match-score-row,
+.public-page .compact-match-score-row-v24c,
+.public-page .compact-match-score-row-v24e,
+.public-page .compact-match-score-row-v24n,
+.referee-page .compact-match-score-row,
+.referee-page .compact-match-score-row-v24c,
+.referee-page .compact-match-score-row-v24e,
+.referee-page .compact-match-score-row-v24n{
+  background:transparent !important;
+}
+
+.public-page .compact-score-box,
+.public-page .compact-score-box-v24c,
+.public-page .compact-score-box-v24e,
+.public-page .compact-score-box-v24n,
+.referee-page .compact-score-box,
+.referee-page .compact-score-box-v24c,
+.referee-page .compact-score-box-v24e,
+.referee-page .compact-score-box-v24n{
+  background:#fff !important;
+  border:1px solid #cfd6df !important;
+  box-shadow:none !important;
+}
+
+.public-page .compact-brassage-title-v24n,
+.referee-page .compact-brassage-title-v24n{
+  color:#000 !important;
+}
