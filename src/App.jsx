@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V29V';
+const APP_VERSION = 'V29W';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2533,6 +2533,32 @@ export default function App() {
     () => buildQuarterQualifiedTeamRowsFromMatches(knockout.consolanteQuarters, consolanteOverallRanking),
     [knockout.consolanteQuarters, consolanteOverallRanking]
   );
+
+  const publicPrincipalSemiTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getWinnersFromMatches(knockout.principalQuarters, phaseRules), principaleOverallRanking),
+    [knockout.principalQuarters, principaleOverallRanking, phaseRules]
+  );
+  const publicPrincipalFinalTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getWinnersFromMatches(knockout.principalSemis, phaseRules), principaleOverallRanking),
+    [knockout.principalSemis, principaleOverallRanking, phaseRules]
+  );
+  const publicPrincipalPetiteFinaleTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getLosersFromMatches(knockout.principalSemis, phaseRules), principaleOverallRanking),
+    [knockout.principalSemis, principaleOverallRanking, phaseRules]
+  );
+  const publicConsolanteSemiTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getWinnersFromMatches(knockout.consolanteQuarters, phaseRules), consolanteOverallRanking),
+    [knockout.consolanteQuarters, consolanteOverallRanking, phaseRules]
+  );
+  const publicConsolanteFinalTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getWinnersFromMatches(knockout.consolanteSemis, phaseRules), consolanteOverallRanking),
+    [knockout.consolanteSemis, consolanteOverallRanking, phaseRules]
+  );
+  const publicConsolantePetiteFinaleTeams = useMemo(
+    () => buildQualifiedTeamRowsFromTeamIds(getLosersFromMatches(knockout.consolanteSemis, phaseRules), consolanteOverallRanking),
+    [knockout.consolanteSemis, consolanteOverallRanking, phaseRules]
+  );
+
   const championshipLeg1Standings = useMemo(() => computeGroupStandings(championshipLeg1.pools, championshipLeg1.matches, teamMap, phaseRules), [championshipLeg1, teamMap, phaseRules]);
   const championshipLeg2Standings = useMemo(() => computeGroupStandings(championshipLeg2.pools, championshipLeg2.matches, teamMap, phaseRules), [championshipLeg2, teamMap, phaseRules]);
   const championshipRanking = useMemo(() => computeRanking(allTeamIds, [...championshipLeg1.matches, ...championshipLeg2.matches], teamMap, phaseRules), [allTeamIds, championshipLeg1.matches, championshipLeg2.matches, teamMap, phaseRules]);
@@ -7363,6 +7389,35 @@ export default function App() {
 
 
   
+
+function buildQualifiedTeamRowsFromTeamIds(teamIds, rankingRows) {
+  const rankingMap = new Map((Array.isArray(rankingRows) ? rankingRows : []).map((row) => [row.teamId, row]));
+  const seen = new Set();
+  return (Array.isArray(teamIds) ? teamIds : [])
+    .filter(Boolean)
+    .filter((teamId) => {
+      if (seen.has(teamId)) return false;
+      seen.add(teamId);
+      return true;
+    })
+    .map((teamId) => ({
+      teamId,
+      ...(rankingMap.get(teamId) || {}),
+    }));
+}
+
+function getWinnersFromMatches(matches, phaseRules) {
+  return dedupeMatches(Array.isArray(matches) ? matches : [])
+    .map((match) => getWinnerLoser(match, phaseRules)?.winner || null)
+    .filter(Boolean);
+}
+
+function getLosersFromMatches(matches, phaseRules) {
+  return dedupeMatches(Array.isArray(matches) ? matches : [])
+    .map((match) => getWinnerLoser(match, phaseRules)?.loser || null)
+    .filter(Boolean);
+}
+
 function buildQuarterQualifiedTeamRowsFromMatches(matches, rankingRows) {
   const rankingMap = new Map((Array.isArray(rankingRows) ? rankingRows : []).map((row) => [row.teamId, row]));
   const seen = new Set();
@@ -7860,13 +7915,15 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                 </div>
               </Section>
             ) : hasGeneratedMainStagePublic ? (
-              <Section title="Classements généraux" subtitle="Quand la principale et la consolante sont générées, l’affichage public montre les classements généraux de chaque tableau à la place du classement cumulé des brassages.">
+              <Section title="Classements généraux" subtitle="Quand la principale et la consolante sont générées, l’affichage public montre les équipes encore en course dans chaque tableau à la place du classement cumulé des brassages.">
                 <div className="cards-grid two-up public-rankings-grid">
                   <div className="stack-gap">
                     {knockout.principalQuarters.length > 0 ? (
                       <>
                         {renderQualifiedTeamsList('Équipes en quarts de finale principale', publicPrincipalQuarterTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
-                        {renderQualifiedTeamsList('Équipes qui seront en demi-finales principale', publicPrincipalQuarterTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
+                        {renderQualifiedTeamsList('Équipes en demi-finales principale', publicPrincipalSemiTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
+                        {renderQualifiedTeamsList('Équipes en petite finale principale', publicPrincipalPetiteFinaleTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
+                        {renderQualifiedTeamsList('Équipes en finale principale', publicPrincipalFinalTeams, { showPoints: true, phaseLabel: 'Points de poule' })}
                       </>
                     ) : (
                       <div className="mini-card public-ranking-card">
@@ -7876,10 +7933,12 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                     )}
                   </div>
                   <div className="stack-gap">
-                    {knockout.consolanteQuarters.length > 0 ? (
+                    {(knockout.consolanteQuarters.length > 0 || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0) ? (
                       <>
-                        {renderQualifiedTeamsList('Équipes en quarts de finale consolante', publicConsolanteQuarterTeams, { showPoints: false })}
-                        {renderQualifiedTeamsList('Équipes qui seront en demi-finales consolante', publicConsolanteQuarterTeams, { showPoints: false })}
+                        {knockout.consolanteQuarters.length > 0 ? renderQualifiedTeamsList('Équipes en quarts de finale consolante', publicConsolanteQuarterTeams, { showPoints: false }) : null}
+                        {renderQualifiedTeamsList('Équipes en demi-finales consolante', publicConsolanteSemiTeams, { showPoints: false })}
+                        {renderQualifiedTeamsList('Équipes en petite finale consolante', publicConsolantePetiteFinaleTeams, { showPoints: false })}
+                        {renderQualifiedTeamsList('Équipes en finale consolante', publicConsolanteFinalTeams, { showPoints: false })}
                       </>
                     ) : (
                       <div className="mini-card public-ranking-card">
