@@ -5130,3 +5130,269 @@ tbody tr:last-child td { border-bottom: none; }
 .referee-page .compact-brassage-title-v24n{
   color:#000 !important;
 }
+
+
+/* --- V30M : style Arbitres proche du modèle image, sans fond noir --- */
+
+.referee-page{
+  background:#efefef !important;
+}
+
+.referee-page .referee-focus-card{
+  background:#f1f3f6 !important;
+  border:1px solid #c8d1dc !important;
+  border-radius:16px !important;
+  box-shadow:none !important;
+  padding:1rem !important;
+}
+
+.referee-page .referee-focus-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:flex-start !important;
+  gap:1rem !important;
+  margin-bottom:0.85rem !important;
+}
+
+.referee-page .referee-phase-caption{
+  color:#000 !important;
+  font-size:0.72rem !important;
+  font-weight:700 !important;
+  letter-spacing:0.14em !important;
+  text-transform:uppercase !important;
+  margin-bottom:0.35rem !important;
+}
+
+.referee-page .referee-focus-head h2{
+  color:#000 !important;
+  font-size:1.05rem !important;
+  font-weight:800 !important;
+  margin:0 0 0.3rem 0 !important;
+}
+
+.referee-page .referee-match-context,
+.referee-page .referee-match-format{
+  color:#000 !important;
+  margin:0.1rem 0 !important;
+  font-size:0.82rem !important;
+}
+
+.referee-page .referee-focus-body{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr) !important;
+  gap:0.9rem !important;
+  align-items:center !important;
+}
+
+.referee-page .referee-team-card{
+  background:#55aac8 !important;
+  border:1px solid #4b94ae !important;
+  border-radius:16px !important;
+  padding:0.45rem 0.7rem !important;
+  min-height:68px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+}
+
+.referee-page .referee-team-card .small{
+  color:#000 !important;
+  font-size:0.68rem !important;
+  font-weight:700 !important;
+  text-transform:uppercase !important;
+  margin-bottom:0.35rem !important;
+}
+
+.referee-page .referee-team-card .team-badge{
+  border-radius:12px !important;
+  min-height:34px !important;
+  justify-content:center !important;
+  font-weight:700 !important;
+  box-shadow:none !important;
+}
+
+.referee-page .referee-big-score{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:0.45rem !important;
+  min-width:180px !important;
+}
+
+.referee-page .score-inputs-large{
+  display:grid !important;
+  grid-template-columns:1fr auto 1fr !important;
+  align-items:center !important;
+  gap:0.6rem !important;
+}
+
+.referee-page .score-stepper{
+  display:grid !important;
+  grid-template-rows:auto auto auto !important;
+  gap:0.35rem !important;
+  align-items:center !important;
+  justify-items:center !important;
+}
+
+.referee-page .score-stepper-btn{
+  width:64px !important;
+  height:44px !important;
+  border:none !important;
+  border-radius:14px !important;
+  background:#0f7d73 !important;
+  color:#fff !important;
+  font-size:1.6rem !important;
+  font-weight:800 !important;
+  box-shadow:none !important;
+}
+
+.referee-page .score-stepper-btn[disabled]{
+  background:#96bdbb !important;
+  color:#fff !important;
+  opacity:1 !important;
+}
+
+.referee-page .score-stepper input{
+  width:86px !important;
+  height:62px !important;
+  border-radius:12px !important;
+  border:1px solid #c6ced8 !important;
+  background:#f7f7f7 !important;
+  color:#000 !important;
+  font-size:1.55rem !important;
+  font-weight:700 !important;
+  text-align:center !important;
+  box-shadow:none !important;
+}
+
+.referee-page .score-separator{
+  color:#374151 !important;
+  font-size:1.55rem !important;
+  font-weight:700 !important;
+  align-self:center !important;
+}
+
+.referee-page .status-cell.center-status{
+  gap:0.3rem !important;
+}
+
+.referee-page .badge-neutral,
+.referee-page .badge-danger,
+.referee-page .badge-info,
+.referee-page .badge-success{
+  background:#dfe4ea !important;
+  color:#000 !important;
+  box-shadow:none !important;
+}
+
+.referee-page .referee-focus-card .btn-secondary{
+  background:#f7f7f7 !important;
+  color:#000 !important;
+  border:1px solid #c8d1dc !important;
+}
+
+.referee-page .compact-final-stage-board-v24s{
+  background:transparent !important;
+  border:none !important;
+  padding:0 !important;
+}
+
+.referee-page .compact-final-terrain-column-v24s,
+.referee-page .compact-terrain-column-v24n{
+  background:#f5f5f5 !important;
+  border:1px solid #d0d7e2 !important;
+  border-radius:14px !important;
+  box-shadow:none !important;
+  padding:0.55rem !important;
+}
+
+.referee-page .compact-terrain-column-title-v24n{
+  color:#000 !important;
+  font-size:1rem !important;
+  font-weight:700 !important;
+  margin-bottom:0.45rem !important;
+}
+
+.referee-page .compact-match-card-v24n,
+.referee-page .compact-match-card-v24c,
+.referee-page .compact-match-card-v24e{
+  background:#dfe7f0 !important;
+  border:1px solid #8ea5bf !important;
+  border-radius:14px !important;
+  box-shadow:none !important;
+  padding:0.55rem 0.7rem !important;
+}
+
+.referee-page .compact-match-header-v24n,
+.referee-page .compact-match-header-v24c,
+.referee-page .compact-match-header-wide-v24d,
+.referee-page .compact-match-header-wide-v24e{
+  background:transparent !important;
+  color:#000 !important;
+  padding:0 !important;
+  margin-bottom:0.35rem !important;
+}
+
+.referee-page .compact-final-stage-label-v24s{
+  font-weight:700 !important;
+  color:#000 !important;
+}
+
+.referee-page .compact-match-chip{
+  background:transparent !important;
+  color:#000 !important;
+  border:none !important;
+  padding:0 !important;
+}
+
+.referee-page .compact-match-team-row-v24n{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:0.4rem !important;
+  margin-bottom:0.3rem !important;
+}
+
+.referee-page .compact-team-strip-badge-v24n,
+.referee-page .compact-team-strip-badge-v24c,
+.referee-page .compact-team-strip-badge-v24e{
+  width:auto !important;
+  max-width:210px !important;
+  border-radius:11px !important;
+  min-height:30px !important;
+  padding:0.32rem 0.7rem !important;
+  box-shadow:none !important;
+  font-weight:700 !important;
+}
+
+.referee-page .compact-match-score-row,
+.referee-page .compact-match-score-row-v24n,
+.referee-page .compact-match-score-row-v24c,
+.referee-page .compact-match-score-row-v24e{
+  display:none !important;
+}
+
+.referee-page .compact-match-footer-v24n,
+.referee-page .compact-match-footer-v24c,
+.referee-page .compact-match-footer-v24e{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  color:#000 !important;
+  padding:0 !important;
+  margin-top:0.15rem !important;
+}
+
+.referee-page .match-print-button-v24c{
+  display:none !important;
+}
+
+@media (max-width: 900px){
+  .referee-page .referee-focus-body{
+    grid-template-columns:1fr !important;
+  }
+  .referee-page .referee-big-score{
+    min-width:0 !important;
+  }
+}
