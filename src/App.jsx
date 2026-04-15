@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V30V';
+const APP_VERSION = 'V30W';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6543,7 +6543,7 @@ export default function App() {
       window.setTimeout(() => {
         setRefereeSelectedScoreDraft(null);
         setRefereeSelectedMatch(null);
-      }, 260);
+      }, 80);
     } else {
       setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
@@ -8066,7 +8066,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                       <div className="mini-card-head">{group.title}</div>
                       {!group.isUnlocked ? <div className="referee-lock-note">{group.lockReason}</div> : null}
                       <div className="referee-selector-list">
-                        {group.matches.map((match) => {
+                        {group.matches.filter((match) => !match.pendingResultSentAt).map((match) => {
                           const schedule = scheduleData.scheduleMap[match.id];
                           const pendingStatus = getPendingStatus(match);
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
