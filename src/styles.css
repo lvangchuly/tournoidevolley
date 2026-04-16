@@ -5679,10 +5679,11 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V31A : entête Équipe à gauche dans les listes Public sans colonne points */
-.public-qualified-simple-table thead th:only-child,
-.public-qualified-simple-table thead th[colspan],
-.public-qualified-simple-table thead th:first-child:last-child{
-  text-align: left !important;
-  padding-left: 0.45rem !important;
+/* V31B */
+.public-page .badge-danger,
+.public-page .public-match-card .badge-danger,
+.public-page .public-match-card-featured .badge-danger{
+  background:#dc2626 !important;
+  color:#ffffff !important;
+  border-color:#dc2626 !important;
 }

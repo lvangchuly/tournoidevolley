@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31A';
+const APP_VERSION = 'V31B';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -367,6 +367,53 @@ function normalizeSingleKnockoutState(input) {
   };
 }
 
+
+function matchHasUndefinedTeams(match) {
+  const a = String(match?.teamAId || '').trim().toLowerCase();
+  const b = String(match?.teamBId || '').trim().toLowerCase();
+  return !a || !b || a === 'a definir' || b === 'a definir' || a === 'à définir' || b === 'à définir';
+}
+
+function stageContainsUndefinedTeams(matches) {
+  const safe = Array.isArray(matches) ? matches : [];
+  return safe.some(matchHasUndefinedTeams);
+}
+
+function areAllMatchesValidated(matches, phaseRules = PHASE_RULES_DEFAULT) {
+  const safe = Array.isArray(matches) ? matches : [];
+  return safe.length > 0 && safe.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+}
+
+function sanitizePrematureFutureStages(parsed) {
+  const brassage1Finished = areAllMatchesValidated(parsed?.brassage1?.matches || [], PHASE_RULES_DEFAULT);
+
+  if (!brassage1Finished) {
+    if (stageContainsUndefinedTeams(parsed?.brassage2?.matches || [])) {
+      parsed.brassage2 = normalizeLeagueState({ pools: [], matches: [] });
+    }
+    if (
+      stageContainsUndefinedTeams(parsed?.mainStage?.principaleMatches || []) ||
+      stageContainsUndefinedTeams(parsed?.mainStage?.consolanteMatches || [])
+    ) {
+      parsed.mainStage = normalizeMainStageState({ principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] });
+    }
+    if (
+      stageContainsUndefinedTeams(parsed?.knockout?.principalQuarters || []) ||
+      stageContainsUndefinedTeams(parsed?.knockout?.principalSemis || []) ||
+      stageContainsUndefinedTeams(parsed?.knockout?.principalFinals || []) ||
+      stageContainsUndefinedTeams(parsed?.knockout?.consolanteQuarters || []) ||
+      stageContainsUndefinedTeams(parsed?.knockout?.consolanteSemis || []) ||
+      stageContainsUndefinedTeams(parsed?.knockout?.consolanteFinals || [])
+    ) {
+      parsed.knockout = normalizeKnockoutState({
+        principalQuarters: [], principalSemis: [], principalFinals: [],
+        consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [],
+      });
+    }
+  }
+  return parsed;
+}
+
 function countMatchesInPersistedState(payload) {
   if (!payload) return 0;
   const arrays = [
@@ -404,7 +451,7 @@ function loadState() {
     parsed.championshipLeg1 = normalizeLeagueState(parsed?.championshipLeg1);
     parsed.championshipLeg2 = normalizeLeagueState(parsed?.championshipLeg2);
     parsed.singleKnockout = normalizeSingleKnockoutState(parsed?.singleKnockout);
-    return parsed;
+    return sanitizePrematureFutureStages(parsed);
   } catch {
     return null;
   }
@@ -6619,28 +6666,26 @@ export default function App() {
   }
 
   function approveRefereeScore(scope, matchId) {
-    const resolvedScope = findMatchInScope(scope, matchId)
-      ? scope
-      : (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
+    const resolvedScope = !findMatchInScope(scope, matchId)
+      ? (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
         : findMatchInScope('consolanteFinals', matchId) ? 'consolanteFinals'
         : findMatchInScope('principalSemis', matchId) ? 'principalSemis'
         : findMatchInScope('consolanteSemis', matchId) ? 'consolanteSemis'
         : findMatchInScope('principalQuarters', matchId) ? 'principalQuarters'
         : findMatchInScope('consolanteQuarters', matchId) ? 'consolanteQuarters'
-        : scope);
-
+        : scope)
+      : scope;
     recentRefereeLocalEditsRef.current.delete(matchId);
     const approvalTimestamp = markPendingLocalMutation(new Date().toISOString());
-    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
-    if (!fallbackMatch) return;
-
-    protectOrganizerLocalEdit(matchId, {
-      scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
-      scoreB: fallbackMatch.submittedScoreB ?? fallbackMatch.scoreB ?? '',
-      officialAt: approvalTimestamp,
-    });
-
-    updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (fallbackMatch) {
+      protectOrganizerLocalEdit(matchId, {
+        scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
+        scoreB: fallbackMatch.submittedScoreB ?? fallbackMatch.scoreB ?? '',
+        officialAt: approvalTimestamp,
+      });
+    }
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
         ...match,
@@ -6657,7 +6702,6 @@ export default function App() {
       approved.validatedAt = isMatchResultValid(approved, phaseRulesRef.current) ? approvalTimestamp : null;
       return approved;
     }));
-
     queueBackgroundCloudSave(20, approvalTimestamp);
 
     const tryGenerateBrassage2AfterValidation = () => {
@@ -8093,14 +8137,14 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                             : match.refereeInProgress
                               ? 'badge-danger'
                               : 'badge-neutral';
-                          const canSelectExistingInProgressMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && Boolean(match.matchInProgress);
+                          const canSelectExistingInProgressMatch = false;
                           const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && !match.matchInProgress && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
-                          const canSelect = canSelectExistingInProgressMatch || canSelectNewMatch;
+                          const canSelect = canSelectNewMatch;
                           const disabledReason = !group.isUnlocked
                             ? group.lockReason
-                            : match.refereeInProgress
+                            : (match.refereeInProgress || match.matchInProgress)
                               ? 'Match déjà en cours de saisie par un arbitre.'
-                              : !match.matchInProgress && activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
+                              : activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
                                 ? 'Les 3 terrains sont déjà occupés par des matchs en cours.'
                                 : '';
                           return (
