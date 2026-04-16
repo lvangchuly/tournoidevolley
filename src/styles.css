@@ -5695,3 +5695,12 @@ tbody tr:last-child td { border-bottom: none; }
   color:#ffffff !important;
   border-color:#dc2626 !important;
 }
+
+
+/* V31H */
+.referee-page .badge-danger,
+.referee-page .referee-selector-item .badge-danger{
+  background:#dc2626 !important;
+  color:#ffffff !important;
+  border-color:#dc2626 !important;
+}
