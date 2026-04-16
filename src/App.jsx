@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31D';
+const APP_VERSION = 'V31E';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6756,9 +6756,6 @@ export default function App() {
         refereeInProgress: false,
         matchInProgress: false,
         pendingResultSentAt: null,
-        submittedScoreA: '',
-        submittedScoreB: '',
-        submittedAt: null,
       };
     }));
 
@@ -6768,12 +6765,6 @@ export default function App() {
     setRefereeSelectedMatch((current) => (
       current && current.matchId === matchId ? null : current
     ));
-
-    commitRefereeScoreDrafts((current) => {
-      const next = { ...(current || {}) };
-      delete next[matchId];
-      return next;
-    });
 
     queueBackgroundCloudSave(20, releaseTimestamp);
   }
