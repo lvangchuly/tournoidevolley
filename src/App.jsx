@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31E';
+const APP_VERSION = 'V31F';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7380,9 +7380,9 @@ export default function App() {
 
     const badgeClass = isLocked
       ? 'badge-success'
-      : pendingResultReady
-        ? 'badge-info'
-        : ((match.refereeInProgress || match.matchInProgress) ? 'badge-danger' : 'badge-neutral');
+      : ((match.refereeInProgress || match.matchInProgress)
+        ? 'badge-danger'
+        : (pendingResultReady ? 'badge-info' : 'badge-neutral'));
 
     return (
       <div className="referee-focus-card">
@@ -8142,7 +8142,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : match.refereeInProgress
+                            : (match.refereeInProgress || match.matchInProgress)
                               ? 'badge-danger'
                               : 'badge-neutral';
                           const canSelectExistingInProgressMatch = false;

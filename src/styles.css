@@ -5687,3 +5687,11 @@ tbody tr:last-child td { border-bottom: none; }
   color:#ffffff !important;
   border-color:#dc2626 !important;
 }
+
+
+/* V31F */
+.referee-page .badge-danger{
+  background:#dc2626 !important;
+  color:#ffffff !important;
+  border-color:#dc2626 !important;
+}
