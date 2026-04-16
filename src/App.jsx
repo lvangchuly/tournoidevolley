@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31B';
+const APP_VERSION = 'V31C';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6747,19 +6747,25 @@ export default function App() {
   function reassignRefereeWithoutReset(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
     const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
-    recentRefereeReleaseRef.current.set(matchId, { until: Date.now() + 4000 });
-    updateMatchesInScope(scope, (matches) => matches.map((match) => {
-      if (match.id !== matchId) return match;
-      return {
-        ...match,
-        submittedAt: releaseTimestamp,
-        refereeInProgress: false,
-        matchInProgress: true,
-      };
-    }));
-    setRefereeSelectedScoreDraft((current) => (current && current.matchId === matchId ? null : current));
-    setRefereeSelectedMatch((current) => (current && current.scope === scope && current.matchId === matchId ? null : current));
-    queueBackgroundCloudSave(250, releaseTimestamp);
+    recentRefereeReleaseRef.current.set(matchId, { at: releaseTimestamp, until: Date.now() + 90000 });
+
+    updateMatchesInScope(scope, (matches) => matches.map((match) => (
+      match.id === matchId
+        ? {
+            ...match,
+            refereeInProgress: false,
+            matchInProgress: false,
+            pendingResultSentAt: null,
+            submittedAt: null,
+          }
+        : match
+    )));
+    queueBackgroundCloudSave(20, releaseTimestamp);
+
+    if (refereeSelectedMatch?.matchId === matchId) {
+      setRefereeSelectedScoreDraft(null);
+      setRefereeSelectedMatch(null);
+    }
   }
 
   function releaseRefereeSelectedMatch(entry) {
@@ -8140,9 +8146,10 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                           const canSelectExistingInProgressMatch = false;
                           const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && !match.matchInProgress && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
                           const canSelect = canSelectNewMatch;
+                          const isActuallyBlockedByReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const disabledReason = !group.isUnlocked
                             ? group.lockReason
-                            : (match.refereeInProgress || match.matchInProgress)
+                            : isActuallyBlockedByReferee
                               ? 'Match déjà en cours de saisie par un arbitre.'
                               : activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
                                 ? 'Les 3 terrains sont déjà occupés par des matchs en cours.'
