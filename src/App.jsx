@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31J';
+const APP_VERSION = 'V31K';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -8142,7 +8142,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : ((statusText === 'Match en cours') || Boolean(match.refereeInProgress) || Boolean(match.matchInProgress))
+                            : ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
                               ? 'badge-danger'
                               : 'badge-neutral';
                           const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);

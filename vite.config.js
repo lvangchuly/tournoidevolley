@@ -1,25 +1,15 @@
-{
-  "name": "tournoidevolley-react-vite",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "engines": {
-    "node": "20.x"
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  base: './',
+  plugins: [react()],
+  server: {
+    host: true,
+    port: 5173,
   },
-  "packageManager": "npm@10.8.2",
-  "scripts": {
-    "dev": "node node_modules/vite/bin/vite.js",
-    "build": "node node_modules/vite/bin/vite.js build",
-    "preview": "node node_modules/vite/bin/vite.js preview --host"
+  preview: {
+    host: true,
+    port: 4173,
   },
-  "dependencies": {
-    "@babel/parser": "^7.29.2",
-    "eslint-scope": "^9.1.2",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "4.3.1",
-    "vite": "5.4.10"
-  }
-}
+});
