@@ -5704,3 +5704,38 @@ tbody tr:last-child td { border-bottom: none; }
   color:#ffffff !important;
   border-color:#dc2626 !important;
 }
+
+
+/* V31I */
+.referee-page .referee-selector-item-locked,
+.referee-page .referee-selector-item-locked:hover,
+.referee-page .referee-selector-item-locked:focus,
+.referee-page .referee-selector-item-locked:active{
+  background:#eaf0f7 !important;
+  border:1px solid #8fa7c1 !important;
+  box-shadow:none !important;
+  transform:none !important;
+  filter:none !important;
+  transition:none !important;
+}
+
+.referee-page .referee-selector-item-locked .badge-danger,
+.referee-page .referee-selector-item-locked:hover .badge-danger,
+.referee-page .referee-selector-item-locked:focus .badge-danger,
+.referee-page .referee-selector-item-locked:active .badge-danger{
+  background:#dc2626 !important;
+  color:#ffffff !important;
+  border-color:#dc2626 !important;
+  box-shadow:none !important;
+}
+
+.referee-page .referee-selector-item-locked *,
+.referee-page .referee-selector-item-locked:hover *,
+.referee-page .referee-selector-item-locked:focus *,
+.referee-page .referee-selector-item-locked:active *{
+  transition:none !important;
+}
+
+.referee-page .referee-selector-item-locked{
+  cursor:not-allowed !important;
+}
