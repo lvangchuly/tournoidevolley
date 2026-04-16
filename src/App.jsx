@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31I';
+const APP_VERSION = 'V31J';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7098,7 +7098,7 @@ export default function App() {
                           ) : null}
                           {!isValid && pendingStatus === 'Match en cours' ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant={match.refereeInProgress ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                              <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                                 Changer l’arbitre
                               </Button>
                             </div>
@@ -7203,7 +7203,7 @@ export default function App() {
                         ) : null}
                         {!isValid && pendingStatus === 'Match en cours' ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
-                            <Button variant={match.refereeInProgress ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                            <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                               Changer l’arbitre
                             </Button>
                           </div>
@@ -7304,7 +7304,7 @@ export default function App() {
                         {!isValid ? (
                           <div className="actions-row compact-actions">
                             <Button
-                              variant={match.refereeInProgress ? 'info' : 'secondary'}
+                              variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'}
                               onClick={() => reassignRefereeWithoutReset(scope, match.id)}
                               disabled={pendingStatus !== 'Match en cours'}
                             >
@@ -8166,7 +8166,9 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                                 if (!canSelect) return;
                                 const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
-                                  item.id === match.id ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt, pendingResultSentAt: null } : item
+                                  item.id === match.id
+                                    ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt, pendingResultSentAt: null }
+                                    : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
                                   submittedScoreA: match.submittedScoreA ?? '',
