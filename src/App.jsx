@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31F';
+const APP_VERSION = 'V31G';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -8142,11 +8142,12 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : (match.refereeInProgress || match.matchInProgress)
+                            : (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress))
                               ? 'badge-danger'
                               : 'badge-neutral';
+                          const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const canSelectExistingInProgressMatch = false;
-                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !match.refereeInProgress && !match.matchInProgress && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
+                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
                           const canSelect = canSelectNewMatch;
                           const isActuallyBlockedByReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const disabledReason = !group.isUnlocked
