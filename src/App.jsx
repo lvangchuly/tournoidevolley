@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31C';
+const APP_VERSION = 'V31D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6746,26 +6746,36 @@ export default function App() {
 
   function reassignRefereeWithoutReset(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
+    recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
     const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
-    recentRefereeReleaseRef.current.set(matchId, { at: releaseTimestamp, until: Date.now() + 90000 });
 
-    updateMatchesInScope(scope, (matches) => matches.map((match) => (
-      match.id === matchId
-        ? {
-            ...match,
-            refereeInProgress: false,
-            matchInProgress: false,
-            pendingResultSentAt: null,
-            submittedAt: null,
-          }
-        : match
-    )));
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      return {
+        ...match,
+        refereeInProgress: false,
+        matchInProgress: false,
+        pendingResultSentAt: null,
+        submittedScoreA: '',
+        submittedScoreB: '',
+        submittedAt: null,
+      };
+    }));
+
+    setRefereeSelectedScoreDraft((current) => (
+      current && current.matchId === matchId ? null : current
+    ));
+    setRefereeSelectedMatch((current) => (
+      current && current.matchId === matchId ? null : current
+    ));
+
+    commitRefereeScoreDrafts((current) => {
+      const next = { ...(current || {}) };
+      delete next[matchId];
+      return next;
+    });
+
     queueBackgroundCloudSave(20, releaseTimestamp);
-
-    if (refereeSelectedMatch?.matchId === matchId) {
-      setRefereeSelectedScoreDraft(null);
-      setRefereeSelectedMatch(null);
-    }
   }
 
   function releaseRefereeSelectedMatch(entry) {
@@ -7332,6 +7342,7 @@ export default function App() {
     const liveMatch = findMatchInScope(scope, entryMatch?.id);
     const match = liveMatch || entryMatch;
     if (!match?.id) return null;
+    if (!findMatchInScope(scope, match.id) && !entryMatch?.id) return null;
 
     const teamA = resolveTeam(match.teamAId);
     const teamB = resolveTeam(match.teamBId);
