@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31K';
+const APP_VERSION = 'V31L';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6733,7 +6733,45 @@ export default function App() {
     });
   }
 
-  function rejectRefereeScore(scope, matchId) {
+  
+function applyRandomScores(scope) {
+  const targetScope = scope;
+  if (!targetScope) return;
+
+  const winningRule = getRuleForMatch({ phase: targetScope }, phaseRulesRef.current || phaseRules);
+  const target = Number(winningRule?.winningScore) || 21;
+  const stamp = new Date().toISOString();
+
+  const buildRandomResult = () => {
+    const winnerA = Math.random() < 0.5;
+    const loserMax = Math.max(0, target - 1);
+    const loserScore = Math.floor(Math.random() * (loserMax + 1));
+    return winnerA
+      ? { scoreA: target, scoreB: loserScore }
+      : { scoreA: loserScore, scoreB: target };
+  };
+
+  updateMatchesInScope(targetScope, (matches) => (Array.isArray(matches) ? matches : []).map((match) => {
+    if (getMatchStatusLabel(match, phaseRulesRef.current || phaseRules) === 'Valide') return match;
+    const result = buildRandomResult();
+    const updated = {
+      ...match,
+      scoreA: result.scoreA,
+      scoreB: result.scoreB,
+      submittedScoreA: '',
+      submittedScoreB: '',
+      submittedAt: null,
+      pendingResultSentAt: null,
+      refereeInProgress: false,
+      matchInProgress: false,
+      manualOverrideAt: stamp,
+    };
+    updated.validatedAt = isMatchResultValid(updated, phaseRulesRef.current || phaseRules) ? stamp : null;
+    return updated;
+  }));
+  queueBackgroundCloudSave?.(20, stamp);
+}
+function rejectRefereeScore(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
     const rejectionTimestamp = markPendingLocalMutation(new Date().toISOString());
     updateMatchesInScope(scope, (matches) => matches.map((match) => (
