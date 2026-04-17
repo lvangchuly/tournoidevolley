@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31T';
+const APP_VERSION = 'V31U';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6291,8 +6291,7 @@ export default function App() {
     if (officialStatus === 'Score invalide') {
       return { text: 'Score invalide', className: 'badge-danger' };
     }
-    const resultSent = Boolean(match.pendingResultSentAt);
-    if (resultSent) {
+    if (Boolean(match.pendingResultSentAt)) {
       return { text: 'Résultat envoyé', className: 'badge-info' };
     }
     if (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) {
@@ -6807,6 +6806,32 @@ function rejectRefereeScore(scope, matchId) {
   function reassignRefereeWithoutReset(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
+    const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
+
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      return {
+        ...match,
+        refereeInProgress: false,
+        matchInProgress: false,
+        pendingResultSentAt: null,
+      };
+    }));
+
+    setRefereeSelectedScoreDraft((current) => (
+      current && current.matchId === matchId ? null : current
+    ));
+    setRefereeSelectedMatch((current) => (
+      current && current.matchId === matchId ? null : current
+    ));
+
+    queueBackgroundCloudSave(20, releaseTimestamp);
+  }
+
+  
+  function cancelRefereeResult(scope, matchId) {
+    recentRefereeLocalEditsRef.current.delete(matchId);
+    recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
     const resetTimestamp = markPendingLocalMutation(new Date().toISOString());
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
@@ -6842,7 +6867,7 @@ function rejectRefereeScore(scope, matchId) {
     queueBackgroundCloudSave(20, resetTimestamp);
   }
 
-  function releaseRefereeSelectedMatch(entry) {
+function releaseRefereeSelectedMatch(entry) {
     if (!entry?.match) {
       setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
@@ -7176,9 +7201,9 @@ function rejectRefereeScore(scope, matchId) {
                               </Button>
                             </div>
                           ) : null}
-                          {!isValid && Boolean(match.pendingResultSentAt) && !Boolean(match.refereeInProgress) && !Boolean(match.matchInProgress) ? (
+                          {!isValid && Boolean(match.pendingResultSentAt) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant='secondary' onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                              <Button variant='secondary' onClick={() => cancelRefereeResult(scope, match.id)}>
                                 Annuler
                               </Button>
                             </div>
@@ -7281,7 +7306,7 @@ function rejectRefereeScore(scope, matchId) {
                             <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                       </div>
                         ) : null}
-                        {!isValid && pendingStatus === 'Match en cours' ? (
+                        {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                               Annuler
@@ -7371,7 +7396,7 @@ function rejectRefereeScore(scope, matchId) {
                     <td>
                       <div className="status-cell">
                         <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
-                        {!isValid && pendingStatus === 'Match en cours' ? (
+                        {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
                           <>
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                             {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
