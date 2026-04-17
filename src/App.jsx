@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31N';
+const APP_VERSION = 'V31P';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6808,15 +6808,22 @@ function rejectRefereeScore(scope, matchId) {
   function reassignRefereeWithoutReset(scope, matchId) {
     recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
-    const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
+    const resetTimestamp = markPendingLocalMutation(new Date().toISOString());
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       return {
         ...match,
+        scoreA: '',
+        scoreB: '',
+        submittedScoreA: '',
+        submittedScoreB: '',
+        submittedAt: null,
+        pendingResultSentAt: null,
+        validatedAt: null,
         refereeInProgress: false,
         matchInProgress: false,
-        pendingResultSentAt: null,
+        manualOverrideAt: resetTimestamp,
       };
     }));
 
@@ -6827,7 +6834,13 @@ function rejectRefereeScore(scope, matchId) {
       current && current.matchId === matchId ? null : current
     ));
 
-    queueBackgroundCloudSave(20, releaseTimestamp);
+    commitRefereeScoreDrafts((current) => {
+      const next = { ...(current || {}) };
+      delete next[matchId];
+      return next;
+    });
+
+    queueBackgroundCloudSave(20, resetTimestamp);
   }
 
   function releaseRefereeSelectedMatch(entry) {
@@ -7160,7 +7173,7 @@ function rejectRefereeScore(scope, matchId) {
                           {!isValid && pendingStatus === 'Match en cours' ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
                               <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
-                                Changer l’arbitre
+                                Annuler
                               </Button>
                             </div>
                           ) : null}
@@ -7265,7 +7278,7 @@ function rejectRefereeScore(scope, matchId) {
                         {!isValid && pendingStatus === 'Match en cours' ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
-                              Changer l’arbitre
+                              Annuler
                             </Button>
                           </div>
                         ) : null}
@@ -7369,7 +7382,7 @@ function rejectRefereeScore(scope, matchId) {
                               onClick={() => reassignRefereeWithoutReset(scope, match.id)}
                               disabled={pendingStatus !== 'Match en cours'}
                             >
-                              Changer l’arbitre
+                              Annuler
                             </Button>
                           </div>
                         ) : null}

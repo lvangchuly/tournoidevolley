@@ -5739,3 +5739,14 @@ tbody tr:last-child td { border-bottom: none; }
 .referee-page .referee-selector-item-locked{
   cursor:not-allowed !important;
 }
+
+
+/* V31O : entête Équipe à gauche dans la colonne consolante/public */
+.public-qualified-simple-table thead th:first-child,
+.public-qualified-simple-table thead th:only-child,
+.public-qualified-simple-table thead th[colspan],
+.public-qualified-simple-table thead th:first-child:last-child{
+  text-align:left !important;
+  justify-content:flex-start !important;
+  padding-left:0.45rem !important;
+}
