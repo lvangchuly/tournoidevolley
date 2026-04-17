@@ -5066,6 +5066,7 @@ export default function App() {
       'Veux-tu continuer ?'
     );
     if (!confirmed) return;
+
     const scopes = getCurrentRandomScoreScopes();
     if (!scopes.length) {
       window.alert('Aucune phase en cours à compléter automatiquement.');
@@ -5076,8 +5077,29 @@ export default function App() {
     const mutationTimestamp = markPendingLocalMutation(updatedAt);
     let updatedCount = 0;
 
+    const scopedMatchesMap = {
+      championshipLeg1: championshipLeg1Ref.current?.matches || [],
+      championshipLeg2: championshipLeg2Ref.current?.matches || [],
+      quarters: singleKnockoutRef.current?.quarters || [],
+      semis: singleKnockoutRef.current?.semis || [],
+      finals: singleKnockoutRef.current?.finals || [],
+      brassage1: brassage1Ref.current?.matches || [],
+      brassage2: brassage2Ref.current?.matches || [],
+      principale: mainStageRef.current?.principaleMatches || [],
+      consolante: mainStageRef.current?.consolanteMatches || [],
+      principalQuarters: knockoutRef.current?.principalQuarters || [],
+      principalSemis: knockoutRef.current?.principalSemis || [],
+      principalFinals: knockoutRef.current?.principalFinals || [],
+      consolanteQuarters: knockoutRef.current?.consolanteQuarters || [],
+      consolanteSemis: knockoutRef.current?.consolanteSemis || [],
+      consolanteFinals: knockoutRef.current?.consolanteFinals || [],
+    };
+
     scopes.forEach((scope) => {
-      updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
+      const currentMatches = Array.isArray(scopedMatchesMap[scope]) ? scopedMatchesMap[scope] : [];
+      if (!currentMatches.length) return;
+
+      updateMatchesInScope(scope, (matches) => matches.map((match) => {
         const isEditable = getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir'
           && !match.refereeInProgress
           && !match.matchInProgress
@@ -5094,6 +5116,7 @@ export default function App() {
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
+          pendingResultSentAt: null,
           validatedAt: updatedAt,
           manualOverrideAt: updatedAt,
           refereeInProgress: false,
