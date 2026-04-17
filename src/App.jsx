@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31U';
+const APP_VERSION = 'V31W';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7194,7 +7194,7 @@ function releaseRefereeSelectedMatch(entry) {
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
-                          {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
+                          {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
                               <Button variant='info' onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                                 Changer l’arbitre
@@ -7203,7 +7203,7 @@ function releaseRefereeSelectedMatch(entry) {
                           ) : null}
                           {!isValid && Boolean(match.pendingResultSentAt) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant='secondary' onClick={() => cancelRefereeResult(scope, match.id)}>
+                              <Button variant='danger' onClick={() => cancelRefereeResult(scope, match.id)}>
                                 Annuler
                               </Button>
                             </div>
@@ -7306,7 +7306,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                       </div>
                         ) : null}
-                        {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
+                        {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                               Annuler
@@ -7396,7 +7396,7 @@ function releaseRefereeSelectedMatch(entry) {
                     <td>
                       <div className="status-cell">
                         <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
-                        {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
+                        {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
                           <>
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                             {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
