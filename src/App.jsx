@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31Y';
+const APP_VERSION = 'V31Z';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7130,7 +7130,7 @@ function releaseRefereeSelectedMatch(entry) {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) && (Boolean(match.pendingResultSentAt) || Boolean(match.matchInProgress) || Boolean(match.refereeInProgress) || isFinalStage);
+                      const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -7191,7 +7191,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                          {!isValid && ((pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules)) || canApprovePending) ? (
+                          {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                           </div>
@@ -7276,7 +7276,7 @@ function releaseRefereeSelectedMatch(entry) {
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
                     const isFinalStage = /quart|demi|finale|petite finale|petite final|principale|principal/i.test(`${match.phase || ''} ${match.group || ''}`);
-                    const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) && (Boolean(match.pendingResultSentAt) || Boolean(match.matchInProgress) || Boolean(match.refereeInProgress) || isFinalStage);
+                    const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                     const matchNumber = index + 1;
 
                     return (
@@ -7303,7 +7303,7 @@ function releaseRefereeSelectedMatch(entry) {
                           <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                        {!isValid && ((pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules)) || canApprovePending) ? (
+                        {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                       </div>
@@ -7374,7 +7374,7 @@ function releaseRefereeSelectedMatch(entry) {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) && (Boolean(match.pendingResultSentAt) || Boolean(match.matchInProgress) || Boolean(match.refereeInProgress) || isFinalStage);
+                const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
