@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31P';
+const APP_VERSION = 'V31Q';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6291,13 +6291,12 @@ export default function App() {
     if (officialStatus === 'Score invalide') {
       return { text: 'Score invalide', className: 'badge-danger' };
     }
-    const pendingStatus = getPendingStatus(match);
-    if (pendingStatus === 'Match en cours') {
-      const resultSent = Boolean(match.pendingResultSentAt) || (!match.refereeInProgress && Boolean(match.matchInProgress) && isMatchResultValid(getPendingMatchSnapshot(match), phaseRulesRef.current));
-      return {
-        text: resultSent ? 'Résultat envoyé' : 'Match en cours',
-        className: resultSent ? 'badge-info' : (match.refereeInProgress ? 'badge-danger' : 'badge-neutral'),
-      };
+    const resultSent = Boolean(match.pendingResultSentAt);
+    if (resultSent) {
+      return { text: 'Résultat envoyé', className: 'badge-info' };
+    }
+    if (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) {
+      return { text: 'Match en cours', className: 'badge-danger' };
     }
     return { text: 'À saisir', className: 'badge-neutral' };
   }

@@ -5750,3 +5750,12 @@ tbody tr:last-child td { border-bottom: none; }
   justify-content:flex-start !important;
   padding-left:0.45rem !important;
 }
+
+
+/* V31Q */
+.organizer-page .badge-danger,
+.badge-danger{
+  background:#dc2626 !important;
+  color:#ffffff !important;
+  border-color:#dc2626 !important;
+}
