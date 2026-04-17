@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31S';
+const APP_VERSION = 'V31T';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -7169,9 +7169,16 @@ function rejectRefereeScore(scope, matchId) {
                               <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
-                          {!isValid && pendingStatus === 'Match en cours' ? (
+                          {!isValid && !Boolean(match.pendingResultSentAt) && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                              <Button variant='info' onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                                Changer l’arbitre
+                              </Button>
+                            </div>
+                          ) : null}
+                          {!isValid && Boolean(match.pendingResultSentAt) && !Boolean(match.refereeInProgress) && !Boolean(match.matchInProgress) ? (
+                            <div className="actions-row compact-actions compact-match-card-actions">
+                              <Button variant='secondary' onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                                 Annuler
                               </Button>
                             </div>
