@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31X';
+const APP_VERSION = 'V31Y';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6804,30 +6804,19 @@ function rejectRefereeScore(scope, matchId) {
   }
 
   function reassignRefereeWithoutReset(scope, matchId) {
+    const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
     recentRefereeLocalEditsRef.current.delete(matchId);
     recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
-    const releaseTimestamp = markPendingLocalMutation(new Date().toISOString());
+
+    const fallbackMatch = findMatchInScope(scope, matchId);
+    if (!fallbackMatch) return;
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
-
-      const hasPendingSubmittedScores =
-        String(match.submittedScoreA ?? '').trim() !== ''
-        && String(match.submittedScoreB ?? '').trim() !== '';
-
-      if (hasPendingSubmittedScores) {
-        return {
-          ...match,
-          refereeInProgress: false,
-          matchInProgress: false,
-        };
-      }
-
       return {
         ...match,
         refereeInProgress: false,
         matchInProgress: false,
-        pendingResultSentAt: null,
       };
     }));
 
@@ -7451,6 +7440,7 @@ function releaseRefereeSelectedMatch(entry) {
     const liveMatch = findMatchInScope(scope, entryMatch?.id);
     const match = liveMatch || entryMatch;
     if (!match?.id) return null;
+    if (!liveMatch && refereeSelectedMatch?.matchId === match.id) return null;
     if (!liveMatch && !entryMatch?.id) return null;
     if (!findMatchInScope(scope, match.id) && !entryMatch?.id) return null;
 
