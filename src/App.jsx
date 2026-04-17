@@ -33,7 +33,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V31W';
+const APP_VERSION = 'V31X';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6810,6 +6810,19 @@ function rejectRefereeScore(scope, matchId) {
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
+
+      const hasPendingSubmittedScores =
+        String(match.submittedScoreA ?? '').trim() !== ''
+        && String(match.submittedScoreB ?? '').trim() !== '';
+
+      if (hasPendingSubmittedScores) {
+        return {
+          ...match,
+          refereeInProgress: false,
+          matchInProgress: false,
+        };
+      }
+
       return {
         ...match,
         refereeInProgress: false,
@@ -7438,6 +7451,7 @@ function releaseRefereeSelectedMatch(entry) {
     const liveMatch = findMatchInScope(scope, entryMatch?.id);
     const match = liveMatch || entryMatch;
     if (!match?.id) return null;
+    if (!liveMatch && !entryMatch?.id) return null;
     if (!findMatchInScope(scope, match.id) && !entryMatch?.id) return null;
 
     const teamA = resolveTeam(match.teamAId);
