@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32O';
+const APP_VERSION = 'V32P';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -127,9 +127,12 @@ function getCourtNumbers(count = DEFAULT_COURT_COUNT) {
 
 
 function getPrincipalQuarterCourts(count = CURRENT_COURT_COUNT) {
-  const split = splitCourtsByStage(count);
-  if (split.principale.length >= 3) return split.principale.slice(0, 3);
-  return split.principale;
+  const courtCount = clampCourtCount(count);
+  if (courtCount >= 6) return [1, 2, 3];
+  const split = splitCourtsByStage(courtCount);
+  if (courtCount === 5) return [1, 2, 3];
+  if (courtCount === 4) return [1, 2];
+  return getCourtNumbers(courtCount);
 }
 
 function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
@@ -8644,7 +8647,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                 </div>
               </Section>
 
-              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante). Avec 6 terrains, les quarts de finale principale utilisent aussi les terrains 1, 2 et 3.">
+              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante). Avec 6 terrains, les quarts de finale principale utilisent les terrains 1, 2 et 3.">
                 <div className="overview-court-count-row">
                   <span className="muted">Nombre de terrains</span>
                   <select
