@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32M';
+const APP_VERSION = 'V32N';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5165,44 +5165,18 @@ export default function App() {
 
   function randomizeCurrentPhaseScores() {
     const confirmed = confirmWithDetails(
-      'Des scores aléatoires seront saisis dans les matchs qui n’ont pas encore commencé. Les matchs en cours et les matchs validés ne seront pas concernés.',
+      'Des scores aléatoires seront saisis sur la phase en cours puis sur les phases suivantes si elles sont générées. Les matchs en cours et les matchs déjà validés ne seront pas modifiés.',
       'Veux-tu continuer ?'
     );
     if (!confirmed) return;
-
-    const scopes = getCurrentRandomScoreScopes();
-    if (!scopes.length) {
-      window.alert('Aucune phase en cours à compléter automatiquement.');
-      return;
-    }
 
     const updatedAt = new Date().toISOString();
     const mutationTimestamp = markPendingLocalMutation(updatedAt);
     let updatedCount = 0;
 
-    const scopedMatchesMap = {
-      championshipLeg1: championshipLeg1Ref.current?.matches || [],
-      championshipLeg2: championshipLeg2Ref.current?.matches || [],
-      quarters: singleKnockoutRef.current?.quarters || [],
-      semis: singleKnockoutRef.current?.semis || [],
-      finals: singleKnockoutRef.current?.finals || [],
-      brassage1: brassage1Ref.current?.matches || [],
-      brassage2: brassage2Ref.current?.matches || [],
-      principale: mainStageRef.current?.principaleMatches || [],
-      consolante: mainStageRef.current?.consolanteMatches || [],
-      principalQuarters: knockoutRef.current?.principalQuarters || [],
-      principalSemis: knockoutRef.current?.principalSemis || [],
-      principalFinals: knockoutRef.current?.principalFinals || [],
-      consolanteQuarters: knockoutRef.current?.consolanteQuarters || [],
-      consolanteSemis: knockoutRef.current?.consolanteSemis || [],
-      consolanteFinals: knockoutRef.current?.consolanteFinals || [],
-    };
-
-    scopes.forEach((scope) => {
-      const currentMatches = Array.isArray(scopedMatchesMap[scope]) ? scopedMatchesMap[scope] : [];
-      if (!currentMatches.length) return;
-
-      updateMatchesInScope(scope, (matches) => matches.map((match) => {
+    const applyRandomScoresToScope = (scope) => {
+      let localUpdates = 0;
+      updateMatchesInScope(scope, (matches) => (Array.isArray(matches) ? matches : []).map((match) => {
         const isEditable = getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir'
           && !match.refereeInProgress
           && !match.matchInProgress
@@ -5210,12 +5184,13 @@ export default function App() {
 
         if (!isEditable) return match;
 
-        const { scoreA, scoreB } = buildRandomValidScore(getRuleForMatch(match, phaseRulesRef.current));
+        const randomScore = buildRandomValidScore(getRuleForMatch(match, phaseRulesRef.current));
+        localUpdates += 1;
         updatedCount += 1;
         return {
           ...match,
-          scoreA: String(scoreA),
-          scoreB: String(scoreB),
+          scoreA: String(randomScore.scoreA),
+          scoreB: String(randomScore.scoreB),
           submittedScoreA: '',
           submittedScoreB: '',
           submittedAt: null,
@@ -5226,15 +5201,94 @@ export default function App() {
           matchInProgress: false,
         };
       }));
-    });
+      return localUpdates;
+    };
+
+    const orderedScopes = () => {
+      const list = [];
+      const pushIfPlayable = (scope, matches) => {
+        if ((Array.isArray(matches) ? matches : []).some((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir' && hasBothTeamsDefined(match))) {
+          list.push(scope);
+        }
+      };
+
+      pushIfPlayable('championshipLeg1', championshipLeg1Ref.current?.matches);
+      pushIfPlayable('championshipLeg2', championshipLeg2Ref.current?.matches);
+      pushIfPlayable('brassage1', brassage1Ref.current?.matches);
+      pushIfPlayable('brassage2', brassage2Ref.current?.matches);
+      pushIfPlayable('principale', mainStageRef.current?.principaleMatches);
+      pushIfPlayable('consolante', mainStageRef.current?.consolanteMatches);
+      pushIfPlayable('principalQuarters', knockoutRef.current?.principalQuarters);
+      pushIfPlayable('consolanteQuarters', knockoutRef.current?.consolanteQuarters);
+      pushIfPlayable('principalSemis', knockoutRef.current?.principalSemis);
+      pushIfPlayable('consolanteSemis', knockoutRef.current?.consolanteSemis);
+      pushIfPlayable('principalFinals', knockoutRef.current?.principalFinals);
+      pushIfPlayable('consolanteFinals', knockoutRef.current?.consolanteFinals);
+      pushIfPlayable('quarters', singleKnockoutRef.current?.quarters);
+      pushIfPlayable('semis', singleKnockoutRef.current?.semis);
+      pushIfPlayable('finals', singleKnockoutRef.current?.finals);
+      return list;
+    };
+
+    const tryProgress = () => {
+      let progressed = false;
+      try { if (typeof tryAutoGenerateBrassage2Silently === 'function' && tryAutoGenerateBrassage2Silently()) progressed = true; } catch {}
+      try {
+        const b2Matches = brassage2Ref.current?.matches || [];
+        const b2Done = b2Matches.length > 0 && b2Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        const hasMainStage = (mainStageRef.current?.principaleMatches?.length || 0) > 0 || (mainStageRef.current?.consolanteMatches?.length || 0) > 0;
+        if (b2Done && !hasMainStage && typeof generateMainStage === 'function' && generateMainStage() !== false) progressed = true;
+      } catch {}
+      try {
+        const principaleDone = (mainStageRef.current?.principaleMatches || []).length > 0 && (mainStageRef.current?.principaleMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if (principaleDone && !(knockoutRef.current?.principalQuarters?.length > 0) && typeof generatePrincipalQuarters === 'function' && generatePrincipalQuarters() !== false) progressed = true;
+      } catch {}
+      try {
+        const consolanteDone = (mainStageRef.current?.consolanteMatches || []).length > 0 && (mainStageRef.current?.consolanteMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if (consolanteDone && !(knockoutRef.current?.consolanteQuarters?.length > 0) && typeof generateConsolanteQuarters === 'function' && generateConsolanteQuarters() !== false) progressed = true;
+      } catch {}
+      try {
+        const principalQuartersDone = (knockoutRef.current?.principalQuarters || []).length > 0 && (knockoutRef.current?.principalQuarters || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if (principalQuartersDone && !(knockoutRef.current?.principalSemis?.length > 0) && typeof generatePrincipalSemis === 'function' && generatePrincipalSemis() !== false) progressed = true;
+      } catch {}
+      try {
+        const hasConsolanteQuarters = (knockoutRef.current?.consolanteQuarters || []).length > 0;
+        const consolanteQuarterDone = hasConsolanteQuarters && (knockoutRef.current?.consolanteQuarters || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        const consolantePoolDone = !hasConsolanteQuarters && (mainStageRef.current?.consolanteMatches || []).length > 0 && (mainStageRef.current?.consolanteMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if ((consolanteQuarterDone || consolantePoolDone) && !(knockoutRef.current?.consolanteSemis?.length > 0) && typeof generateConsolanteSemis === 'function' && generateConsolanteSemis() !== false) progressed = true;
+      } catch {}
+      try {
+        const principalSemisDone = (knockoutRef.current?.principalSemis || []).length > 0 && (knockoutRef.current?.principalSemis || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if (principalSemisDone && !(knockoutRef.current?.principalFinals?.length > 0) && typeof generatePrincipalFinals === 'function' && generatePrincipalFinals() !== false) progressed = true;
+      } catch {}
+      try {
+        const consolanteSemisDone = (knockoutRef.current?.consolanteSemis || []).length > 0 && (knockoutRef.current?.consolanteSemis || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+        if (consolanteSemisDone && !(knockoutRef.current?.consolanteFinals?.length > 0) && typeof generateConsolanteFinals === 'function' && generateConsolanteFinals() !== false) progressed = true;
+      } catch {}
+      return progressed;
+    };
+
+    let guard = 0;
+    while (guard < 20) {
+      guard += 1;
+      const scopes = orderedScopes();
+      let loopUpdates = 0;
+
+      scopes.forEach((scope) => {
+        loopUpdates += applyRandomScoresToScope(scope);
+      });
+
+      const progressed = tryProgress();
+      if (!loopUpdates && !progressed) break;
+    }
 
     if (!updatedCount) {
-      window.alert('Aucun match À saisir et non sélectionné par un arbitre n’a été trouvé dans la phase en cours.');
+      window.alert('Aucun match À saisir et non sélectionné par un arbitre n’a été trouvé.');
       return;
     }
 
     queueBackgroundCloudSave(250, mutationTimestamp);
-    window.alert(`${updatedCount} match(s) de la phase en cours ont reçu un score aléatoire.`);
+    window.alert(`${updatedCount} match(s) ont reçu un score aléatoire.`);
   }
 
   function addTeam() {
