@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32Q';
+const APP_VERSION = 'V32R';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -129,7 +129,6 @@ function getCourtNumbers(count = DEFAULT_COURT_COUNT) {
 function getPrincipalQuarterCourts(count = CURRENT_COURT_COUNT) {
   const courtCount = clampCourtCount(count);
   if (courtCount >= 6) return [1, 2, 3];
-  const split = splitCourtsByStage(courtCount);
   if (courtCount === 5) return [1, 2, 3];
   if (courtCount === 4) return [1, 2];
   return getCourtNumbers(courtCount);
@@ -1270,6 +1269,26 @@ function assignSchedule(matches, startSlot) {
       validatedAt: match.validatedAt || null,
     };
   });
+}
+
+
+
+function rebalancePrincipalQuarterCourts(matches, count = CURRENT_COURT_COUNT) {
+  const safeMatches = Array.isArray(matches) ? matches.map((match) => ({ ...match })) : [];
+  const principalCourts = getPrincipalQuarterCourts(count);
+
+  if (safeMatches.length === 4 && principalCourts.length >= 3) {
+    const orderedCourts = [principalCourts[0], principalCourts[1], principalCourts[2], principalCourts[0]];
+    return safeMatches.map((match, index) => ({
+      ...match,
+      court: orderedCourts[index],
+      slot: index < 3 ? 1 : 2,
+      time: '',
+      validatedAt: match.validatedAt || null,
+    }));
+  }
+
+  return safeMatches;
 }
 
 function assignScheduleWithCourts(matches, startSlot, courts) {
