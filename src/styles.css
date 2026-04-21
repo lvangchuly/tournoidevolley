@@ -5785,17 +5785,17 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V32F compact court count */
+/* V32G compact court count */
 .overview-court-count-row{
   justify-content:flex-start !important;
   width:auto !important;
-  max-width:240px !important;
+  max-width:260px !important;
 }
 .court-count-select{
-  width:3.5ch !important;
-  min-width:3.5ch !important;
-  max-width:3.5ch !important;
-  padding:6px 4px !important;
+  width:6ch !important;
+  min-width:6ch !important;
+  max-width:6ch !important;
+  padding:6px 6px !important;
   text-align:center !important;
   flex:0 0 auto !important;
 }
