@@ -5741,7 +5741,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V31O : entête Équipe à gauche dans la colonne consolante/public */
+/* V32E : entête Équipe à gauche dans la colonne consolante/public */
 .public-qualified-simple-table thead th:first-child,
 .public-qualified-simple-table thead th:only-child,
 .public-qualified-simple-table thead th[colspan],
@@ -5752,7 +5752,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V31Q */
+/* V32E */
 .organizer-page .badge-danger,
 .badge-danger{
   background:#dc2626 !important;
@@ -5761,14 +5761,14 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V32A access title links */
+/* V32E access title links */
 .referee-qr-title a{
   color: inherit !important;
   text-decoration: underline !important;
 }
 
 
-/* V32C terrain selector */
+/* V32E terrain selector */
 .overview-court-count-row{
   display:flex;
   align-items:center;

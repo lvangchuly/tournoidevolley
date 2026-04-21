@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32D';
+const APP_VERSION = 'V32E';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -136,6 +136,11 @@ function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
     consolante: consolanteCourts.length ? consolanteCourts : courts.slice(-1),
   };
 }
+
+function getMaxActiveCourts(count = CURRENT_COURT_COUNT) {
+  return getCourtNumbers(count).length;
+}
+
 function shuffleArray(items) {
   const copy = Array.isArray(items) ? [...items] : [];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -3885,7 +3890,7 @@ export default function App() {
       .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
       .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
-      .slice(0, MAX_ACTIVE_COURTS)
+      .slice(0, getMaxActiveCourts(courtCount))
       .map((match) => {
         const estimatedDuration = estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules));
         const actualStartMinutes = stampToMinutes(match.submittedAt) ?? scheduleData.scheduleMap[match.id]?.startMinutes ?? parseTimeToMinutes(match.time || '09:00');
@@ -3910,7 +3915,7 @@ export default function App() {
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
       })
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
-      .slice(0, MAX_ACTIVE_COURTS)
+      .slice(0, getMaxActiveCourts(courtCount))
       .map((match) => ({
         ...match,
         time: scheduleData.scheduleMap[match.id]?.startText || match.time,
@@ -4009,7 +4014,7 @@ export default function App() {
         match,
       }));
     const currentIds = new Set(items.map((item) => item.match.id));
-    const remainingSlots = Math.max(0, MAX_ACTIVE_COURTS - items.length);
+    const remainingSlots = Math.max(0, getMaxActiveCourts(courtCount) - items.length);
     upcomingMatches
       .filter((match) => !currentIds.has(match.id))
       .slice(0, remainingSlots)
@@ -4026,7 +4031,7 @@ export default function App() {
         .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
         .filter((match) => !isMatchResultValid(match, phaseRules) || isMatchCurrentlyInProgress(match, phaseRules))
         .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
-        .slice(0, MAX_ACTIVE_COURTS)
+        .slice(0, getMaxActiveCourts(courtCount))
         .forEach((match, index) => {
           items.push({
             type: 'match',
@@ -8305,7 +8310,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                             ? group.lockReason
                             : isActuallyBlockedByReferee
                               ? 'Match déjà en cours de saisie par un arbitre.'
-                              : activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
+                              : activeOccupiedMatchCount >= getMaxActiveCourts(courtCount)
                                 ? 'Tous les terrains disponibles sont déjà occupés par des matchs en cours.'
                                 : '';
                           return (
