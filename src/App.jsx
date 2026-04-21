@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32K';
+const APP_VERSION = 'V32L';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -132,8 +132,8 @@ function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
   if (safeCount <= 3) {
     return {
       all: courts,
-      principale: courts.slice(0, Math.max(1, safeCount - 1)),
-      consolante: courts.slice(Math.max(1, safeCount - 1)),
+      principale: courts,
+      consolante: courts,
     };
   }
 
@@ -3979,7 +3979,7 @@ export default function App() {
       return Boolean(teamName && teamName !== 'à définir');
     };
 
-    const extractPodium = (matches, fallbackRanking = []) => {
+    const extractPodium = (matches, fallbackRanking = [], options = {}) => {
       const finalMatch = matches.find((match) => match.group === 'Finale');
       const smallFinal = matches.find((match) => match.group === 'Petite finale');
       const finalResult = finalMatch ? getWinnerLoser(finalMatch, phaseRules) : { winner: null, loser: null };
@@ -3995,7 +3995,9 @@ export default function App() {
         ? smallResult.winner
         : null;
 
-      if (!first || !second || !third) {
+      const allowFallback = options?.allowFallback !== false;
+
+      if (allowFallback && (!first || !second || !third)) {
         const fallback = (Array.isArray(fallbackRanking) ? fallbackRanking : [])
           .map((row) => row?.teamId || null)
           .filter((teamId) => isResolvedPodiumTeam(teamId));
@@ -4016,8 +4018,16 @@ export default function App() {
       phaseRules,
     );
 
+    const consolanteHasQuarterStage = Array.isArray(knockout.consolanteQuarters) && knockout.consolanteQuarters.length > 0;
+    const consolanteQuartersComplete = !consolanteHasQuarterStage
+      || knockout.consolanteQuarters.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
+
     const principale = extractPodium(knockout.principalFinals);
-    const consolante = extractPodium(knockout.consolanteFinals, consolanteFallbackRanking);
+    const consolante = extractPodium(
+      knockout.consolanteFinals,
+      consolanteFallbackRanking,
+      { allowFallback: !consolanteHasQuarterStage || consolanteQuartersComplete }
+    );
     const tournamentFinished = Boolean(
       principale.first
       && principale.second
