@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32N';
+const APP_VERSION = 'V32O';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -123,6 +123,13 @@ function clampCourtCount(value) {
 
 function getCourtNumbers(count = DEFAULT_COURT_COUNT) {
   return Array.from({ length: clampCourtCount(count) }, (_, index) => index + 1);
+}
+
+
+function getPrincipalQuarterCourts(count = CURRENT_COURT_COUNT) {
+  const split = splitCourtsByStage(count);
+  if (split.principale.length >= 3) return split.principale.slice(0, 3);
+  return split.principale;
 }
 
 function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
@@ -6071,7 +6078,7 @@ export default function App() {
         + stageSlotCount(brassage2Ref.current.matches.length)
         + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
       const stage1Duration = Math.max(
-        stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(CURRENT_COURT_COUNT).principale),
+        stageSlotCountForCourts(currentKnockout.principalQuarters.length, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)),
         stageSlotCountForCourts(currentConsolanteQuarters.length, splitCourtsByStage(CURRENT_COURT_COUNT).consolante),
       );
       const startSlot = stage1StartSlot + stage1Duration;
@@ -6188,7 +6195,7 @@ export default function App() {
     ];
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(CURRENT_COURT_COUNT).principale),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)),
       stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(CURRENT_COURT_COUNT).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration;
@@ -6232,7 +6239,7 @@ export default function App() {
       + stageSlotCount(brassage2Ref.current.matches.length)
       + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(CURRENT_COURT_COUNT).principale),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)),
       stageSlotCountForCourts((currentKnockout.consolanteQuarters || []).length > 0 ? currentKnockout.consolanteQuarters.length : currentConsolanteSemis.length, [3]),
     );
     const stage2StartsAfterSemis = (currentKnockout.consolanteQuarters || []).length > 0;
@@ -6276,7 +6283,7 @@ export default function App() {
     }
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(CURRENT_COURT_COUNT).principale),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)),
       stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(CURRENT_COURT_COUNT).consolante),
     );
     const stage2Duration = Math.max(
@@ -8637,7 +8644,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                 </div>
               </Section>
 
-              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante).">
+              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante). Avec 6 terrains, les quarts de finale principale utilisent aussi les terrains 1, 2 et 3.">
                 <div className="overview-court-count-row">
                   <span className="muted">Nombre de terrains</span>
                   <select
