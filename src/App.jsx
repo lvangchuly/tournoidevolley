@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32P';
+const APP_VERSION = 'V32Q';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5829,11 +5829,11 @@ export default function App() {
     ).map((row) => row.teamId);
 
     if ([8, 9, 10].includes(currentTeamIds.length)) {
-      const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length)),
-        splitCourtsByStage(CURRENT_COURT_COUNT).principale,
-      ));
+        getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
+      ), CURRENT_COURT_COUNT));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
       const nextKnockout = { principalQuarters, principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
       mainStageRef.current = nextMainStage;
@@ -5849,11 +5849,11 @@ export default function App() {
 
     if (currentTeamIds.length === 12) {
       const startSlot = stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length));
-      const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        splitCourtsByStage(CURRENT_COURT_COUNT).principale,
-      ));
+        getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
+      ), CURRENT_COURT_COUNT));
       const consolantePools = createChampionshipPool(rankedIds.slice(8, 12), CONSOLANTE_POOL_NAMES[0]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools, consolanteMatches };
@@ -5871,11 +5871,11 @@ export default function App() {
 
     if (currentTeamIds.length === 11) {
       const startSlot = stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length));
-      const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        splitCourtsByStage(CURRENT_COURT_COUNT).principale,
-      ));
+        getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
+      ), CURRENT_COURT_COUNT));
       const consolantePools = createPools(rankedIds.slice(8, 11), [CONSOLANTE_POOL_NAMES[0]]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools, consolanteMatches };
@@ -5959,7 +5959,7 @@ export default function App() {
       const principalSemis = stampGeneratedMatches(assignScheduleWithCourts(
         principalSemisRaw,
         stage1StartSlot,
-        splitCourtsByStage(CURRENT_COURT_COUNT).principale,
+        getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
       ));
       const nextKnockout = {
         ...currentKnockout,
@@ -5984,11 +5984,11 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pC[1]?.teamId || null),
     ]);
-    const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
+    const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
       principalQuartersRaw,
       stage1StartSlot,
-      [1, 2],
-    ));
+      getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
+    ), CURRENT_COURT_COUNT));
     const nextKnockout = {
       ...currentKnockout,
       principalQuarters: sanitizeKnockoutMatches(principalQuarters),
@@ -6204,7 +6204,7 @@ export default function App() {
     const startSlot = stage1StartSlot + stage1Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, splitCourtsByStage(CURRENT_COURT_COUNT).principale))),
+      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)))),
       principalFinals: [],
     };
     knockoutRef.current = nextKnockout;
@@ -6290,13 +6290,13 @@ export default function App() {
       stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(CURRENT_COURT_COUNT).consolante),
     );
     const stage2Duration = Math.max(
-      stageSlotCountForCourts(currentPrincipalSemis.length, splitCourtsByStage(CURRENT_COURT_COUNT).principale),
+      stageSlotCountForCourts(currentPrincipalSemis.length, getPrincipalQuarterCourts(CURRENT_COURT_COUNT)),
       stageSlotCountForCourts(currentKnockout.consolanteFinals.length, splitCourtsByStage(CURRENT_COURT_COUNT).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration + stage2Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, splitCourtsByStage(CURRENT_COURT_COUNT).principale)),
+      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, getPrincipalQuarterCourts(CURRENT_COURT_COUNT))),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
@@ -8647,7 +8647,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                 </div>
               </Section>
 
-              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante). Avec 6 terrains, les quarts de finale principale utilisent les terrains 1, 2 et 3.">
+              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante). Avec 6 terrains, les quarts de finale principale sont répartis sur les terrains 1, 2 et 3.">
                 <div className="overview-court-count-row">
                   <span className="muted">Nombre de terrains</span>
                   <select
