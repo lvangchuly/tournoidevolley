@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32I';
+const APP_VERSION = 'V32J';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -8895,3 +8895,22 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
     </div>
   );
 }
+function buildSemiFinalsFromQuarterWinners(quarters, prefix = 'D') {
+  const safeQuarters = Array.isArray(quarters) ? quarters : [];
+  return [
+    {
+      id: `${prefix}_M1`,
+      label: 'Demi-finale 1',
+      teamA: safeQuarters[0]?.winner || 'Vainqueur Q1',
+      teamB: safeQuarters[1]?.winner || 'Vainqueur Q2',
+    },
+    {
+      id: `${prefix}_M2`,
+      label: 'Demi-finale 2',
+      teamA: safeQuarters[2]?.winner || 'Vainqueur Q3',
+      teamB: safeQuarters[3]?.winner || 'Vainqueur Q4',
+    },
+  ];
+}
+
+
