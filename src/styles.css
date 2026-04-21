@@ -5759,3 +5759,10 @@ tbody tr:last-child td { border-bottom: none; }
   color:#ffffff !important;
   border-color:#dc2626 !important;
 }
+
+
+/* V32A access title links */
+.referee-qr-title a{
+  color: inherit !important;
+  text-decoration: underline !important;
+}
