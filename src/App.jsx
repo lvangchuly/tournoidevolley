@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32H';
+const APP_VERSION = 'V32I';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -127,13 +127,36 @@ function getCourtNumbers(count = DEFAULT_COURT_COUNT) {
 
 function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
   const courts = getCourtNumbers(count);
-  const principaleCount = Math.max(1, Math.ceil(courts.length / 2));
-  const principaleCourts = courts.slice(0, principaleCount);
-  const consolanteCourts = courts.slice(principaleCount);
+  const safeCount = courts.length;
+
+  if (safeCount <= 3) {
+    return {
+      all: courts,
+      principale: courts.slice(0, Math.max(1, safeCount - 1)),
+      consolante: courts.slice(Math.max(1, safeCount - 1)),
+    };
+  }
+
+  if (safeCount === 4) {
+    return {
+      all: courts,
+      principale: [1, 2],
+      consolante: [3, 4],
+    };
+  }
+
+  if (safeCount === 5) {
+    return {
+      all: courts,
+      principale: [1, 2, 3],
+      consolante: [4, 5],
+    };
+  }
+
   return {
     all: courts,
-    principale: principaleCourts.length ? principaleCourts : courts.slice(0, 1),
-    consolante: consolanteCourts.length ? consolanteCourts : courts.slice(-1),
+    principale: [1, 2, 3],
+    consolante: [4, 5, 6],
   };
 }
 
@@ -1212,14 +1235,18 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
 function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
   const safePrincipalePools = Array.isArray(principalePools) ? principalePools.filter(Boolean) : [];
   const safeConsolantePools = Array.isArray(consolantePools) ? consolantePools.filter(Boolean) : [];
-  const availableCourts = getCourtNumbers(CURRENT_COURT_COUNT);
+  const stageCourts = splitCourtsByStage(CURRENT_COURT_COUNT);
 
-  const descriptors = [
-    ...buildPoolMatchDescriptors(safePrincipalePools, 'Principale', availableCourts),
-    ...buildPoolMatchDescriptors(safeConsolantePools, 'Consolante', availableCourts),
-  ];
+  const principaleDescriptors = buildPoolMatchDescriptors(safePrincipalePools, 'Principale', stageCourts.principale);
+  const consolanteDescriptors = buildPoolMatchDescriptors(safeConsolantePools, 'Consolante', stageCourts.consolante);
 
-  return schedulePoolDescriptorsOnCourts(descriptors, availableCourts, startSlot);
+  const principaleScheduled = schedulePoolDescriptorsOnCourts(principaleDescriptors, stageCourts.principale, startSlot);
+  const consolanteScheduled = schedulePoolDescriptorsOnCourts(consolanteDescriptors, stageCourts.consolante, startSlot);
+
+  return [...principaleScheduled, ...consolanteScheduled].sort((a, b) => {
+    if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
+    return (a.court || 0) - (b.court || 0);
+  });
 }
 
 function assignSchedule(matches, startSlot) {
@@ -8523,7 +8550,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                 </div>
               </Section>
 
-              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation.">
+              <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation. Les terrains sont regroupés par phase autant que possible (par exemple terrains 1 à 3 pour la Principale et 4 à 6 pour la Consolante).">
                 <div className="overview-court-count-row">
                   <span className="muted">Nombre de terrains</span>
                   <select
