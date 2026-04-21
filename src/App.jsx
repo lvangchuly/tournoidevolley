@@ -17,6 +17,7 @@ const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27BE', 'tournoidevolle
 const DEFAULT_COURT_COUNT = 3;
 const MIN_COURT_COUNT = 3;
 const MAX_COURT_COUNT = 6;
+let CURRENT_COURT_COUNT = DEFAULT_COURT_COUNT;
 const DEFAULT_TEAM_COUNT = 18;
 const TEAM_TARGET = 24;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -35,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32C';
+const APP_VERSION = 'V32D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -861,7 +862,7 @@ function buildPoolMatchDescriptors(pools, phase, preferredCourts, extra = {}) {
 
 function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
   const safeDescriptors = (Array.isArray(descriptors) ? descriptors : []).filter((entry) => entry && Array.isArray(entry.matches) && entry.matches.length);
-  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(courtCountRef.current);
+  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(CURRENT_COURT_COUNT);
   if (!safeDescriptors.length) return [];
 
   const scheduled = [];
@@ -992,7 +993,7 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
   if (!safePools.length) return [];
 
-  const courts = getCourtNumbers(courtCountRef.current);
+  const courts = getCourtNumbers(CURRENT_COURT_COUNT);
   const descriptors = safePools
     .filter((pool) => Array.isArray(pool?.teamIds) && pool.teamIds.filter(Boolean).length >= 2)
     .map((pool, originalIndex) => ({
@@ -1210,7 +1211,7 @@ function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
   const samePoolCount = safePrincipalePools.length > 0
     && safePrincipalePools.length === safeConsolantePools.length;
 
-  const stageCourts = splitCourtsByStage(courtCountRef.current);
+  const stageCourts = splitCourtsByStage(courtCount);
   const descriptors = [
     ...buildPoolMatchDescriptors(safePrincipalePools, 'Principale', samePoolCount ? stageCourts.all : stageCourts.principale),
     ...buildPoolMatchDescriptors(safeConsolantePools, 'Consolante', samePoolCount ? stageCourts.all : stageCourts.consolante),
@@ -1221,10 +1222,10 @@ function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
 
 function assignSchedule(matches, startSlot) {
   return matches.map((match, index) => {
-    const zeroBasedSlot = startSlot + Math.floor(index / getCourtNumbers(courtCountRef.current).length);
+    const zeroBasedSlot = startSlot + Math.floor(index / getCourtNumbers(CURRENT_COURT_COUNT).length);
     return {
       ...match,
-      court: getCourtNumbers(courtCountRef.current)[index % getCourtNumbers(courtCountRef.current).length],
+      court: getCourtNumbers(CURRENT_COURT_COUNT)[index % getCourtNumbers(CURRENT_COURT_COUNT).length],
       slot: zeroBasedSlot + 1,
       time: '',
       validatedAt: match.validatedAt || null,
@@ -1233,7 +1234,7 @@ function assignSchedule(matches, startSlot) {
 }
 
 function assignScheduleWithCourts(matches, startSlot, courts) {
-  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(courtCountRef.current);
+  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(CURRENT_COURT_COUNT);
   return matches.map((match, index) => {
     const zeroBasedSlot = startSlot + Math.floor(index / safeCourts.length);
     return {
@@ -1247,11 +1248,11 @@ function assignScheduleWithCourts(matches, startSlot, courts) {
 }
 
 function stageSlotCount(matchCount) {
-  return Math.ceil(matchCount / getCourtNumbers(courtCountRef.current).length);
+  return Math.ceil(matchCount / getCourtNumbers(CURRENT_COURT_COUNT).length);
 }
 
 function stageSlotCountForCourts(matchCount, courts) {
-  const safeCourtCount = Array.isArray(courts) && courts.length ? courts.length : getCourtNumbers(courtCountRef.current).length;
+  const safeCourtCount = Array.isArray(courts) && courts.length ? courts.length : getCourtNumbers(CURRENT_COURT_COUNT).length;
   return Math.ceil(matchCount / safeCourtCount);
 }
 
@@ -1384,7 +1385,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
     if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
     return (a.court || 0) - (b.court || 0);
   });
-  const courtAvailability = new Map(getCourtNumbers(courtCountRef.current).map((court) => [court, stageStartMinutes]));
+  const courtAvailability = new Map(getCourtNumbers(CURRENT_COURT_COUNT).map((court) => [court, stageStartMinutes]));
 
   sorted.forEach((match) => {
     const court = match.court || 1;
@@ -2394,6 +2395,7 @@ export default function App() {
 
   useEffect(() => {
     courtCountRef.current = clampCourtCount(courtCount);
+    CURRENT_COURT_COUNT = clampCourtCount(courtCount);
   }, [courtCount]);
 
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -2760,7 +2762,11 @@ export default function App() {
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'disableBrassage2')) setDisableBrassage2(Boolean(parsed.settings?.disableBrassage2));
-    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'courtCount')) setCourtCount(clampCourtCount(parsed.settings?.courtCount));
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'courtCount')) {
+      const nextCourtCount = clampCourtCount(parsed.settings?.courtCount);
+      CURRENT_COURT_COUNT = nextCourtCount;
+      setCourtCount(nextCourtCount);
+    }
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'createdAt')) setCreatedAt(parsed.meta?.createdAt || new Date().toISOString());
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
@@ -5700,7 +5706,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length)),
-        splitCourtsByStage(courtCountRef.current).principale,
+        splitCourtsByStage(courtCount).principale,
       ));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
       const nextKnockout = { principalQuarters, principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
@@ -5720,7 +5726,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        splitCourtsByStage(courtCountRef.current).principale,
+        splitCourtsByStage(courtCount).principale,
       ));
       const consolantePools = createChampionshipPool(rankedIds.slice(8, 12), CONSOLANTE_POOL_NAMES[0]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
@@ -5742,7 +5748,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        splitCourtsByStage(courtCountRef.current).principale,
+        splitCourtsByStage(courtCount).principale,
       ));
       const consolantePools = createPools(rankedIds.slice(8, 11), [CONSOLANTE_POOL_NAMES[0]]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
@@ -5827,7 +5833,7 @@ export default function App() {
       const principalSemis = stampGeneratedMatches(assignScheduleWithCourts(
         principalSemisRaw,
         stage1StartSlot,
-        splitCourtsByStage(courtCountRef.current).principale,
+        splitCourtsByStage(courtCount).principale,
       ));
       const nextKnockout = {
         ...currentKnockout,
@@ -5917,7 +5923,7 @@ export default function App() {
 
         const nextKnockout = {
           ...currentKnockout,
-          consolanteQuarters: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(quarterRaw, stage1StartSlot, splitCourtsByStage(courtCountRef.current).consolante))),
+          consolanteQuarters: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(quarterRaw, stage1StartSlot, splitCourtsByStage(courtCount).consolante))),
           consolanteSemis: [],
           consolanteFinals: [],
         };
@@ -5949,14 +5955,14 @@ export default function App() {
         + stageSlotCount(brassage2Ref.current.matches.length)
         + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
       const stage1Duration = Math.max(
-        stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
-        stageSlotCountForCourts(currentConsolanteQuarters.length, splitCourtsByStage(courtCountRef.current).consolante),
+        stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCount).principale),
+        stageSlotCountForCourts(currentConsolanteQuarters.length, splitCourtsByStage(courtCount).consolante),
       );
       const startSlot = stage1StartSlot + stage1Duration;
 
       const nextKnockout = {
         ...currentKnockout,
-        consolanteSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(semisRaw, startSlot, splitCourtsByStage(courtCountRef.current).consolante))),
+        consolanteSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(semisRaw, startSlot, splitCourtsByStage(courtCount).consolante))),
         consolanteFinals: [],
       };
       knockoutRef.current = nextKnockout;
@@ -6020,7 +6026,7 @@ export default function App() {
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length)
       + stageSlotCount(brassage2Ref.current.matches.length)
       + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
-    const consolanteSemis = stampGeneratedMatches(assignScheduleWithCourts(consolanteSemisRaw, stage1StartSlot, splitCourtsByStage(courtCountRef.current).consolante));
+    const consolanteSemis = stampGeneratedMatches(assignScheduleWithCourts(consolanteSemisRaw, stage1StartSlot, splitCourtsByStage(courtCount).consolante));
     const nextKnockout = {
       ...currentKnockout,
       consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
@@ -6066,13 +6072,13 @@ export default function App() {
     ];
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
-      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCountRef.current).consolante),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCount).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCount).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, splitCourtsByStage(courtCountRef.current).principale))),
+      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, splitCourtsByStage(courtCount).principale))),
       principalFinals: [],
     };
     knockoutRef.current = nextKnockout;
@@ -6110,7 +6116,7 @@ export default function App() {
       + stageSlotCount(brassage2Ref.current.matches.length)
       + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCount).principale),
       stageSlotCountForCourts((currentKnockout.consolanteQuarters || []).length > 0 ? currentKnockout.consolanteQuarters.length : currentConsolanteSemis.length, [3]),
     );
     const stage2StartsAfterSemis = (currentKnockout.consolanteQuarters || []).length > 0;
@@ -6119,7 +6125,7 @@ export default function App() {
       : stage1StartSlot + stage1Duration;
     const nextKnockout = {
       ...currentKnockout,
-      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(consolanteFinalsRaw, startSlot, splitCourtsByStage(courtCountRef.current).consolante))),
+      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(consolanteFinalsRaw, startSlot, splitCourtsByStage(courtCount).consolante))),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
@@ -6154,17 +6160,17 @@ export default function App() {
     }
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
-      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCountRef.current).consolante),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCount).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCount).consolante),
     );
     const stage2Duration = Math.max(
-      stageSlotCountForCourts(currentPrincipalSemis.length, splitCourtsByStage(courtCountRef.current).principale),
-      stageSlotCountForCourts(currentKnockout.consolanteFinals.length, splitCourtsByStage(courtCountRef.current).consolante),
+      stageSlotCountForCourts(currentPrincipalSemis.length, splitCourtsByStage(courtCount).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteFinals.length, splitCourtsByStage(courtCount).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration + stage2Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, splitCourtsByStage(courtCountRef.current).principale)),
+      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, splitCourtsByStage(courtCount).principale)),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
@@ -7074,7 +7080,7 @@ function releaseRefereeSelectedMatch(entry) {
       setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: '' }));
     };
 
-    getCourtNumbers(courtCountRef.current).forEach((courtNumber) => {
+    getCourtNumbers(courtCount).forEach((courtNumber) => {
       const courtMatches = safeMatches
         .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
@@ -7084,7 +7090,7 @@ function releaseRefereeSelectedMatch(entry) {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
-    const activeCourtNumbers = getCourtNumbers(courtCountRef.current).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
+    const activeCourtNumbers = getCourtNumbers(courtCount).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
     const poolCards = safePools.map((pool) => {
       const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
@@ -7280,7 +7286,7 @@ function releaseRefereeSelectedMatch(entry) {
       if (!safeMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
 
     const terrainMatchMap = new Map();
-    getCourtNumbers(courtCountRef.current).forEach((courtNumber) => {
+    getCourtNumbers(courtCount).forEach((courtNumber) => {
       const courtMatches = safeMatches
         .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
@@ -7290,7 +7296,7 @@ function releaseRefereeSelectedMatch(entry) {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
-    const activeCourtNumbers = getCourtNumbers(courtCountRef.current).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
+    const activeCourtNumbers = getCourtNumbers(courtCount).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
       return (
       <div className="mini-card compact-final-stage-board-v24s">
@@ -8291,7 +8297,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               : 'badge-neutral';
                           const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const canSelectExistingInProgressMatch = false;
-                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < clampCourtCount(courtCountRef.current);
+                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < clampCourtCount(courtCount);
                           const canSelect = canSelectNewMatch;
                           const isLockedVisualMatch = isBlockedByRunningReferee;
                           const isActuallyBlockedByReferee = Boolean(match.refereeInProgress || match.matchInProgress);
