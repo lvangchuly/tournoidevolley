@@ -5766,3 +5766,20 @@ tbody tr:last-child td { border-bottom: none; }
   color: inherit !important;
   text-decoration: underline !important;
 }
+
+
+/* V32C terrain selector */
+.overview-court-count-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  margin:0 0 12px 0;
+}
+.court-count-select{
+  min-width:72px;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #cbd5e1;
+  background:#fff;
+}

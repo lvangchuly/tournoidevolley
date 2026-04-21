@@ -14,7 +14,9 @@ const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
 const STORAGE_KEY = 'tournoidevolley-react-vite-V27BH';
 const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
-const MAX_ACTIVE_COURTS = 3;
+const DEFAULT_COURT_COUNT = 3;
+const MIN_COURT_COUNT = 3;
+const MAX_COURT_COUNT = 6;
 const DEFAULT_TEAM_COUNT = 18;
 const TEAM_TARGET = 24;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
@@ -33,7 +35,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32B';
+const APP_VERSION = 'V32C';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -111,6 +113,28 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (safeMax - safeMin + 1)) + safeMin;
 }
 
+
+function clampCourtCount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return DEFAULT_COURT_COUNT;
+  return Math.max(MIN_COURT_COUNT, Math.min(MAX_COURT_COUNT, Math.round(numeric)));
+}
+
+function getCourtNumbers(count = DEFAULT_COURT_COUNT) {
+  return Array.from({ length: clampCourtCount(count) }, (_, index) => index + 1);
+}
+
+function splitCourtsByStage(count = DEFAULT_COURT_COUNT) {
+  const courts = getCourtNumbers(count);
+  const principaleCount = Math.max(1, Math.ceil(courts.length / 2));
+  const principaleCourts = courts.slice(0, principaleCount);
+  const consolanteCourts = courts.slice(principaleCount);
+  return {
+    all: courts,
+    principale: principaleCourts.length ? principaleCourts : courts.slice(0, 1),
+    consolante: consolanteCourts.length ? consolanteCourts : courts.slice(-1),
+  };
+}
 function shuffleArray(items) {
   const copy = Array.isArray(items) ? [...items] : [];
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -451,6 +475,7 @@ function loadState() {
     parsed.championshipLeg1 = normalizeLeagueState(parsed?.championshipLeg1);
     parsed.championshipLeg2 = normalizeLeagueState(parsed?.championshipLeg2);
     parsed.singleKnockout = normalizeSingleKnockoutState(parsed?.singleKnockout);
+    parsed.settings = { ...(parsed.settings || {}), courtCount: clampCourtCount(parsed?.settings?.courtCount ?? DEFAULT_COURT_COUNT) };
     return sanitizePrematureFutureStages(parsed);
   } catch {
     return null;
@@ -813,7 +838,7 @@ function scheduleAlternatingPoolsOnCourt(pools, phase, court, startSlot) {
 }
 
 function buildPoolMatchDescriptors(pools, phase, preferredCourts, extra = {}) {
-  const safePreferredCourts = Array.isArray(preferredCourts) && preferredCourts.length ? preferredCourts : [1, 2, 3];
+  const safePreferredCourts = Array.isArray(preferredCourts) && preferredCourts.length ? preferredCourts : getCourtNumbers();
   return (Array.isArray(pools) ? pools : [])
     .filter((pool) => pool && Array.isArray(pool.teamIds) && pool.teamIds.filter(Boolean).length >= 2)
     .map((pool) => {
@@ -836,7 +861,7 @@ function buildPoolMatchDescriptors(pools, phase, preferredCourts, extra = {}) {
 
 function schedulePoolDescriptorsOnCourts(descriptors, courts, startSlot) {
   const safeDescriptors = (Array.isArray(descriptors) ? descriptors : []).filter((entry) => entry && Array.isArray(entry.matches) && entry.matches.length);
-  const safeCourts = Array.isArray(courts) && courts.length ? courts : [1, 2, 3];
+  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(courtCountRef.current);
   if (!safeDescriptors.length) return [];
 
   const scheduled = [];
@@ -967,7 +992,7 @@ function scheduleBrassageMatches(pools, phase, startSlot) {
   const safePools = Array.isArray(pools) ? pools.filter(Boolean) : [];
   if (!safePools.length) return [];
 
-  const courts = [1, 2, 3];
+  const courts = getCourtNumbers(courtCountRef.current);
   const descriptors = safePools
     .filter((pool) => Array.isArray(pool?.teamIds) && pool.teamIds.filter(Boolean).length >= 2)
     .map((pool, originalIndex) => ({
@@ -1185,20 +1210,21 @@ function scheduleMainStageMatches(principalePools, consolantePools, startSlot) {
   const samePoolCount = safePrincipalePools.length > 0
     && safePrincipalePools.length === safeConsolantePools.length;
 
+  const stageCourts = splitCourtsByStage(courtCountRef.current);
   const descriptors = [
-    ...buildPoolMatchDescriptors(safePrincipalePools, 'Principale', samePoolCount ? [1, 2, 3] : [1, 2]),
-    ...buildPoolMatchDescriptors(safeConsolantePools, 'Consolante', samePoolCount ? [1, 2, 3] : [3]),
+    ...buildPoolMatchDescriptors(safePrincipalePools, 'Principale', samePoolCount ? stageCourts.all : stageCourts.principale),
+    ...buildPoolMatchDescriptors(safeConsolantePools, 'Consolante', samePoolCount ? stageCourts.all : stageCourts.consolante),
   ];
 
-  return schedulePoolDescriptorsOnCourts(descriptors, [1, 2, 3], startSlot);
+  return schedulePoolDescriptorsOnCourts(descriptors, stageCourts.all, startSlot);
 }
 
 function assignSchedule(matches, startSlot) {
   return matches.map((match, index) => {
-    const zeroBasedSlot = startSlot + Math.floor(index / 3);
+    const zeroBasedSlot = startSlot + Math.floor(index / getCourtNumbers(courtCountRef.current).length);
     return {
       ...match,
-      court: (index % 3) + 1,
+      court: getCourtNumbers(courtCountRef.current)[index % getCourtNumbers(courtCountRef.current).length],
       slot: zeroBasedSlot + 1,
       time: '',
       validatedAt: match.validatedAt || null,
@@ -1207,7 +1233,7 @@ function assignSchedule(matches, startSlot) {
 }
 
 function assignScheduleWithCourts(matches, startSlot, courts) {
-  const safeCourts = Array.isArray(courts) && courts.length ? courts : [1, 2, 3];
+  const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(courtCountRef.current);
   return matches.map((match, index) => {
     const zeroBasedSlot = startSlot + Math.floor(index / safeCourts.length);
     return {
@@ -1221,11 +1247,11 @@ function assignScheduleWithCourts(matches, startSlot, courts) {
 }
 
 function stageSlotCount(matchCount) {
-  return Math.ceil(matchCount / 3);
+  return Math.ceil(matchCount / getCourtNumbers(courtCountRef.current).length);
 }
 
 function stageSlotCountForCourts(matchCount, courts) {
-  const safeCourtCount = Array.isArray(courts) && courts.length ? courts.length : 3;
+  const safeCourtCount = Array.isArray(courts) && courts.length ? courts.length : getCourtNumbers(courtCountRef.current).length;
   return Math.ceil(matchCount / safeCourtCount);
 }
 
@@ -1358,7 +1384,7 @@ function computeDynamicStageSchedule(matches, stageStartMinutes, phaseRules) {
     if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
     return (a.court || 0) - (b.court || 0);
   });
-  const courtAvailability = new Map([[1, stageStartMinutes], [2, stageStartMinutes], [3, stageStartMinutes]]);
+  const courtAvailability = new Map(getCourtNumbers(courtCountRef.current).map((court) => [court, stageStartMinutes]));
 
   sorted.forEach((match) => {
     const court = match.court || 1;
@@ -2273,6 +2299,7 @@ export default function App() {
   const [tournamentLogo, setTournamentLogo] = useState(initial?.settings?.tournamentLogo || '');
   const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME));
   const [disableBrassage2, setDisableBrassage2] = useState(Boolean(initial?.settings?.disableBrassage2));
+  const [courtCount, setCourtCount] = useState(clampCourtCount(initial?.settings?.courtCount ?? DEFAULT_COURT_COUNT));
   const [lastSavedAt, setLastSavedAt] = useState(initial?.meta?.lastSavedAt || '');
   const [lastAutomaticSaveFilename, setLastAutomaticSaveFilenameState] = useState(initial?.meta?.lastAutomaticSaveFilename || '');
   const [remoteSavedAt, setRemoteSavedAt] = useState(initial?.meta?.remoteSavedAt || '');
@@ -2341,6 +2368,7 @@ export default function App() {
   const tournamentLogoRef = useRef(tournamentLogo);
   const sharedTournamentIdRef = useRef(sharedTournamentId);
   const disableBrassage2Ref = useRef(disableBrassage2);
+  const courtCountRef = useRef(courtCount);
   const remoteSavedAtRef = useRef(remoteSavedAt);
   const brassage1Ref = useRef(brassage1);
   const brassage2Ref = useRef(brassage2);
@@ -2363,6 +2391,10 @@ export default function App() {
   useEffect(() => {
     disableBrassage2Ref.current = disableBrassage2;
   }, [disableBrassage2]);
+
+  useEffect(() => {
+    courtCountRef.current = clampCourtCount(courtCount);
+  }, [courtCount]);
 
   const refereeAccessUrl = useMemo(() => buildRefereeAccessUrl(sharedTournamentId), [sharedTournamentId]);
   const publicAccessUrl = useMemo(() => buildPublicAccessUrl(sharedTournamentId), [sharedTournamentId]);
@@ -2682,6 +2714,7 @@ export default function App() {
         tournamentLogo: overrides.tournamentLogo ?? tournamentLogoRef.current,
         sharedTournamentId: overrides.sharedTournamentId ?? sharedTournamentIdRef.current,
         disableBrassage2: overrides.disableBrassage2 ?? disableBrassage2Ref.current,
+        courtCount: clampCourtCount(overrides.courtCount ?? courtCountRef.current),
       },
       meta: {
         createdAt: overrides.createdAt ?? createdAtRef.current,
@@ -2727,6 +2760,7 @@ export default function App() {
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'disableBrassage2')) setDisableBrassage2(Boolean(parsed.settings?.disableBrassage2));
+    if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'courtCount')) setCourtCount(clampCourtCount(parsed.settings?.courtCount));
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'createdAt')) setCreatedAt(parsed.meta?.createdAt || new Date().toISOString());
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'lastSavedAt')) setLastSavedAt(parsed.meta?.lastSavedAt || '');
     if (Object.prototype.hasOwnProperty.call(parsed.meta || {}, 'remoteSavedAt')) setRemoteSavedAt(parsed.meta?.remoteSavedAt || '');
@@ -4793,6 +4827,7 @@ export default function App() {
         tournamentLogo: '',
         sharedTournamentId: nextSharedTournamentId,
         disableBrassage2: false,
+        courtCount: DEFAULT_COURT_COUNT,
       },
       meta: { createdAt: new Date().toISOString(), lastSavedAt: '', remoteSavedAt: '', lastAutomaticSaveFilename: '' },
       brassage1: { pools: [], matches: [] },
@@ -5665,7 +5700,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length)),
-        [1, 2],
+        splitCourtsByStage(courtCountRef.current).principale,
       ));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools: [], consolanteMatches: [] };
       const nextKnockout = { principalQuarters, principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
@@ -5685,7 +5720,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        [1, 2],
+        splitCourtsByStage(courtCountRef.current).principale,
       ));
       const consolantePools = createChampionshipPool(rankedIds.slice(8, 12), CONSOLANTE_POOL_NAMES[0]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
@@ -5707,7 +5742,7 @@ export default function App() {
       const principalQuarters = stampGeneratedMatches(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
-        [1, 2],
+        splitCourtsByStage(courtCountRef.current).principale,
       ));
       const consolantePools = createPools(rankedIds.slice(8, 11), [CONSOLANTE_POOL_NAMES[0]]);
       const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
@@ -5792,7 +5827,7 @@ export default function App() {
       const principalSemis = stampGeneratedMatches(assignScheduleWithCourts(
         principalSemisRaw,
         stage1StartSlot,
-        [1, 2],
+        splitCourtsByStage(courtCountRef.current).principale,
       ));
       const nextKnockout = {
         ...currentKnockout,
@@ -5882,7 +5917,7 @@ export default function App() {
 
         const nextKnockout = {
           ...currentKnockout,
-          consolanteQuarters: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(quarterRaw, stage1StartSlot, [3]))),
+          consolanteQuarters: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(quarterRaw, stage1StartSlot, splitCourtsByStage(courtCountRef.current).consolante))),
           consolanteSemis: [],
           consolanteFinals: [],
         };
@@ -5914,14 +5949,14 @@ export default function App() {
         + stageSlotCount(brassage2Ref.current.matches.length)
         + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
       const stage1Duration = Math.max(
-        stageSlotCountForCourts(currentKnockout.principalQuarters.length, [1, 2]),
-        stageSlotCountForCourts(currentConsolanteQuarters.length, [3]),
+        stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
+        stageSlotCountForCourts(currentConsolanteQuarters.length, splitCourtsByStage(courtCountRef.current).consolante),
       );
       const startSlot = stage1StartSlot + stage1Duration;
 
       const nextKnockout = {
         ...currentKnockout,
-        consolanteSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(semisRaw, startSlot, [3]))),
+        consolanteSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(semisRaw, startSlot, splitCourtsByStage(courtCountRef.current).consolante))),
         consolanteFinals: [],
       };
       knockoutRef.current = nextKnockout;
@@ -5985,7 +6020,7 @@ export default function App() {
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length)
       + stageSlotCount(brassage2Ref.current.matches.length)
       + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
-    const consolanteSemis = stampGeneratedMatches(assignScheduleWithCourts(consolanteSemisRaw, stage1StartSlot, [3]));
+    const consolanteSemis = stampGeneratedMatches(assignScheduleWithCourts(consolanteSemisRaw, stage1StartSlot, splitCourtsByStage(courtCountRef.current).consolante));
     const nextKnockout = {
       ...currentKnockout,
       consolanteSemis: sanitizeKnockoutMatches(consolanteSemis),
@@ -6031,13 +6066,13 @@ export default function App() {
     ];
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, [1, 2]),
-      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, [3]),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCountRef.current).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, [1, 2]))),
+      principalSemis: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(principalSemisRaw, startSlot, splitCourtsByStage(courtCountRef.current).principale))),
       principalFinals: [],
     };
     knockoutRef.current = nextKnockout;
@@ -6075,7 +6110,7 @@ export default function App() {
       + stageSlotCount(brassage2Ref.current.matches.length)
       + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, [1, 2]),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
       stageSlotCountForCourts((currentKnockout.consolanteQuarters || []).length > 0 ? currentKnockout.consolanteQuarters.length : currentConsolanteSemis.length, [3]),
     );
     const stage2StartsAfterSemis = (currentKnockout.consolanteQuarters || []).length > 0;
@@ -6084,7 +6119,7 @@ export default function App() {
       : stage1StartSlot + stage1Duration;
     const nextKnockout = {
       ...currentKnockout,
-      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(consolanteFinalsRaw, startSlot, [3]))),
+      consolanteFinals: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(consolanteFinalsRaw, startSlot, splitCourtsByStage(courtCountRef.current).consolante))),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
@@ -6119,17 +6154,17 @@ export default function App() {
     }
     const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length) + stageSlotCount(brassage2Ref.current.matches.length) + stageSlotCount(currentMainStage.principaleMatches.length + currentMainStage.consolanteMatches.length);
     const stage1Duration = Math.max(
-      stageSlotCountForCourts(currentKnockout.principalQuarters.length, [1, 2]),
-      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, [3]),
+      stageSlotCountForCourts(currentKnockout.principalQuarters.length, splitCourtsByStage(courtCountRef.current).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteSemis.length, splitCourtsByStage(courtCountRef.current).consolante),
     );
     const stage2Duration = Math.max(
-      stageSlotCountForCourts(currentPrincipalSemis.length, [1, 2]),
-      stageSlotCountForCourts(currentKnockout.consolanteFinals.length, [3]),
+      stageSlotCountForCourts(currentPrincipalSemis.length, splitCourtsByStage(courtCountRef.current).principale),
+      stageSlotCountForCourts(currentKnockout.consolanteFinals.length, splitCourtsByStage(courtCountRef.current).consolante),
     );
     const startSlot = stage1StartSlot + stage1Duration + stage2Duration;
     const nextKnockout = {
       ...currentKnockout,
-      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, [1, 2])),
+      principalFinals: stampGeneratedMatches(assignScheduleWithCourts(finalsRaw, startSlot, splitCourtsByStage(courtCountRef.current).principale)),
     };
     knockoutRef.current = nextKnockout;
     setKnockout(nextKnockout);
@@ -7039,7 +7074,7 @@ function releaseRefereeSelectedMatch(entry) {
       setSelectedBrassageTeamByScope((current) => ({ ...current, [scope]: '' }));
     };
 
-    [1, 2, 3].forEach((courtNumber) => {
+    getCourtNumbers(courtCountRef.current).forEach((courtNumber) => {
       const courtMatches = safeMatches
         .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
@@ -7049,7 +7084,7 @@ function releaseRefereeSelectedMatch(entry) {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
-    const activeCourtNumbers = [1, 2, 3].filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
+    const activeCourtNumbers = getCourtNumbers(courtCountRef.current).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
     const poolCards = safePools.map((pool) => {
       const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
@@ -7245,7 +7280,7 @@ function releaseRefereeSelectedMatch(entry) {
       if (!safeMatches.length) return <div className="empty-state">Aucun match généré pour le moment.</div>;
 
     const terrainMatchMap = new Map();
-    [1, 2, 3].forEach((courtNumber) => {
+    getCourtNumbers(courtCountRef.current).forEach((courtNumber) => {
       const courtMatches = safeMatches
         .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
@@ -7255,7 +7290,7 @@ function releaseRefereeSelectedMatch(entry) {
         });
       terrainMatchMap.set(courtNumber, courtMatches);
     });
-    const activeCourtNumbers = [1, 2, 3].filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
+    const activeCourtNumbers = getCourtNumbers(courtCountRef.current).filter((courtNumber) => (terrainMatchMap.get(courtNumber) || []).length > 0);
 
       return (
       <div className="mini-card compact-final-stage-board-v24s">
@@ -8256,7 +8291,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               : 'badge-neutral';
                           const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const canSelectExistingInProgressMatch = false;
-                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < MAX_ACTIVE_COURTS;
+                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < clampCourtCount(courtCountRef.current);
                           const canSelect = canSelectNewMatch;
                           const isLockedVisualMatch = isBlockedByRunningReferee;
                           const isActuallyBlockedByReferee = Boolean(match.refereeInProgress || match.matchInProgress);
@@ -8265,7 +8300,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                             : isActuallyBlockedByReferee
                               ? 'Match déjà en cours de saisie par un arbitre.'
                               : activeOccupiedMatchCount >= MAX_ACTIVE_COURTS
-                                ? 'Les 3 terrains sont déjà occupés par des matchs en cours.'
+                                ? 'Tous les terrains disponibles sont déjà occupés par des matchs en cours.'
                                 : '';
                           return (
                             <button
@@ -8461,6 +8496,18 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
               </Section>
 
               <Section title="Paramètres de score par phase" subtitle="Chaque phase dispose de son score gagnant et de son contexte de validation.">
+                <div className="overview-court-count-row">
+                  <span className="muted">Nombre de terrains</span>
+                  <select
+                    value={courtCount}
+                    onChange={(e) => setCourtCount(clampCourtCount(e.target.value))}
+                    className="court-count-select"
+                  >
+                    {[3, 4, 5, 6].map((count) => (
+                      <option key={count} value={count}>{count}</option>
+                    ))}
+                  </select>
+                </div>
                 {canDisableBrassage2 ? (
                   <label className="checkbox-row" style={{ marginBottom: '12px' }}>
                     <input type="checkbox" checked={disableBrassage2} onChange={(e) => setDisableBrassage2(e.target.checked)} />
