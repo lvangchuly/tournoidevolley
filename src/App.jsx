@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32U';
+const APP_VERSION = 'V32V';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -55,8 +55,8 @@ const DEFAULT_PHASE_RULES = {
   finale: { winningScore: 21, mode: 'sec' },
   petiteFinale: { winningScore: 21, mode: 'sec' },
 };
-const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', 'Principale D'];
-const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B'];
+const PRINCIPALE_POOL_NAMES = ['Principale A', 'Principale B', 'Principale C', 'Principale D', 'Principale E', 'Principale F'];
+const CONSOLANTE_POOL_NAMES = ['Consolante A', 'Consolante B', 'Consolante C', 'Consolante D', 'Consolante E', 'Consolante F'];
 
 function getPreferredBrassagePoolCount(teamCount) {
   if (teamCount < 8) return 0;
@@ -84,23 +84,24 @@ function getBrassagePoolSummary(teamCount) {
 }
 
 function getMainStageDistribution(teamCount) {
-  if (teamCount === 24) return { principaleCount: 12, consolanteCount: 12, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C', 'Consolante D'], directPrincipalSemis: false };
-  if (teamCount === 23) return { principaleCount: 12, consolanteCount: 11, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
-  if (teamCount === 22) return { principaleCount: 12, consolanteCount: 10, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
-  if (teamCount === 21) return { principaleCount: 12, consolanteCount: 9, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
-  if (teamCount === 20) return { principaleCount: 12, consolanteCount: 8, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
-  if (teamCount === 19) return { principaleCount: 12, consolanteCount: 7, normalizedRanking: false, consolanteMode: 'mixed43', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
-  if (teamCount === 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
+  if (teamCount === 36) return { principaleCount: 18, consolanteCount: 18, normalizedRanking: false, consolanteMode: 'pools36', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 6), consolantePoolNames: CONSOLANTE_POOL_NAMES.slice(0, 6), directPrincipalSemis: false };
+  if (teamCount === 24) return { principaleCount: 12, consolanteCount: 12, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C', 'Consolante D'], directPrincipalSemis: false };
+  if (teamCount === 23) return { principaleCount: 12, consolanteCount: 11, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 22) return { principaleCount: 12, consolanteCount: 10, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 21) return { principaleCount: 12, consolanteCount: 9, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B', 'Consolante C'], directPrincipalSemis: false };
+  if (teamCount === 20) return { principaleCount: 12, consolanteCount: 8, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
+  if (teamCount === 19) return { principaleCount: 12, consolanteCount: 7, normalizedRanking: false, consolanteMode: 'mixed43', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
+  if (teamCount === 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: CONSOLANTE_POOL_NAMES.slice(0, 2), directPrincipalSemis: false };
   if (teamCount === 8 || teamCount === 9 || teamCount === 10) return { principaleCount: 8, consolanteCount: 0, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [], directPrincipalSemis: false };
   if (teamCount === 12) return { principaleCount: 8, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'direct-podium', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
   if (teamCount === 11) return { principaleCount: 8, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false, directPrincipalQuarters: true };
-  if (teamCount === 17) return { principaleCount: 12, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
-  if (teamCount === 16) return { principaleCount: 12, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
-  if (teamCount === 15) return { principaleCount: 12, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 17) return { principaleCount: 12, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 16) return { principaleCount: 12, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
+  if (teamCount === 15) return { principaleCount: 12, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
   if (teamCount === 14) return { principaleCount: 8, consolanteCount: 6, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2), consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: true };
   if (teamCount === 13) return { principaleCount: 8, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 2), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: true };
-  if (teamCount >= 13) return { principaleCount: 8, consolanteCount: Math.max(0, teamCount - 8), normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
-  return { principaleCount: 0, consolanteCount: 0, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES, consolantePoolNames: CONSOLANTE_POOL_NAMES, directPrincipalSemis: false };
+  if (teamCount >= 13) return { principaleCount: 8, consolanteCount: Math.max(0, teamCount - 8), normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: CONSOLANTE_POOL_NAMES.slice(0, 2), directPrincipalSemis: false };
+  return { principaleCount: 0, consolanteCount: 0, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: CONSOLANTE_POOL_NAMES.slice(0, 2), directPrincipalSemis: false };
 }
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
