@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32Z';
+const APP_VERSION = 'V33A';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -4215,13 +4215,13 @@ export default function App() {
     let changed = false;
     const beforePrincipal = (knockoutRef.current?.principalEighths || []).length;
     if (!beforePrincipal) {
-      const handled = generateThirtySixPrincipalEighths();
+      const handled = generateThirtySixPrincipalEighths({ silent: true });
       changed = changed || handled;
     }
 
     const beforeConsolante = (knockoutRef.current?.consolanteEighths || []).length;
     if (!beforeConsolante) {
-      const handled = generateThirtySixConsolanteEighths();
+      const handled = generateThirtySixConsolanteEighths({ silent: true });
       changed = changed || handled;
     }
 
@@ -5264,6 +5264,21 @@ export default function App() {
     return [];
   }
 
+
+  function forceGenerateThirtySixFinalStagesAfterRandomScores() {
+    const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (currentTeamCount !== 36) return false;
+
+    let progressed = false;
+    if (!(knockoutRef.current?.principalEighths || []).length) {
+      progressed = generateThirtySixPrincipalEighths({ silent: true }) || progressed;
+    }
+    if (!(knockoutRef.current?.consolanteEighths || []).length) {
+      progressed = generateThirtySixConsolanteEighths({ silent: true }) || progressed;
+    }
+    return progressed;
+  }
+
   function randomizeCurrentPhaseScores() {
     const confirmed = confirmWithDetails(
       'Des scores aléatoires seront saisis sur la phase en cours puis sur les phases suivantes si elles sont générées. Les matchs en cours et les matchs déjà validés ne seront pas modifiés.',
@@ -5319,7 +5334,9 @@ export default function App() {
       pushIfPlayable('brassage2', brassage2Ref.current?.matches);
       pushIfPlayable('principale', mainStageRef.current?.principaleMatches);
       pushIfPlayable('consolante', mainStageRef.current?.consolanteMatches);
+      pushIfPlayable('principalEighths', knockoutRef.current?.principalEighths);
       pushIfPlayable('principalQuarters', knockoutRef.current?.principalQuarters);
+      pushIfPlayable('consolanteEighths', knockoutRef.current?.consolanteEighths);
       pushIfPlayable('consolanteQuarters', knockoutRef.current?.consolanteQuarters);
       pushIfPlayable('principalSemis', knockoutRef.current?.principalSemis);
       pushIfPlayable('consolanteSemis', knockoutRef.current?.consolanteSemis);
@@ -5333,6 +5350,7 @@ export default function App() {
 
     const tryProgress = () => {
       let progressed = false;
+      try { if (forceGenerateThirtySixFinalStagesAfterRandomScores()) progressed = true; } catch {}
       try { if (typeof tryAutoGenerateBrassage2Silently === 'function' && tryAutoGenerateBrassage2Silently()) progressed = true; } catch {}
       try {
         const b2Matches = brassage2Ref.current?.matches || [];
@@ -6013,7 +6031,7 @@ export default function App() {
   }
 
 
-  function generateThirtySixPrincipalEighths() {
+  function generateThirtySixPrincipalEighths(options = {}) {
     const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
     if (currentTeamCount !== 36) return false;
     const currentMainStage = mainStageRef.current;
@@ -6022,8 +6040,10 @@ export default function App() {
     const visibleMatches = filterMatchesToPools(currentMainStage.principaleMatches || [], currentMainStage.principalePools || [], 'Principale');
     const complete = visibleMatches.length > 0 && visibleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!complete) {
-      window.alert('Tous les scores des poules principales doivent être valides avant de générer les huitièmes de finale principale.');
-      return true;
+      if (!options?.silent) {
+        window.alert('Tous les scores des poules principales doivent être valides avant de générer les huitièmes de finale principale.');
+      }
+      return false;
     }
 
     if ((currentKnockout.principalEighths || []).length > 0) return false;
@@ -6061,7 +6081,7 @@ export default function App() {
     return true;
   }
 
-  function generateThirtySixConsolanteEighths() {
+  function generateThirtySixConsolanteEighths(options = {}) {
     const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
     if (currentTeamCount !== 36) return false;
     const currentMainStage = mainStageRef.current;
@@ -6070,8 +6090,10 @@ export default function App() {
     const visibleMatches = filterMatchesToPools(currentMainStage.consolanteMatches || [], currentMainStage.consolantePools || [], 'Consolante');
     const complete = visibleMatches.length > 0 && visibleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!complete) {
-      window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les huitièmes de finale consolante.');
-      return true;
+      if (!options?.silent) {
+        window.alert('Tous les scores des poules de consolante doivent être valides avant de générer les huitièmes de finale consolante.');
+      }
+      return false;
     }
 
     if ((currentKnockout.consolanteEighths || []).length > 0) return false;
