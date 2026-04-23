@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32X';
+const APP_VERSION = 'V32Y';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -3942,6 +3942,8 @@ export default function App() {
       || knockout.principalFinals.length > 0
       || knockout.consolanteEighths.length > 0
     || knockout.consolanteQuarters.length > 0
+    || (knockout.consolanteEighths || []).length > 0
+    || knockout.consolanteQuarters.length > 0
     || knockout.consolanteSemis.length > 0
       || knockout.consolanteFinals.length > 0;
 
@@ -4205,6 +4207,89 @@ export default function App() {
     }
   }, [shouldSkipBrassage2, activeTab]);
 
+
+  function tryGenerateThirtySixFinalStages() {
+    const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (currentTeamCount !== 36) return false;
+
+    const currentMainStage = mainStageRef.current;
+    const currentKnockout = normalizeKnockoutState(knockoutRef.current);
+    const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+
+    const visiblePrincipaleMatches = filterMatchesToPools(currentMainStage.principaleMatches || [], currentMainStage.principalePools || [], 'Principale');
+    const visibleConsolanteMatches = filterMatchesToPools(currentMainStage.consolanteMatches || [], currentMainStage.consolantePools || [], 'Consolante');
+
+    const principaleComplete = visiblePrincipaleMatches.length > 0
+      && visiblePrincipaleMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+    const consolanteComplete = visibleConsolanteMatches.length > 0
+      && visibleConsolanteMatches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+
+    if (!principaleComplete && !consolanteComplete) return false;
+
+    const stage1StartSlot = stageSlotCount(brassage1Ref.current.matches.length)
+      + stageSlotCount(brassage2Ref.current.matches.length)
+      + stageSlotCount((currentMainStage.principaleMatches || []).length + (currentMainStage.consolanteMatches || []).length);
+
+    let changed = false;
+    let nextKnockout = { ...currentKnockout };
+
+    if (principaleComplete && !(nextKnockout.principalEighths || []).length && !(nextKnockout.principalQuarters || []).length) {
+      const principaleRanking = computeRanking(
+        collectUniquePoolTeamIds(currentMainStage.principalePools),
+        visiblePrincipaleMatches,
+        currentTeamMap,
+        phaseRulesRef.current,
+        { normalizeByMatches: false },
+      ).map((row) => row.teamId).filter(Boolean).slice(0, 16);
+
+      nextKnockout = {
+        ...nextKnockout,
+        principalEighths: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(
+          buildEighthMatchesFromRanking(principaleRanking, 'Tableau principal'),
+          stage1StartSlot,
+          getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
+        ))),
+        principalQuarters: [],
+        principalSemis: [],
+        principalFinals: [],
+      };
+      changed = true;
+    }
+
+    if (consolanteComplete && !(nextKnockout.consolanteEighths || []).length && !(nextKnockout.consolanteQuarters || []).length) {
+      const consolanteRanking = computeRanking(
+        collectUniquePoolTeamIds(currentMainStage.consolantePools),
+        visibleConsolanteMatches,
+        currentTeamMap,
+        phaseRulesRef.current,
+        { normalizeByMatches: false },
+      ).map((row) => row.teamId).filter(Boolean).slice(0, 16);
+
+      nextKnockout = {
+        ...nextKnockout,
+        consolanteEighths: sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(
+          buildEighthMatchesFromRanking(consolanteRanking, 'Tableau consolante'),
+          stage1StartSlot,
+          splitCourtsByStage(CURRENT_COURT_COUNT).consolante,
+        ))),
+        consolanteQuarters: [],
+        consolanteSemis: [],
+        consolanteFinals: [],
+      };
+      changed = true;
+    }
+
+    if (!changed) return false;
+
+    knockoutRef.current = nextKnockout;
+    setKnockout(nextKnockout);
+    setActiveTab('finales');
+    markPendingStructureSync();
+    queueBackgroundCloudSave(250);
+    triggerAutomaticBackup({ phaseName: 'Phases finales', knockout: nextKnockout });
+    return true;
+  }
+
   const stageValidation = useMemo(() => isSmallTournamentMode ? ({
     championnatAllerComplete: championshipLeg1.matches.length > 0 && championshipLeg1.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
     championnatRetourComplete: championshipLeg2.matches.length > 0 && championshipLeg2.matches.every((m) => getMatchStatusLabel(m, phaseRules) === 'Valide'),
@@ -4317,6 +4402,10 @@ export default function App() {
     }
 
     let generatedFinalStageFromPools = false;
+
+    if (tryGenerateThirtySixFinalStages()) {
+      return;
+    }
 
     if (stageValidation.principalePoolsComplete && knockoutRef.current.principalQuarters.length === 0 && knockoutRef.current.principalSemis.length === 0) {
       const signature = `auto-principale-stage1-${mainStageDistribution.directPrincipalSemis ? 'semis' : 'quarters'}`;
@@ -4631,7 +4720,9 @@ export default function App() {
           knockout.principalQuarters.length > 0
           || knockout.principalSemis.length > 0
           || knockout.principalFinals.length > 0
-          || knockout.consolanteSemis.length > 0
+          || (knockout.consolanteEighths || []).length > 0
+    || knockout.consolanteQuarters.length > 0
+    || knockout.consolanteSemis.length > 0
           || knockout.consolanteFinals.length > 0
           ? ['finales']
           : []
@@ -7001,14 +7092,17 @@ export default function App() {
 
     queueMicrotask(() => {
       if (tryGenerateBrassage2AfterValidation()) return;
+      if (tryGenerateThirtySixFinalStages()) return;
       if (tryGenerateMainStageAfterValidation()) return;
       if (typeof window !== 'undefined') {
         window.setTimeout(() => {
           if (tryGenerateBrassage2AfterValidation()) return;
+          if (tryGenerateThirtySixFinalStages()) return;
           tryGenerateMainStageAfterValidation();
         }, 80);
         window.setTimeout(() => {
           if (tryGenerateBrassage2AfterValidation()) return;
+          if (tryGenerateThirtySixFinalStages()) return;
           tryGenerateMainStageAfterValidation();
         }, 220);
       }
@@ -8113,13 +8207,17 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
   const hasOrganizerFinalMatches = knockout.principalEighths.length > 0 || knockout.principalQuarters.length > 0
     || knockout.principalSemis.length > 0
     || knockout.principalFinals.length > 0
+    || (knockout.consolanteEighths || []).length > 0
+    || knockout.consolanteQuarters.length > 0
     || knockout.consolanteSemis.length > 0
     || knockout.consolanteFinals.length > 0
     || singleKnockout.quarters.length > 0
     || singleKnockout.semis.length > 0
     || singleKnockout.finals.length > 0;
 
-  const hasConsolanteStage = hasOrganizerConsolanteMatches || mainStage.consolantePools.length > 0 || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0 || Boolean(publicPodiumLeaders?.consolante?.first);
+  const hasConsolanteStage = hasOrganizerConsolanteMatches || mainStage.consolantePools.length > 0 || (knockout.consolanteEighths || []).length > 0
+    || knockout.consolanteQuarters.length > 0
+    || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0 || Boolean(publicPodiumLeaders?.consolante?.first);
   const finalsPrincipalEighthOnlyMatches = ensureMatchArray(knockout.principalEighths);
   const finalsConsolanteEighthOnlyMatches = ensureMatchArray(knockout.consolanteEighths);
   const finalsPrincipalStage1Matches = mainStageDistribution.directPrincipalSemis ? ensureMatchArray(knockout.principalSemis) : ensureMatchArray(knockout.principalQuarters);
@@ -8425,7 +8523,9 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                     )}
                   </div>
                   <div className="stack-gap">
-                    {(knockout.consolanteQuarters.length > 0 || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0) ? (
+                    {(knockout.consolanteQuarters.length > 0 || (knockout.consolanteEighths || []).length > 0
+    || knockout.consolanteQuarters.length > 0
+    || knockout.consolanteSemis.length > 0 || knockout.consolanteFinals.length > 0) ? (
                       <>
                         {knockout.consolanteQuarters.length > 0 ? renderQualifiedTeamsList('Équipes en quarts de finale consolante', publicConsolanteQuarterTeams, { showPoints: false }) : null}
                         {renderQualifiedTeamsList('Équipes en demi-finales consolante', publicConsolanteSemiTeams, { showPoints: false })}
