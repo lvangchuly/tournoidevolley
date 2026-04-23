@@ -19,7 +19,7 @@ const MIN_COURT_COUNT = 3;
 const MAX_COURT_COUNT = 6;
 let CURRENT_COURT_COUNT = DEFAULT_COURT_COUNT;
 const DEFAULT_TEAM_COUNT = 18;
-const TEAM_TARGET = 24;
+const TEAM_TARGET = 36;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, PN: 4, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', PN: 'team-level-pn', NP: 'team-level-pn', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32T';
+const APP_VERSION = 'V32U';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -281,7 +281,7 @@ function normalizeLevelValue(level, fallback = 'D') {
 }
 
 function normalizeTeamsList(inputTeams) {
-  if (!Array.isArray(inputTeams) || inputTeams.length === 0) return defaultTeams();
+  if (!Array.isArray(inputTeams) || inputTeams.length === 0) return defaultTeams(18);
   return inputTeams
     .filter(Boolean)
     .slice(0, TEAM_TARGET)
@@ -2389,7 +2389,7 @@ export default function App() {
   const [showOrganizerLogin, setShowOrganizerLogin] = useState(false);
   const [organizerAttempt, setOrganizerAttempt] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [teams, setTeams] = useState(() => normalizeTeamsList(safeClone(initial?.teams, defaultTeams())));
+  const [teams, setTeams] = useState(() => normalizeTeamsList(safeClone(initial?.teams, defaultTeams(18))));
   const [startTime, setStartTime] = useState(initial?.settings?.startTime || '09:00');
   const [slotDuration, setSlotDuration] = useState(initial?.settings?.slotDuration || 20);
   const [phaseRules, setPhaseRules] = useState(safeClone(initial?.settings?.phaseRules, DEFAULT_PHASE_RULES));
@@ -4932,7 +4932,7 @@ export default function App() {
     const nextSharedTournamentId = preserveSharedId ? (String(sharedTournamentId || '').trim() || buildDefaultSharedTournamentId('Tournoi de volley')) : buildDefaultSharedTournamentId('Tournoi de volley');
     const nextOrganizerPassword = preservePassword ? organizerPassword : '';
     return {
-      teams: resetLevelsToL ? defaultTeamsAllLevelL() : defaultTeams(),
+      teams: resetLevelsToL ? defaultTeamsAllLevelL() : defaultTeams(18),
       settings: {
         startTime: '09:00',
         slotDuration: 20,
