@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V32S';
+const APP_VERSION = 'V32T';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1291,6 +1291,23 @@ function rebalancePrincipalQuarterCourts(matches, count = CURRENT_COURT_COUNT) {
   return safeMatches;
 }
 
+
+function forcePrincipalQuarterThreeCourts(matches, count = CURRENT_COURT_COUNT) {
+  const safeMatches = Array.isArray(matches) ? matches.map((match) => ({ ...match })) : [];
+  const courtCount = clampCourtCount(count);
+  if (courtCount < 6 || safeMatches.length != 4) {
+    return safeMatches;
+  }
+  const orderedCourts = [1, 2, 3, 1];
+  return safeMatches.map((match, index) => ({
+    ...match,
+    court: orderedCourts[index],
+    slot: index < 3 ? 1 : 2,
+    time: '',
+    validatedAt: match.validatedAt || null,
+  }));
+}
+
 function assignScheduleWithCourts(matches, startSlot, courts) {
   const safeCourts = Array.isArray(courts) && courts.length ? courts : getCourtNumbers(CURRENT_COURT_COUNT);
   return matches.map((match, index) => {
@@ -2103,6 +2120,7 @@ function buildSaveModeFunctionnements() {
     "Pour 22 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 1 poule de 4 et 6 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 10 suivantes en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes et 1 poule de 4 équipes puis les 8 meilleures équipes du classement général des trois poules iront en quarts de finale consolante, puis demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 23 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 2 poules de 4 et 5 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 11 suivantes en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 2 poules de 4 et 1 poule de 3 équipes puis les 8 meilleures équipes du classement général des 3 poules iront en quarts de finale consolante, puis demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 24 équipes : même modèle que pour 18 équipes, avec 2 phases de brassage. Pour réduire la durée du tournoi sur 3 terrains, les équipes sont réparties en 8 poules de 3 au brassage 1, puis selon le même format au brassage 2. Le Brassage 1 est équilibré en serpent à partir des niveaux saisis, puis le Brassage 2 est recomposé en serpent selon le classement cumulé. À l’issue du classement cumulé, les 12 meilleures équipes vont en phase principale et les 12 dernières en phase consolante. La principale débute par 4 poules de 3 équipes, puis quarts de finale, demi-finales, finale principale et petite finale principale. La consolante débute par 4 poules de 3 équipes puis quarts de finale consolante, demi-finales consolante, finale consolante et petite finale consolante.",
+    "Pour 36 équipes : 2 phases de brassage avec 12 poules de 3 équipes au brassage 1 puis 12 poules de 3 équipes au brassage 2, recomposées en serpent selon le classement. À l’issue du brassage 2, les 18 meilleures équipes vont en phase principale et les 18 autres en phase consolante. Chaque tableau est organisé en 6 poules de 3 équipes. Après cette phase, les 16 meilleures équipes de chaque tableau accèdent aux huitièmes de finale, puis quarts de finale, demi-finales, finale et petite finale.",
   ];
 }
 
@@ -5848,7 +5866,7 @@ export default function App() {
     ).map((row) => row.teamId);
 
     if ([8, 9, 10].includes(currentTeamIds.length)) {
-      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(forcePrincipalQuarterThreeCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length)),
         getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
@@ -5868,7 +5886,7 @@ export default function App() {
 
     if (currentTeamIds.length === 12) {
       const startSlot = stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length));
-      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(forcePrincipalQuarterThreeCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
         getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
@@ -5890,7 +5908,7 @@ export default function App() {
 
     if (currentTeamIds.length === 11) {
       const startSlot = stageSlotCount(currentBrassage1.matches.length) + (useDirectBrassage1ToMainStage ? 0 : stageSlotCount(currentBrassage2.matches.length));
-      const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
+      const principalQuarters = stampGeneratedMatches(forcePrincipalQuarterThreeCourts(assignScheduleWithCourts(
         buildQuarterMatchesFromRanking(rankedIds.slice(0, 8)),
         startSlot,
         getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
@@ -6003,7 +6021,7 @@ export default function App() {
       makeKnockoutMatch('Tableau principal', 'Quart 3', pC[0]?.teamId || null, pB[1]?.teamId || null),
       makeKnockoutMatch('Tableau principal', 'Quart 4', pD[0]?.teamId || null, pC[1]?.teamId || null),
     ]);
-    const principalQuarters = stampGeneratedMatches(rebalancePrincipalQuarterCourts(assignScheduleWithCourts(
+    const principalQuarters = stampGeneratedMatches(forcePrincipalQuarterThreeCourts(assignScheduleWithCourts(
       principalQuartersRaw,
       stage1StartSlot,
       getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
