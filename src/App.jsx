@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33D';
+const APP_VERSION = 'V33E';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5707,38 +5707,53 @@ export default function App() {
     const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
     if (currentTeamCount !== 9) return false;
 
-    const currentLeg1 = championshipLeg1Ref.current;
-    const currentLeg2 = championshipLeg2Ref.current;
-    const currentSingleKnockout = singleKnockoutRef.current;
+    const currentLeg1 = championshipLeg1Ref.current || { pools: [], matches: [] };
+    const currentLeg2 = championshipLeg2Ref.current || { pools: [], matches: [] };
+    const currentSingleKnockout = singleKnockoutRef.current || { quarters: [], semis: [], finals: [] };
 
-    if (!currentLeg2 || !Array.isArray(currentLeg2.matches) || currentLeg2.matches.length === 0) return false;
-    if ((currentSingleKnockout?.quarters || []).length > 0) return false;
+    if (!Array.isArray(currentLeg2.matches) || currentLeg2.matches.length === 0) return false;
+    if ((currentSingleKnockout.quarters || []).length > 0) return false;
 
     const retourComplete = currentLeg2.matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
     if (!retourComplete) {
       if (!options?.silent) {
         window.alert('Tous les scores du Championnat Retour doivent être valides avant de générer les quarts de finale.');
       }
-      return true;
+      return false;
     }
 
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
+    const poolTeamIds = (
+      currentLeg2.pools?.[0]?.teamIds
+      || currentLeg1.pools?.[0]?.teamIds
+      || teamsRef.current.filter((team) => team.name.trim()).map((team) => team.id)
+      || []
+    ).filter(Boolean);
+
     const allChampionshipMatches = [
-      ...(Array.isArray(currentLeg1?.matches) ? currentLeg1.matches : []),
-      ...(Array.isArray(currentLeg2?.matches) ? currentLeg2.matches : []),
+      ...(Array.isArray(currentLeg1.matches) ? currentLeg1.matches : []),
+      ...(Array.isArray(currentLeg2.matches) ? currentLeg2.matches : []),
     ];
 
     const rankedIds = computeRanking(
-      (currentLeg2.pools?.[0]?.teamIds || currentLeg1.pools?.[0]?.teamIds || teamsRef.current.map((team) => team.id)).filter(Boolean),
+      poolTeamIds,
       allChampionshipMatches,
       currentTeamMap,
       phaseRulesRef.current,
       { normalizeByMatches: false },
     ).slice(0, 8).map((row) => row.teamId).filter(Boolean);
 
-    const startSlot = stageSlotCount((currentLeg1?.matches || []).length) + stageSlotCount((currentLeg2?.matches || []).length);
+    if (rankedIds.length < 8) {
+      if (!options?.silent) {
+        window.alert('Le classement du Championnat Retour ne contient pas encore 8 équipes qualifiées.');
+      }
+      return false;
+    }
+
+    const startSlot = stageSlotCount((currentLeg1.matches || []).length) + stageSlotCount((currentLeg2.matches || []).length);
+    const quarterRaw = buildQuarterMatchesFromRanking(rankedIds);
     const quarters = sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(
-      buildQuarterMatchesFromRanking(rankedIds),
+      quarterRaw,
       startSlot,
       getCourtNumbers(CURRENT_COURT_COUNT),
     )));
