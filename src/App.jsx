@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33J';
+const APP_VERSION = 'V33K';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2066,6 +2066,9 @@ function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSk
   if (!teamCount) return `${levelText} Ajoutez des équipes pour afficher automatiquement le déroulé du tournoi.`;
 
   if (isSmallTournamentMode) {
+    if (teamCount === 9) {
+      return `${levelText} Avec 9 équipes, méthode championnat : une seule poule de 9 équipes, Championnat Aller puis Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour qualifie les 8 meilleures équipes pour les quarts : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale.`;
+    }
     const finalStageText = teamCount <= 2
       ? 'pas de phase finale supplémentaire : le classement du championnat désigne directement le vainqueur'
       : teamCount <= 4
@@ -5725,7 +5728,9 @@ export default function App() {
     const currentLeg2 = championshipLeg2Ref.current || { pools: [], matches: [] };
     const currentSingle = singleKnockoutRef.current || { quarters: [], semis: [], finals: [] };
 
-    if ((currentSingle.quarters || []).length > 0 || (currentSingle.semis || []).length > 0 || (currentSingle.finals || []).length > 0) return false;
+    if ((currentSingle.quarters || []).length > 0 || (currentSingle.semis || []).length > 0 || (currentSingle.finals || []).length > 0) {
+      return false;
+    }
 
     const retourMatches = Array.isArray(currentLeg2.matches) ? currentLeg2.matches : [];
     if (retourMatches.length === 0) return false;
@@ -5740,15 +5745,17 @@ export default function App() {
     const poolTeamIds = (currentLeg2.pools?.[0]?.teamIds || currentLeg1.pools?.[0]?.teamIds || activeTeamIds).filter(Boolean);
     const { teamMap: currentTeamMap } = buildCurrentTeamContext();
 
-    const ranking = computeRanking(
+    const rankedIds = computeRanking(
       poolTeamIds,
-      [...(Array.isArray(currentLeg1.matches) ? currentLeg1.matches : []), ...retourMatches],
+      [
+        ...(Array.isArray(currentLeg1.matches) ? currentLeg1.matches : []),
+        ...retourMatches,
+      ],
       currentTeamMap,
       phaseRulesRef.current,
       { normalizeByMatches: false },
-    );
+    ).map((row) => row.teamId).filter(Boolean).slice(0, 8);
 
-    const rankedIds = ranking.map((row) => row.teamId).filter(Boolean).slice(0, 8);
     if (rankedIds.length < 8) {
       if (!options?.silent) window.alert('Impossible de générer les quarts : il faut 8 équipes classées après le Championnat Retour.');
       return false;
