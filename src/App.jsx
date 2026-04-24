@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33M';
+const APP_VERSION = 'V33N';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5327,7 +5327,63 @@ export default function App() {
     return progressed;
   }
 
+
+  function randomizeNineTeamTournamentScores() {
+    const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (currentTeamCount !== 9) return false;
+
+    const phaseRulesNow = phaseRulesRef.current || phaseRules;
+    const fillScope = (scope, matches) => {
+      const safeMatches = Array.isArray(matches) ? matches : [];
+      const remaining = safeMatches.filter((match) => getMatchStatusLabel(match, phaseRulesNow) !== 'Valide');
+      if (!remaining.length) return false;
+      applyRandomScores(scope);
+      return true;
+    };
+
+    if (fillScope('championshipLeg1', championshipLeg1Ref.current?.matches)) return true;
+
+    const allerComplete = (championshipLeg1Ref.current?.matches || []).length > 0
+      && (championshipLeg1Ref.current?.matches || []).every((match) => getMatchStatusLabel(match, phaseRulesNow) === 'Valide');
+    if (allerComplete && !(championshipLeg2Ref.current?.matches || []).length) {
+      generateBrassage2();
+      return true;
+    }
+
+    if (fillScope('championshipLeg2', championshipLeg2Ref.current?.matches)) return true;
+
+    const retourComplete = (championshipLeg2Ref.current?.matches || []).length > 0
+      && (championshipLeg2Ref.current?.matches || []).every((match) => getMatchStatusLabel(match, phaseRulesNow) === 'Valide');
+    if (retourComplete && !(singleKnockoutRef.current?.quarters || []).length) {
+      forceNineTeamFinalsIfReady({ silent: true });
+      return true;
+    }
+
+    if (fillScope('quarters', singleKnockoutRef.current?.quarters)) return true;
+
+    const quartersComplete = (singleKnockoutRef.current?.quarters || []).length > 0
+      && (singleKnockoutRef.current?.quarters || []).every((match) => getMatchStatusLabel(match, phaseRulesNow) === 'Valide');
+    if (quartersComplete && !(singleKnockoutRef.current?.semis || []).length) {
+      generateSmallKnockoutStage2();
+      return true;
+    }
+
+    if (fillScope('semis', singleKnockoutRef.current?.semis)) return true;
+
+    const semisComplete = (singleKnockoutRef.current?.semis || []).length > 0
+      && (singleKnockoutRef.current?.semis || []).every((match) => getMatchStatusLabel(match, phaseRulesNow) === 'Valide');
+    if (semisComplete && !(singleKnockoutRef.current?.finals || []).length) {
+      generateSmallKnockoutStage3();
+      return true;
+    }
+
+    if (fillScope('finals', singleKnockoutRef.current?.finals)) return true;
+
+    return true;
+  }
+
   function randomizeCurrentPhaseScores() {
+    if (randomizeNineTeamTournamentScores()) return;
     const confirmed = confirmWithDetails(
       'Des scores aléatoires seront saisis sur la phase en cours puis sur les phases suivantes si elles sont générées. Les matchs en cours et les matchs déjà validés ne seront pas modifiés.',
       'Veux-tu continuer ?'
@@ -5757,10 +5813,7 @@ export default function App() {
       { normalizeByMatches: false },
     ).map((row) => row.teamId).filter(Boolean).slice(0, 8);
 
-    if (rankedIds.length < 8) {
-      if (!options?.silent) window.alert('Impossible de générer les quarts : il faut 8 équipes classées après le Championnat Retour.');
-      return false;
-    }
+    if (rankedIds.length < 8) return false;
 
     const startSlot = stageSlotCount(Array.isArray(currentLeg1.matches) ? currentLeg1.matches.length : 0) + stageSlotCount(retourMatches.length);
     const quarterMatches = sanitizeKnockoutMatches(stampGeneratedMatches(assignScheduleWithCourts(
