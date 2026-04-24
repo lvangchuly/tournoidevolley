@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33A';
+const APP_VERSION = 'V33B';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -92,7 +92,7 @@ function getMainStageDistribution(teamCount) {
   if (teamCount === 20) return { principaleCount: 12, consolanteCount: 8, normalizedRanking: false, consolanteMode: 'quarter-pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
   if (teamCount === 19) return { principaleCount: 12, consolanteCount: 7, normalizedRanking: false, consolanteMode: 'mixed43', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: ['Consolante A', 'Consolante B'], directPrincipalSemis: false };
   if (teamCount === 18) return { principaleCount: 12, consolanteCount: 6, normalizedRanking: false, consolanteMode: 'pools', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: CONSOLANTE_POOL_NAMES.slice(0, 2), directPrincipalSemis: false };
-  if (teamCount === 8 || teamCount === 9 || teamCount === 10) return { principaleCount: 8, consolanteCount: 0, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [], directPrincipalSemis: false };
+  if (teamCount === 8 || teamCount === 10) return { principaleCount: 8, consolanteCount: 0, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [], directPrincipalSemis: false };
   if (teamCount === 12) return { principaleCount: 8, consolanteCount: 4, normalizedRanking: true, consolanteMode: 'direct-podium', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
   if (teamCount === 11) return { principaleCount: 8, consolanteCount: 3, normalizedRanking: true, consolanteMode: 'pools', principalePoolNames: [], consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false, directPrincipalQuarters: true };
   if (teamCount === 17) return { principaleCount: 12, consolanteCount: 5, normalizedRanking: true, consolanteMode: 'championship', principalePoolNames: PRINCIPALE_POOL_NAMES.slice(0, 4), consolantePoolNames: [CONSOLANTE_POOL_NAMES[0]], directPrincipalSemis: false };
@@ -105,7 +105,7 @@ function getMainStageDistribution(teamCount) {
 }
 const CHAMPIONSHIP_ALLER_POOL_NAME = 'Championnat Aller';
 const CHAMPIONSHIP_RETOUR_POOL_NAME = 'Championnat Retour';
-const SMALL_QUARTER_PAIRINGS = [[1, 8], [4, 5], [3, 6], [2, 7]];
+const SMALL_QUARTER_PAIRINGS = [[1, 8], [2, 7], [3, 6], [4, 5]];
 
 const RANDOM_TEAM_NAMES = ['Atlas', 'Blitz', 'Comete', 'Cyclone', 'Dynamo', 'Eclair', 'Falcon', 'Fusion', 'Galaxy', 'Helios', 'Horizon', 'Impact', 'Jaguar', 'Krypton', 'Laser', 'Meteor', 'Mirage', 'Nova', 'Orion', 'Phenix', 'Pixel', 'Quartz', 'Raptor', 'Rocket', 'Shadow', 'Silver', 'Solstice', 'Sonic', 'Storm', 'Titan', 'Turbo', 'Vega', 'Vector', 'Volt', 'Zenith', 'Aigle', 'Boreal', 'Cobalt', 'Cosmos', 'Dragon', 'Echo', 'Foudre', 'Globe', 'Inferno', 'Iris', 'Lynx', 'Magma', 'Nimbus', 'Onyx', 'Pegase', 'Pulsar', 'Ruby', 'Saphir', 'Saturne', 'Spectrum', 'Tornado', 'Vortex', 'Ymir', 'Zephyr'];
 
@@ -738,8 +738,8 @@ function buildSemisFromRanking(rankedIds) {
 
 function buildSemisFromQuarters(rankedIds, quarterMatches, phaseRules) {
   return [
-    makeKnockoutMatch('Demi-finale', 'Demi 1', resolveQuarterSlotWinner(rankedIds, quarterMatches, 0, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 1, phaseRules)),
-    makeKnockoutMatch('Demi-finale', 'Demi 2', resolveQuarterSlotWinner(rankedIds, quarterMatches, 2, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 3, phaseRules)),
+    makeKnockoutMatch('Demi-finale', 'Demi 1', resolveQuarterSlotWinner(rankedIds, quarterMatches, 0, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 3, phaseRules)),
+    makeKnockoutMatch('Demi-finale', 'Demi 2', resolveQuarterSlotWinner(rankedIds, quarterMatches, 1, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 2, phaseRules)),
   ].filter((match) => match.teamAId && match.teamBId);
 }
 
@@ -2129,6 +2129,7 @@ function buildSaveModeFunctionnements() {
     "Pour 8 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 équipes disputent ensuite directement les quarts de finale, puis les demi-finales, la finale et la petite finale.",
     "Pour 9 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes du classement accèdent aux quarts de finale principale ; la 9e équipe n’est pas qualifiée pour la phase finale. Les gagnantes des quarts vont en demi-finales, puis en finale principale, avec petite finale pour les perdantes des demi-finales.",
     "Pour 10 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes du classement accèdent aux quarts de finale principale ; les 2 dernières ne sont pas qualifiées pour la phase finale. Les gagnantes des quarts vont en demi-finales, puis en finale principale, avec petite finale pour les perdantes des demi-finales.",
+    "Pour 9 équipes : méthode championnat. Le tournoi commence par une seule poule de 9 équipes où toutes les équipes se rencontrent en Championnat Aller puis en Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour désigne les 8 meilleures équipes pour les quarts de finale. Les quarts suivent le classement : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale.",
     "Pour 11 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes du classement accèdent directement aux quarts de finale principale. Les 3 autres équipes forment une poule unique de consolante ; le classement final de cette poule attribue directement le podium consolante. Les gagnantes des quarts principale vont en demi-finales, puis en finale principale, avec petite finale pour les perdantes des demi-finales.",
     "Pour 12 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes du classement accèdent directement aux quarts de finale principale. Les 4 autres équipes disputent une consolante en championnat, et les 3 meilleures équipes forment le podium de la consolante.",
     "Pour 13 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 2 poules de 4 équipes ; les 2 premières de chaque poule vont directement en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale et la petite finale consolante.",
