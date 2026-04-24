@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33C';
+const APP_VERSION = 'V33D';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5283,6 +5283,33 @@ export default function App() {
     return progressed;
   }
 
+
+  function forceGenerateNineTeamStagesAfterRandomScores() {
+    const currentTeamCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (currentTeamCount !== 9) return false;
+
+    let progressed = false;
+
+    try {
+      const leg1Matches = championshipLeg1Ref.current?.matches || [];
+      const leg2Matches = championshipLeg2Ref.current?.matches || [];
+      const allerComplete = leg1Matches.length > 0 && leg1Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      const retourMissing = leg2Matches.length === 0;
+      if (allerComplete && retourMissing && typeof generateBrassage2 === 'function') {
+        generateBrassage2();
+        progressed = true;
+      }
+    } catch {}
+
+    try {
+      if (generateNineTeamFinalsFromChampionshipReturn({ silent: true })) {
+        progressed = true;
+      }
+    } catch {}
+
+    return progressed;
+  }
+
   function randomizeCurrentPhaseScores() {
     const confirmed = confirmWithDetails(
       'Des scores aléatoires seront saisis sur la phase en cours puis sur les phases suivantes si elles sont générées. Les matchs en cours et les matchs déjà validés ne seront pas modifiés.',
@@ -5354,6 +5381,7 @@ export default function App() {
 
     const tryProgress = () => {
       let progressed = false;
+      try { if (forceGenerateNineTeamStagesAfterRandomScores()) progressed = true; } catch {}
       try { if (forceGenerateThirtySixFinalStagesAfterRandomScores()) progressed = true; } catch {}
       try { if (typeof tryAutoGenerateBrassage2Silently === 'function' && tryAutoGenerateBrassage2Silently()) progressed = true; } catch {}
       try {
