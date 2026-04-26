@@ -1,7 +1,33 @@
-html, body, #root {
-  background: #1b1f2a !important;
+.public-rankings-grid,
+.public-ranking-card {
+  width: 100%;
 }
 
-body {
-  background-color: #1b1f2a !important;
+.public-ranking-card {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.public-ranking-card table,
+.public-ranking-card .ranking-table,
+.public-ranking-card .table-wrap {
+  min-width: 720px !important;
+  width: max-content !important;
+}
+
+@media (min-width: 769px) {
+  .public-rankings-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px !important;
+    align-items: start !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .public-rankings-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
 }

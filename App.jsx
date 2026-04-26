@@ -1,33 +1,28 @@
-.public-rankings-grid,
-.public-ranking-card {
-  width: 100%;
+
+/* V23Y : lisibilité maximale colonne Match */
+.match-column,
+.match-cell,
+td:first-child {
+  background: #020617 !important;
+  color: #ffffff !important;
 }
 
-.public-ranking-card {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch;
+/* heure */
+.match-time {
+  color: #22c55e !important;
+  font-weight: 800 !important;
+  font-size: 16px !important;
 }
 
-.public-ranking-card table,
-.public-ranking-card .ranking-table,
-.public-ranking-card .table-wrap {
-  min-width: 720px !important;
-  width: max-content !important;
+/* texte match */
+.match-cell div,
+.match-cell span,
+td:first-child div {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
 }
 
-@media (min-width: 769px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px !important;
-    align-items: start !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
+/* lignes */
+td:first-child {
+  border-right: 2px solid rgba(255,255,255,0.2) !important;
 }

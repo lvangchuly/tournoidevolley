@@ -1,45 +1,38 @@
-.public-rankings-grid,
-.public-ranking-card,
-.public-ranking,
-.public-standings,
-.ranking-section,
-.standings-section {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+/* V23Y : améliore la lisibilité de la colonne Match sur tous les affichages */
+th.match-column,
+td.match-column,
+[data-column="match"],
+[data-col="match"],
+.match-column,
+.match-cell,
+.match-label,
+.match-number {
+  color: #ffffff !important;
+  font-weight: 700 !important;
 }
 
-.public-ranking-card {
-  overflow-x: auto !important;
-  max-width: 100% !important;
+td.match-column,
+[data-column="match"],
+[data-col="match"],
+.match-cell,
+.match-label,
+.match-number {
+  background: #1e293b !important;
+  border-color: rgba(255,255,255,0.14) !important;
 }
 
-.public-ranking-card table,
-.public-ranking-card .table-wrap,
-.public-ranking-card .ranking-table {
-  min-width: 640px !important;
-  width: max-content !important;
-}
-
-@media (min-width: 769px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px !important;
-    align-items: start !important;
-  }
+th.match-column {
+  background: #0f172a !important;
 }
 
 @media (max-width: 768px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  .public-ranking-card {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 4px !important;
+  td.match-column,
+  [data-column="match"],
+  [data-col="match"],
+  .match-cell,
+  .match-label,
+  .match-number {
+    background: #111827 !important;
+    color: #ffffff !important;
   }
 }

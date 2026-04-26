@@ -1,28 +1,15 @@
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-/* V23Y : lisibilité maximale colonne Match */
-.match-column,
-.match-cell,
-td:first-child {
-  background: #020617 !important;
-  color: #ffffff !important;
-}
-
-/* heure */
-.match-time {
-  color: #22c55e !important;
-  font-weight: 800 !important;
-  font-size: 16px !important;
-}
-
-/* texte match */
-.match-cell div,
-.match-cell span,
-td:first-child div {
-  color: #e2e8f0 !important;
-  font-weight: 600 !important;
-}
-
-/* lignes */
-td:first-child {
-  border-right: 2px solid rgba(255,255,255,0.2) !important;
-}
+export default defineConfig({
+  base: './',
+  plugins: [react()],
+  server: {
+    host: true,
+    port: 5173,
+  },
+  preview: {
+    host: true,
+    port: 4173,
+  },
+});

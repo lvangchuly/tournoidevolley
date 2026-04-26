@@ -1,10 +1,23 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App.jsx';
-import './styles.css';
+/* V23Y: force l'affichage des classements dans le mode Public sur smartphone */
+.public-ranking,
+.public-standings,
+.ranking-section,
+.standings-section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+@media (max-width: 768px) {
+  .public-ranking,
+  .public-standings,
+  .ranking-section,
+  .standings-section,
+  .hidden-on-mobile-ranking {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
