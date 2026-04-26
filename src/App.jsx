@@ -20,6 +20,7 @@ const MAX_COURT_COUNT = 6;
 let CURRENT_COURT_COUNT = DEFAULT_COURT_COUNT;
 const DEFAULT_TEAM_COUNT = 18;
 const TEAM_TARGET = 36;
+const MIN_TEAM_TARGET = 15;
 const LEVELS = ['L', 'D', 'R', 'PN', 'N'];
 const LEVEL_WEIGHT = { L: 1, D: 2, R: 3, PN: 4, NP: 4, N: 5 };
 const LEVEL_CLASS = { N: 'team-level-n', PN: 'team-level-pn', NP: 'team-level-pn', R: 'team-level-r', D: 'team-level-d', L: 'team-level-l' };
@@ -36,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34E';
+const APP_VERSION = 'V34F';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2065,16 +2066,8 @@ function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSk
   const levelText = 'N = National, PN = Pré-National, R = Régional, D = Départementale, L = Loisir.';
   if (!teamCount) return `${levelText} Ajoutez des équipes pour afficher automatiquement le déroulé du tournoi.`;
 
-  if (isSmallTournamentMode) {
-    if (teamCount === 9 || teamCount === 10) {
-      return `${levelText} Avec ${teamCount} équipes, méthode championnat : une seule poule de ${teamCount} équipes, Championnat Aller puis Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour qualifie les 8 meilleures équipes pour les quarts : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale.`;
-    }
-    const finalStageText = teamCount <= 2
-      ? 'pas de phase finale supplémentaire : le classement du championnat désigne directement le vainqueur'
-      : teamCount <= 4
-        ? 'demi-finales puis finale et petite finale'
-        : 'quarts de finale, demi-finales puis finale et petite finale';
-    return `${levelText} Avec ${teamCount} équipes, le tournoi se joue en championnat aller${teamCount >= 5 ? ' puis retour' : ''}. À l’issue du championnat, le classement général qualifie les équipes pour ${finalStageText}.`;
+  if (activeTeamCount < MIN_TEAM_TARGET) {
+    return `${levelText} Le tournoi doit contenir au minimum 15 équipes pour être généré.`;
   }
 
   const phases = ['Brassage 1'];
@@ -2129,13 +2122,7 @@ function getSaveModeExplanationTeamCount(item) {
 function buildSaveModeFunctionnements() {
   return [
     "Pour 1 à 7 équipes : le tournoi se joue en championnat aller, puis en championnat retour à partir de 5 équipes. Le classement général qualifie ensuite les équipes pour une phase finale adaptée : pas de tableau final à 2 équipes, demi-finales à 3 ou 4 équipes, et quarts de finale à partir de 5 équipes.",
-    "Pour 8 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 équipes disputent ensuite directement les quarts de finale, puis les demi-finales, la finale et la petite finale.",
-    "Pour 9 équipes : méthode championnat. Le tournoi commence par une seule poule de 9 équipes où toutes les équipes se rencontrent en Championnat Aller puis en Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour désigne les 8 meilleures équipes pour les quarts de finale. Les quarts suivent le classement : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale.",
 
-    "Pour 10 équipes : méthode championnat. Le tournoi commence par une seule poule de 10 équipes où toutes les équipes se rencontrent en Championnat Aller puis en Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour désigne les 8 meilleures équipes pour les quarts de finale. Les quarts suivent le classement : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale. Avec 3 terrains, la planification privilégie la compacité et peut faire alterner les matchs sur les terrains disponibles.",
-    "Pour 12 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes du classement accèdent directement aux quarts de finale principale. Les 4 autres équipes disputent une consolante en championnat, et les 3 meilleures équipes forment le podium de la consolante.",
-    "Pour 13 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 2 poules de 4 équipes ; les 2 premières de chaque poule vont directement en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale et la petite finale consolante.",
-    "Pour 14 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 8 meilleures équipes accèdent à la principale et les 6 autres à la consolante. La principale débute par 2 poules de 4 équipes ; les 2 premières de chaque poule vont directement en demi-finales principale, puis en finale principale et petite finale principale. La consolante débute par 2 poules de 3 équipes ; les 2 meilleures de chaque poule vont en demi-finales consolante, puis en finale consolante et petite finale consolante.",
     "Pour 15 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 3 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue en championnat à 3 équipes avec classement final direct.",
     "Pour 16 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 4 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 4 équipes, puis en demi-finales consolante, finale consolante et petite finale consolante.",
     "Pour 17 équipes : 2 phases de brassage. La première répartit les équipes selon le niveau saisi (N, PN, R, D et L). La seconde recompose les poules selon la moyenne de points cumulés. Les 12 meilleures équipes accèdent à la principale et les 5 autres à la consolante. La principale débute par 4 poules de 3 équipes ; les 2 premières de chaque poule forment les quarts de finale principale. Les gagnantes des quarts vont en demi-finales principale, puis en finale principale et petite finale principale. La consolante se joue d’abord en championnat à 5 équipes avant les demi-finales, la finale consolante et la petite finale consolante.",
@@ -5566,7 +5553,7 @@ export default function App() {
     let added = false;
     setTeams((current) => {
       if (current.length >= TEAM_TARGET) {
-        window.alert(`Le tournoi standard est limité à ${TEAM_TARGET} équipes.`);
+        window.alert(`Le tournoi est limité à ${TEAM_TARGET} équipes, avec un minimum de 15 équipes.`);
         return current;
       }
       added = true;
@@ -5578,6 +5565,12 @@ export default function App() {
   }
 
   function removeTeam(teamId) {
+    const activeTeamsCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (activeTeamsCount <= MIN_TEAM_TARGET) {
+      window.alert('Le tournoi doit conserver au minimum 15 équipes.');
+      return;
+    }
+
     const mutationTimestamp = markPendingLocalMutation(new Date().toISOString());
     setTeams((current) => current.filter((team) => team.id !== teamId));
     setBrassage1({ pools: [], matches: [] });
@@ -5654,6 +5647,12 @@ export default function App() {
   }
 
   function generateBrassage1() {
+    const readyTeamsCount = teamsRef.current.filter((team) => team.name.trim()).length;
+    if (readyTeamsCount < MIN_TEAM_TARGET) {
+      window.alert('Il faut au minimum 15 équipes pour générer le tournoi.');
+      return;
+    }
+
     if (!confirmClearStageScores([
       ...brassage1.matches,
       ...brassage2.matches,
