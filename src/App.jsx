@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33T';
+const APP_VERSION = 'V33V';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -3904,10 +3904,6 @@ export default function App() {
       : 'Tous les matchs officiels valides sont pris en compte.';
 
   const organizerPhaseEstimateData = useMemo(() => {
-    if (forceSmallChampionshipQuartersIfReady({ silent: true })) {
-      return;
-    }
-
     if (isSmallTournamentMode) {
       const championshipAllerComplete = championshipLeg1.matches.length > 0 && championshipLeg1.matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
       const championshipRetourComplete = championshipLeg2.matches.length > 0 && championshipLeg2.matches.every((match) => getMatchStatusLabel(match, phaseRules) === 'Valide');
@@ -5358,7 +5354,8 @@ export default function App() {
 
     if (fillScope('championshipLeg2', championshipLeg2Ref.current?.matches)) return true;
 
-    if (forceSmallChampionshipQuartersIfReady({ silent: true })) return true;
+    if (typeof forceSmallChampionshipQuartersIfReady === 'function' && forceSmallChampionshipQuartersIfReady({ silent: true })) return true;
+    if (typeof forceNineTeamFinalsIfReady === 'function' && forceNineTeamFinalsIfReady({ silent: true })) return true;
 
     if (fillScope('quarters', singleKnockoutRef.current?.quarters)) return true;
 
@@ -5379,7 +5376,8 @@ export default function App() {
     }
 
     if (fillScope('finals', singleKnockoutRef.current?.finals)) return true;
-    return true;
+
+    return false;
   }
 
   function randomizeCurrentPhaseScores() {
@@ -5442,6 +5440,9 @@ export default function App() {
       pushIfPlayable('principale', mainStageRef.current?.principaleMatches);
       pushIfPlayable('consolante', mainStageRef.current?.consolanteMatches);
       pushIfPlayable('principalEighths', knockoutRef.current?.principalEighths);
+      pushIfPlayable('quarters', singleKnockoutRef.current?.quarters);
+      pushIfPlayable('semis', singleKnockoutRef.current?.semis);
+      pushIfPlayable('finals', singleKnockoutRef.current?.finals);
       pushIfPlayable('principalQuarters', knockoutRef.current?.principalQuarters);
       pushIfPlayable('consolanteEighths', knockoutRef.current?.consolanteEighths);
       pushIfPlayable('consolanteQuarters', knockoutRef.current?.consolanteQuarters);
@@ -7321,10 +7322,7 @@ export default function App() {
     queueMicrotask(() => {
       if (tryGenerateBrassage2AfterValidation()) return;
       if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-      if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
       if (stableGenerateAfterBrassage2({ silent: true })) return;
-      if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-      if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
       if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
       if (tryGenerateThirtySixFinalStages()) return;
       if (stableGenerateAfterBrassage2({ silent: true })) return;
@@ -7333,16 +7331,14 @@ export default function App() {
         window.setTimeout(() => {
           if (tryGenerateBrassage2AfterValidation()) return;
           if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-          if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-          if (tryGenerateThirtySixFinalStages()) return;
+      if (tryGenerateThirtySixFinalStages()) return;
           if (stableGenerateAfterBrassage2({ silent: true })) return;
           tryGenerateMainStageAfterValidation();
         }, 80);
         window.setTimeout(() => {
           if (tryGenerateBrassage2AfterValidation()) return;
           if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-          if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
-          if (tryGenerateThirtySixFinalStages()) return;
+      if (tryGenerateThirtySixFinalStages()) return;
           if (stableGenerateAfterBrassage2({ silent: true })) return;
           tryGenerateMainStageAfterValidation();
         }, 220);
