@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33Z';
+const APP_VERSION = 'V34A';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6456,22 +6456,33 @@ export default function App() {
   function generateQuartersIfFinalsStartAtQuarters(options = {}) {
     const teamCount = teamsRef.current.filter((team) => team.name.trim()).length;
 
-    // Méthode championnat 8/9/10 : Championnat Aller/Retour => top 8 => quarts.
+    const b1Matches = brassage1Ref.current?.matches || [];
+    const b2Matches = brassage2Ref.current?.matches || [];
+    const c1Matches = championshipLeg1Ref.current?.matches || [];
+    const c2Matches = championshipLeg2Ref.current?.matches || [];
+
+    const allValid = (matches) => Array.isArray(matches)
+      && matches.length > 0
+      && matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+
+    // Garde-fou V34A : aucune génération de quarts si aucune phase initiale n'a démarré.
+    if (b1Matches.length === 0 && c1Matches.length === 0) return false;
+
+    const championnatComplet = allValid(c1Matches) && allValid(c2Matches);
+    const brassageComplet = allValid(b1Matches) && allValid(b2Matches);
+
+    // Méthode championnat 8 / 9 / 10 : uniquement après Championnat Retour valide.
     if ([8, 9, 10].includes(teamCount)) {
+      if (!championnatComplet) return false;
       if (typeof forceSmallChampionshipQuartersIfReady === 'function') {
         return forceSmallChampionshipQuartersIfReady(options);
       }
       return false;
     }
 
-    // Formats <13 hors championnat : Brassage 2 => classement cumulé => quarts principale.
+    // Petits formats hors championnat : uniquement après Brassage 1 + Brassage 2 valides.
     if (teamCount < 13) {
-      const b1Matches = brassage1Ref.current?.matches || [];
-      const b2Matches = brassage2Ref.current?.matches || [];
-      if (!b2Matches.length) return false;
-
-      const b2Complete = b2Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-      if (!b2Complete) return false;
+      if (!brassageComplet) return false;
 
       const activeTeams = teamsRef.current.filter((team) => team.name.trim());
       const { teamMap } = buildCurrentTeamContext();
@@ -6489,7 +6500,9 @@ export default function App() {
       });
     }
 
-    // Formats où Principale existe déjà mais sans poule principale : générer depuis classement disponible.
+    // Autres formats : pas de quarts directs avant Brassage 2 complet.
+    if (!brassageComplet) return false;
+
     const mainStage = mainStageRef.current || {};
     const hasPrincipalPools = (mainStage.principalePools || []).length > 0;
     const hasPrincipalMatches = (mainStage.principaleMatches || []).length > 0;
@@ -6500,16 +6513,16 @@ export default function App() {
       const { teamMap } = buildCurrentTeamContext();
       const rankedIds = computeRanking(
         activeTeams.map((team) => team.id).filter(Boolean),
-        [
-          ...(brassage1Ref.current?.matches || []),
-          ...(brassage2Ref.current?.matches || []),
-        ],
+        [...b1Matches, ...b2Matches],
         teamMap,
         phaseRulesRef.current,
         { normalizeByMatches: false },
       ).map((row) => row.teamId).filter(Boolean).slice(0, 8);
 
-      return generateDirectPrincipalQuartersFromRanking(rankedIds, options);
+      return generateDirectPrincipalQuartersFromRanking(rankedIds, {
+        ...options,
+        startSlot: stageSlotCount(b1Matches.length) + stageSlotCount(b2Matches.length),
+      });
     }
 
     return false;
