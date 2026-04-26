@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33V';
+const APP_VERSION = 'V33W';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5293,6 +5293,7 @@ export default function App() {
     if (currentTeamCount !== 36) return false;
 
     let progressed = false;
+      try { if (tryProgressPrincipalAfterRandomScores()) progressed = true; } catch {}
     if (!(knockoutRef.current?.principalEighths || []).length) {
       progressed = generateThirtySixPrincipalEighths({ silent: true }) || progressed;
     }
@@ -5378,6 +5379,35 @@ export default function App() {
     if (fillScope('finals', singleKnockoutRef.current?.finals)) return true;
 
     return false;
+  }
+
+
+  function tryProgressPrincipalAfterRandomScores() {
+    let progressed = false;
+    try {
+      const currentKnockout = knockoutRef.current || {};
+      const principalQuarters = currentKnockout.principalQuarters || [];
+      const principalSemis = currentKnockout.principalSemis || [];
+      const principalFinals = currentKnockout.principalFinals || [];
+
+      const quartersComplete = principalQuarters.length > 0
+        && principalQuarters.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      const semisComplete = principalSemis.length > 0
+        && principalSemis.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+
+      if (quartersComplete && principalSemis.length === 0 && typeof generatePrincipalSemis === 'function') {
+        generatePrincipalSemis();
+        progressed = true;
+      }
+
+      if (semisComplete && principalFinals.length === 0 && typeof generatePrincipalFinals === 'function') {
+        generatePrincipalFinals();
+        progressed = true;
+      }
+    } catch (error) {
+      console.error('Erreur progression principale score aléatoire', error);
+    }
+    return progressed;
   }
 
   function randomizeCurrentPhaseScores() {
@@ -6776,6 +6806,21 @@ export default function App() {
       const next = { ...mainStageRef.current, principaleMatches: applyUpdater(mainStageRef.current?.principaleMatches) };
       mainStageRef.current = next;
       setMainStage(next);
+      refreshLatestPersistedSnapshot();
+      return;
+    }
+
+    if (scope === 'principalSemis') {
+      const next = { ...knockoutRef.current, principalSemis: applyUpdater(knockoutRef.current?.principalSemis) };
+      knockoutRef.current = next;
+      setKnockout(next);
+      refreshLatestPersistedSnapshot();
+      return;
+    }
+    if (scope === 'principalFinals') {
+      const next = { ...knockoutRef.current, principalFinals: applyUpdater(knockoutRef.current?.principalFinals) };
+      knockoutRef.current = next;
+      setKnockout(next);
       refreshLatestPersistedSnapshot();
       return;
     }
