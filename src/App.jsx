@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34B';
+const APP_VERSION = 'V34C';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5426,48 +5426,58 @@ export default function App() {
     return true;
   }
 
-  function progressStructureBeforeRandomFill() {
+  function fillFirstPendingScopeForRandomScore() {
+    const scopeOrder = [
+      ['championshipLeg1', championshipLeg1Ref.current?.matches],
+      ['championshipLeg2', championshipLeg2Ref.current?.matches],
+      ['brassage1', brassage1Ref.current?.matches],
+      ['brassage2', brassage2Ref.current?.matches],
+      ['principale', mainStageRef.current?.principaleMatches],
+      ['consolante', mainStageRef.current?.consolanteMatches],
+      ['principalEighths', knockoutRef.current?.principalEighths],
+      ['principalQuarters', knockoutRef.current?.principalQuarters],
+      ['principalSemis', knockoutRef.current?.principalSemis],
+      ['principalFinals', knockoutRef.current?.principalFinals],
+      ['consolanteEighths', knockoutRef.current?.consolanteEighths],
+      ['consolanteQuarters', knockoutRef.current?.consolanteQuarters],
+      ['consolanteSemis', knockoutRef.current?.consolanteSemis],
+      ['consolanteFinals', knockoutRef.current?.consolanteFinals],
+      ['quarters', singleKnockoutRef.current?.quarters],
+      ['semis', singleKnockoutRef.current?.semis],
+      ['finals', singleKnockoutRef.current?.finals],
+    ];
+    for (const [scope, matches] of scopeOrder) {
+      if (fillRandomScope(scope, matches)) return true;
+    }
+    return false;
+  }
+
+  function progressStructureForRandomScore() {
     let progressed = false;
+    const rules = phaseRulesRef.current;
 
     try {
       const b1Matches = brassage1Ref.current?.matches || [];
       const b2Matches = brassage2Ref.current?.matches || [];
-      const b1Complete = b1Matches.length > 0
-        && b1Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-
+      const b1Complete = b1Matches.length > 0 && b1Matches.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
       if (b1Complete && b2Matches.length === 0 && typeof generateBrassage2 === 'function') {
         generateBrassage2();
         progressed = true;
       }
-    } catch (error) {
-      console.error('Progression Brassage 1 vers Brassage 2', error);
-    }
+    } catch (error) { console.error('Progression Brassage 1 → Brassage 2', error); }
 
     try {
       const c1Matches = championshipLeg1Ref.current?.matches || [];
       const c2Matches = championshipLeg2Ref.current?.matches || [];
-      const c1Complete = c1Matches.length > 0
-        && c1Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-
+      const c1Complete = c1Matches.length > 0 && c1Matches.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
       if (c1Complete && c2Matches.length === 0 && typeof generateBrassage2 === 'function') {
         generateBrassage2();
         progressed = true;
       }
-    } catch (error) {
-      console.error('Progression Championnat Aller vers Retour', error);
-    }
+    } catch (error) { console.error('Progression Championnat Aller → Retour', error); }
 
     try { if (typeof generateQuartersIfFinalsStartAtQuarters === 'function' && generateQuartersIfFinalsStartAtQuarters({ silent: true })) progressed = true; } catch (error) { console.error('Progression quarts directs', error); }
-    try { if (typeof forceSmallChampionshipQuartersIfReady === 'function' && forceSmallChampionshipQuartersIfReady({ silent: true })) progressed = true; } catch (error) { console.error('Progression championnat', error); }
-    try { if (typeof forceNineTeamFinalsIfReady === 'function' && forceNineTeamFinalsIfReady({ silent: true })) progressed = true; } catch (error) { console.error('Progression 9/10 équipes', error); }
     try { if (typeof stableGenerateAfterBrassage2 === 'function' && stableGenerateAfterBrassage2({ silent: true })) progressed = true; } catch (error) { console.error('Progression Brassage 2', error); }
-
-    return progressed;
-  }
-
-  function progressFinalStagesAfterRandomFill() {
-    let progressed = false;
-    const rules = phaseRulesRef.current;
 
     try {
       const singleQuarters = singleKnockoutRef.current?.quarters || [];
@@ -5520,47 +5530,16 @@ export default function App() {
     return progressed;
   }
 
-  function fillFirstPendingScopeForRandomScore() {
-    const scopeOrder = [
-      ['championshipLeg1', championshipLeg1Ref.current?.matches],
-      ['championshipLeg2', championshipLeg2Ref.current?.matches],
-      ['brassage1', brassage1Ref.current?.matches],
-      ['brassage2', brassage2Ref.current?.matches],
-      ['principale', mainStageRef.current?.principaleMatches],
-      ['consolante', mainStageRef.current?.consolanteMatches],
-      ['principalEighths', knockoutRef.current?.principalEighths],
-      ['principalQuarters', knockoutRef.current?.principalQuarters],
-      ['principalSemis', knockoutRef.current?.principalSemis],
-      ['principalFinals', knockoutRef.current?.principalFinals],
-      ['consolanteEighths', knockoutRef.current?.consolanteEighths],
-      ['consolanteQuarters', knockoutRef.current?.consolanteQuarters],
-      ['consolanteSemis', knockoutRef.current?.consolanteSemis],
-      ['consolanteFinals', knockoutRef.current?.consolanteFinals],
-      ['quarters', singleKnockoutRef.current?.quarters],
-      ['semis', singleKnockoutRef.current?.semis],
-      ['finals', singleKnockoutRef.current?.finals],
-    ];
-
-    for (const [scope, matches] of scopeOrder) {
-      if (fillRandomScope(scope, matches)) return true;
-    }
-    return false;
-  }
-
   function randomizeTournamentUntilStable() {
-    const MAX_RANDOM_STEPS = 100;
+    const MAX_RANDOM_STEPS = 120;
     let changed = false;
 
     for (let step = 0; step < MAX_RANDOM_STEPS; step += 1) {
-      if (progressStructureBeforeRandomFill()) {
-        changed = true;
-        continue;
-      }
       if (fillFirstPendingScopeForRandomScore()) {
         changed = true;
         continue;
       }
-      if (progressFinalStagesAfterRandomFill()) {
+      if (progressStructureForRandomScore()) {
         changed = true;
         continue;
       }
@@ -6411,12 +6390,23 @@ export default function App() {
     const ids = (Array.isArray(rankedIds) ? rankedIds : []).filter(Boolean).slice(0, 8);
     if (ids.length < 8) return false;
 
+    if (!options?.force) {
+      const teamCount = teamsRef.current.filter((team) => team.name.trim()).length;
+      const b1Matches = brassage1Ref.current?.matches || [];
+      const b2Matches = brassage2Ref.current?.matches || [];
+      const c1Matches = championshipLeg1Ref.current?.matches || [];
+      const c2Matches = championshipLeg2Ref.current?.matches || [];
+      const allValid = (matches) => Array.isArray(matches) && matches.length > 0 && matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      const champReady = [8, 9, 10].includes(teamCount) && allValid(c1Matches) && allValid(c2Matches);
+      const brassageReady = ![8, 9, 10].includes(teamCount) && allValid(b1Matches) && allValid(b2Matches);
+      if (!champReady && !brassageReady) return false;
+    }
+
     const currentKnockout = knockoutRef.current || {};
     const alreadyExists = (currentKnockout.principalQuarters || []).length > 0
       || (currentKnockout.principalSemis || []).length > 0
       || (currentKnockout.principalFinals || []).length > 0;
-
-    if (alreadyExists && !options?.force) return false;
+    if (alreadyExists && !options?.replaceExisting) return false;
 
     const startSlot = options?.startSlot ?? (
       stageSlotCount(brassage1Ref.current?.matches?.length || 0)
@@ -6459,13 +6449,9 @@ export default function App() {
       && matches.length > 0
       && matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
 
-    // Garde-fou V34A : aucune génération de quarts si aucune phase initiale n'a démarré.
-    if (b1Matches.length === 0 && c1Matches.length === 0) return false;
-
     const championnatComplet = allValid(c1Matches) && allValid(c2Matches);
     const brassageComplet = allValid(b1Matches) && allValid(b2Matches);
 
-    // Méthode championnat 8 / 9 / 10 : uniquement après Championnat Retour valide.
     if ([8, 9, 10].includes(teamCount)) {
       if (!championnatComplet) return false;
       if (typeof forceSmallChampionshipQuartersIfReady === 'function') {
@@ -6474,7 +6460,6 @@ export default function App() {
       return false;
     }
 
-    // Petits formats hors championnat : uniquement après Brassage 1 + Brassage 2 valides.
     if (teamCount < 13) {
       if (!brassageComplet) return false;
 
@@ -6491,10 +6476,12 @@ export default function App() {
       return generateDirectPrincipalQuartersFromRanking(rankedIds, {
         ...options,
         startSlot: stageSlotCount(b1Matches.length) + stageSlotCount(b2Matches.length),
+        force: true,
       });
     }
 
-    // Autres formats : pas de quarts directs avant Brassage 2 complet.
+    // >= 13 : les quarts directs ne sont autorisés que si le format généré commence vraiment par des quarts
+    // et qu'aucune poule principale n'est en attente.
     if (!brassageComplet) return false;
 
     const mainStage = mainStageRef.current || {};
@@ -6516,6 +6503,7 @@ export default function App() {
       return generateDirectPrincipalQuartersFromRanking(rankedIds, {
         ...options,
         startSlot: stageSlotCount(b1Matches.length) + stageSlotCount(b2Matches.length),
+        force: true,
       });
     }
 
