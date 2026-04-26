@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34F';
+const APP_VERSION = 'V34G';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -2066,8 +2066,16 @@ function buildTeamsPhaseExplanation(teamCount, { isSmallTournamentMode, shouldSk
   const levelText = 'N = National, PN = Pré-National, R = Régional, D = Départementale, L = Loisir.';
   if (!teamCount) return `${levelText} Ajoutez des équipes pour afficher automatiquement le déroulé du tournoi.`;
 
-  if (activeTeamCount < MIN_TEAM_TARGET) {
-    return `${levelText} Le tournoi doit contenir au minimum 15 équipes pour être généré.`;
+  if (isSmallTournamentMode) {
+    if (teamCount === 9 || teamCount === 10) {
+      return `${levelText} Avec ${teamCount} équipes, méthode championnat : une seule poule de ${teamCount} équipes, Championnat Aller puis Championnat Retour. À l’issue du Championnat Retour, le classement cumulé Aller + Retour qualifie les 8 meilleures équipes pour les quarts : 1er contre 8e, 2e contre 7e, 3e contre 6e et 4e contre 5e. Les demi-finales opposent le vainqueur du quart 1 au vainqueur du quart 4, puis le vainqueur du quart 2 au vainqueur du quart 3. Les gagnants jouent la finale et les perdants la petite finale.`;
+    }
+    const finalStageText = teamCount <= 2
+      ? 'pas de phase finale supplémentaire : le classement du championnat désigne directement le vainqueur'
+      : teamCount <= 4
+        ? 'demi-finales puis finale et petite finale'
+        : 'quarts de finale, demi-finales puis finale et petite finale';
+    return `${levelText} Avec ${teamCount} équipes, le tournoi se joue en championnat aller${teamCount >= 5 ? ' puis retour' : ''}. À l’issue du championnat, le classement général qualifie les équipes pour ${finalStageText}.`;
   }
 
   const phases = ['Brassage 1'];
@@ -5553,7 +5561,7 @@ export default function App() {
     let added = false;
     setTeams((current) => {
       if (current.length >= TEAM_TARGET) {
-        window.alert(`Le tournoi est limité à ${TEAM_TARGET} équipes, avec un minimum de 15 équipes.`);
+        window.alert(`Le tournoi standard est limité à ${TEAM_TARGET} équipes.`);
         return current;
       }
       added = true;
