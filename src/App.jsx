@@ -36,7 +36,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V33W';
+const APP_VERSION = 'V33X';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -5410,143 +5410,171 @@ export default function App() {
     return progressed;
   }
 
+
+  function hasPlayablePendingMatches(matches) {
+    return Array.isArray(matches)
+      && matches.some((match) => getMatchStatusLabel(match, phaseRulesRef.current) !== 'Valide');
+  }
+
+  function fillFirstPendingScopeForRandomScore() {
+    const scopeOrder = [
+      ['championshipLeg1', championshipLeg1Ref.current?.matches],
+      ['championshipLeg2', championshipLeg2Ref.current?.matches],
+      ['brassage1', brassage1Ref.current?.matches],
+      ['brassage2', brassage2Ref.current?.matches],
+      ['principale', mainStageRef.current?.principaleMatches],
+      ['consolante', mainStageRef.current?.consolanteMatches],
+      ['principalEighths', knockoutRef.current?.principalEighths],
+      ['principalQuarters', knockoutRef.current?.principalQuarters],
+      ['principalSemis', knockoutRef.current?.principalSemis],
+      ['principalFinals', knockoutRef.current?.principalFinals],
+      ['consolanteEighths', knockoutRef.current?.consolanteEighths],
+      ['consolanteQuarters', knockoutRef.current?.consolanteQuarters],
+      ['consolanteSemis', knockoutRef.current?.consolanteSemis],
+      ['consolanteFinals', knockoutRef.current?.consolanteFinals],
+      ['quarters', singleKnockoutRef.current?.quarters],
+      ['semis', singleKnockoutRef.current?.semis],
+      ['finals', singleKnockoutRef.current?.finals],
+    ];
+
+    const playable = scopeOrder.find(([, matches]) => hasPlayablePendingMatches(matches));
+    if (!playable) return false;
+    applyRandomScores(playable[0]);
+    return true;
+  }
+
+  function progressGeneratedStagesForRandomScore() {
+    let progressed = false;
+    try { if (typeof forceSmallChampionshipQuartersIfReady === 'function' && forceSmallChampionshipQuartersIfReady({ silent: true })) progressed = true; } catch (error) { console.error('Progression quarts championnat', error); }
+    try { if (typeof forceNineTeamFinalsIfReady === 'function' && forceNineTeamFinalsIfReady({ silent: true })) progressed = true; } catch (error) { console.error('Progression 9 équipes', error); }
+    try { if (typeof generateDirectPrincipalQuartersForSmallTournament === 'function' && generateDirectPrincipalQuartersForSmallTournament({ silent: true })) progressed = true; } catch (error) { console.error('Progression quarts directs', error); }
+    try { if (typeof stableGenerateAfterBrassage2 === 'function' && stableGenerateAfterBrassage2({ silent: true })) progressed = true; } catch (error) { console.error('Progression Brassage 2', error); }
+
+    const rules = phaseRulesRef.current;
+
+    try {
+      const singleQuarters = singleKnockoutRef.current?.quarters || [];
+      const singleSemis = singleKnockoutRef.current?.semis || [];
+      const singleFinals = singleKnockoutRef.current?.finals || [];
+      const singleQuartersComplete = singleQuarters.length > 0 && singleQuarters.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+      const singleSemisComplete = singleSemis.length > 0 && singleSemis.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+
+      if (singleQuartersComplete && singleSemis.length === 0 && typeof generateSmallKnockoutStage2 === 'function') {
+        generateSmallKnockoutStage2();
+        progressed = true;
+      }
+      if (singleSemisComplete && singleFinals.length === 0 && typeof generateSmallKnockoutStage3 === 'function') {
+        generateSmallKnockoutStage3();
+        progressed = true;
+      }
+    } catch (error) {
+      console.error('Progression phases finales petit tournoi', error);
+    }
+
+    try {
+      const principalEighths = knockoutRef.current?.principalEighths || [];
+      const principalQuarters = knockoutRef.current?.principalQuarters || [];
+      const principalSemis = knockoutRef.current?.principalSemis || [];
+      const principalFinals = knockoutRef.current?.principalFinals || [];
+
+      const eighthsComplete = principalEighths.length > 0 && principalEighths.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+      const quartersComplete = principalQuarters.length > 0 && principalQuarters.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+      const semisComplete = principalSemis.length > 0 && principalSemis.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+
+      if (eighthsComplete && principalQuarters.length === 0 && typeof generatePrincipalQuarters === 'function') {
+        generatePrincipalQuarters();
+        progressed = true;
+      }
+      if (quartersComplete && principalSemis.length === 0 && typeof generatePrincipalSemis === 'function') {
+        generatePrincipalSemis();
+        progressed = true;
+      }
+      if (semisComplete && principalFinals.length === 0 && typeof generatePrincipalFinals === 'function') {
+        generatePrincipalFinals();
+        progressed = true;
+      }
+    } catch (error) {
+      console.error('Progression principale score aléatoire', error);
+    }
+
+    try {
+      const consolanteEighths = knockoutRef.current?.consolanteEighths || [];
+      const consolanteQuarters = knockoutRef.current?.consolanteQuarters || [];
+      const consolanteSemis = knockoutRef.current?.consolanteSemis || [];
+      const consolanteFinals = knockoutRef.current?.consolanteFinals || [];
+
+      const eighthsComplete = consolanteEighths.length > 0 && consolanteEighths.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+      const quartersComplete = consolanteQuarters.length > 0 && consolanteQuarters.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+      const semisComplete = consolanteSemis.length > 0 && consolanteSemis.every((match) => getMatchStatusLabel(match, rules) === 'Valide');
+
+      if (eighthsComplete && consolanteQuarters.length === 0 && typeof generateConsolanteSemis === 'function') {
+        generateConsolanteSemis();
+        progressed = true;
+      }
+      if (quartersComplete && consolanteSemis.length === 0 && typeof generateConsolanteSemis === 'function') {
+        generateConsolanteSemis();
+        progressed = true;
+      }
+      if (semisComplete && consolanteFinals.length === 0 && typeof generateConsolanteFinals === 'function') {
+        generateConsolanteFinals();
+        progressed = true;
+      }
+    } catch (error) {
+      console.error('Progression consolante score aléatoire', error);
+    }
+
+    return progressed;
+  }
+
+  function randomizeTournamentUntilStable() {
+    const MAX_RANDOM_STEPS = 80;
+    let changed = false;
+
+    for (let step = 0; step < MAX_RANDOM_STEPS; step += 1) {
+      if (fillFirstPendingScopeForRandomScore()) {
+        changed = true;
+        continue;
+      }
+      if (progressGeneratedStagesForRandomScore()) {
+        changed = true;
+        continue;
+      }
+      break;
+    }
+
+    return changed;
+  }
+
   function randomizeCurrentPhaseScores() {
-    try { if (typeof randomizeSmallChampionshipTournamentScores === 'function' && randomizeSmallChampionshipTournamentScores()) return; } catch (error) { console.error('Erreur score aléatoire 8/9 équipes', error); }
-    try { if (typeof randomizeSmallChampionshipTournamentScores === 'function' && randomizeSmallChampionshipTournamentScores()) return; } catch (error) { console.error('Erreur score aléatoire 9 équipes', error); }
+    const scoredMatches = [
+      ...(championshipLeg1Ref.current?.matches || []),
+      ...(championshipLeg2Ref.current?.matches || []),
+      ...(brassage1Ref.current?.matches || []),
+      ...(brassage2Ref.current?.matches || []),
+      ...(mainStageRef.current?.principaleMatches || []),
+      ...(mainStageRef.current?.consolanteMatches || []),
+      ...(knockoutRef.current?.principalEighths || []),
+      ...(knockoutRef.current?.principalQuarters || []),
+      ...(knockoutRef.current?.principalSemis || []),
+      ...(knockoutRef.current?.principalFinals || []),
+      ...(knockoutRef.current?.consolanteEighths || []),
+      ...(knockoutRef.current?.consolanteQuarters || []),
+      ...(knockoutRef.current?.consolanteSemis || []),
+      ...(knockoutRef.current?.consolanteFinals || []),
+      ...(singleKnockoutRef.current?.quarters || []),
+      ...(singleKnockoutRef.current?.semis || []),
+      ...(singleKnockoutRef.current?.finals || []),
+    ].filter((match) => Number(match?.scoreA || 0) > 0 || Number(match?.scoreB || 0) > 0);
 
-    try { if (typeof randomizeSmallChampionshipTournamentScores === 'function' && randomizeSmallChampionshipTournamentScores()) return; } catch (error) { console.error('Erreur score aléatoire 9 équipes', error); }
-    const confirmed = confirmWithDetails(
-      'Des scores aléatoires seront saisis sur la phase en cours puis sur les phases suivantes si elles sont générées. Les matchs en cours et les matchs déjà validés ne seront pas modifiés.',
-      'Veux-tu continuer ?'
-    );
-    if (!confirmed) return;
-
-    const updatedAt = new Date().toISOString();
-    const mutationTimestamp = markPendingLocalMutation(updatedAt);
-    let updatedCount = 0;
-
-    const applyRandomScoresToScope = (scope) => {
-      let localUpdates = 0;
-      updateMatchesInScope(scope, (matches) => (Array.isArray(matches) ? matches : []).map((match) => {
-        const isEditable = getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir'
-          && !match.refereeInProgress
-          && !match.matchInProgress
-          && hasBothTeamsDefined(match);
-
-        if (!isEditable) return match;
-
-        const randomScore = buildRandomValidScore(getRuleForMatch(match, phaseRulesRef.current));
-        localUpdates += 1;
-        updatedCount += 1;
-        return {
-          ...match,
-          scoreA: String(randomScore.scoreA),
-          scoreB: String(randomScore.scoreB),
-          submittedScoreA: '',
-          submittedScoreB: '',
-          submittedAt: null,
-          pendingResultSentAt: null,
-          validatedAt: updatedAt,
-          manualOverrideAt: updatedAt,
-          refereeInProgress: false,
-          matchInProgress: false,
-        };
-      }));
-      return localUpdates;
-    };
-
-    const orderedScopes = () => {
-      const list = [];
-      const pushIfPlayable = (scope, matches) => {
-        if ((Array.isArray(matches) ? matches : []).some((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'À saisir' && hasBothTeamsDefined(match))) {
-          list.push(scope);
-        }
-      };
-
-      pushIfPlayable('championshipLeg1', championshipLeg1Ref.current?.matches);
-      pushIfPlayable('championshipLeg2', championshipLeg2Ref.current?.matches);
-      pushIfPlayable('brassage1', brassage1Ref.current?.matches);
-      pushIfPlayable('brassage2', brassage2Ref.current?.matches);
-      pushIfPlayable('principale', mainStageRef.current?.principaleMatches);
-      pushIfPlayable('consolante', mainStageRef.current?.consolanteMatches);
-      pushIfPlayable('principalEighths', knockoutRef.current?.principalEighths);
-      pushIfPlayable('quarters', singleKnockoutRef.current?.quarters);
-      pushIfPlayable('semis', singleKnockoutRef.current?.semis);
-      pushIfPlayable('finals', singleKnockoutRef.current?.finals);
-      pushIfPlayable('principalQuarters', knockoutRef.current?.principalQuarters);
-      pushIfPlayable('consolanteEighths', knockoutRef.current?.consolanteEighths);
-      pushIfPlayable('consolanteQuarters', knockoutRef.current?.consolanteQuarters);
-      pushIfPlayable('principalSemis', knockoutRef.current?.principalSemis);
-      pushIfPlayable('consolanteSemis', knockoutRef.current?.consolanteSemis);
-      pushIfPlayable('principalFinals', knockoutRef.current?.principalFinals);
-      pushIfPlayable('consolanteFinals', knockoutRef.current?.consolanteFinals);
-      pushIfPlayable('quarters', singleKnockoutRef.current?.quarters);
-      pushIfPlayable('semis', singleKnockoutRef.current?.semis);
-      pushIfPlayable('finals', singleKnockoutRef.current?.finals);
-      return list;
-    };
-
-    const tryProgress = () => {
-      let progressed = false;
-      try { if (forceGenerateNineTeamStagesAfterRandomScores()) progressed = true; } catch {}
-      try { if (forceGenerateThirtySixFinalStagesAfterRandomScores()) progressed = true; } catch {}
-      try { if (typeof tryAutoGenerateBrassage2Silently === 'function' && tryAutoGenerateBrassage2Silently()) progressed = true; } catch {}
-      try {
-        const b2Matches = brassage2Ref.current?.matches || [];
-        const b2Done = b2Matches.length > 0 && b2Matches.every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        const hasMainStage = (mainStageRef.current?.principaleMatches?.length || 0) > 0 || (mainStageRef.current?.consolanteMatches?.length || 0) > 0;
-        if (b2Done && !hasMainStage && typeof generateMainStage === 'function' && generateMainStage() !== false) progressed = true;
-      } catch {}
-      try {
-        const principaleDone = (mainStageRef.current?.principaleMatches || []).length > 0 && (mainStageRef.current?.principaleMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if (principaleDone && !(knockoutRef.current?.principalQuarters?.length > 0) && typeof generatePrincipalQuarters === 'function' && generatePrincipalQuarters() !== false) progressed = true;
-      } catch {}
-      try {
-        const consolanteDone = (mainStageRef.current?.consolanteMatches || []).length > 0 && (mainStageRef.current?.consolanteMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if (consolanteDone && !(knockoutRef.current?.consolanteQuarters?.length > 0) && typeof generateConsolanteQuarters === 'function' && generateConsolanteQuarters() !== false) progressed = true;
-      } catch {}
-      try {
-        const principalQuartersDone = (knockoutRef.current?.principalQuarters || []).length > 0 && (knockoutRef.current?.principalQuarters || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if (principalQuartersDone && !(knockoutRef.current?.principalSemis?.length > 0) && typeof generatePrincipalSemis === 'function' && generatePrincipalSemis() !== false) progressed = true;
-      } catch {}
-      try {
-        const hasConsolanteQuarters = (knockoutRef.current?.consolanteQuarters || []).length > 0;
-        const consolanteQuarterDone = hasConsolanteQuarters && (knockoutRef.current?.consolanteQuarters || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        const consolantePoolDone = !hasConsolanteQuarters && (mainStageRef.current?.consolanteMatches || []).length > 0 && (mainStageRef.current?.consolanteMatches || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if ((consolanteQuarterDone || consolantePoolDone) && !(knockoutRef.current?.consolanteSemis?.length > 0) && typeof generateConsolanteSemis === 'function' && generateConsolanteSemis() !== false) progressed = true;
-      } catch {}
-      try {
-        const principalSemisDone = (knockoutRef.current?.principalSemis || []).length > 0 && (knockoutRef.current?.principalSemis || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if (principalSemisDone && !(knockoutRef.current?.principalFinals?.length > 0) && typeof generatePrincipalFinals === 'function' && generatePrincipalFinals() !== false) progressed = true;
-      } catch {}
-      try {
-        const consolanteSemisDone = (knockoutRef.current?.consolanteSemis || []).length > 0 && (knockoutRef.current?.consolanteSemis || []).every((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
-        if (consolanteSemisDone && !(knockoutRef.current?.consolanteFinals?.length > 0) && typeof generateConsolanteFinals === 'function' && generateConsolanteFinals() !== false) progressed = true;
-      } catch {}
-      return progressed;
-    };
-
-    let guard = 0;
-    while (guard < 20) {
-      guard += 1;
-      const scopes = orderedScopes();
-      let loopUpdates = 0;
-
-      scopes.forEach((scope) => {
-        loopUpdates += applyRandomScoresToScope(scope);
-      });
-
-      const progressed = tryProgress();
-      if (!loopUpdates && !progressed) break;
+    if (scoredMatches.length > 0) {
+      const confirmed = window.confirm(`${scoredMatches.length} match(s) contiennent déjà un score. Continuer effacera et remplacera les scores concernés par des scores aléatoires. Confirmer ?`);
+      if (!confirmed) return;
     }
 
-    if (!updatedCount) {
-      window.alert('Aucun match À saisir et non sélectionné par un arbitre n’a été trouvé.');
-      return;
+    const changed = randomizeTournamentUntilStable();
+    if (!changed) {
+      window.alert('Aucun match à remplir automatiquement pour le moment.');
     }
-
-    queueBackgroundCloudSave(250, mutationTimestamp);
-    window.alert(`${updatedCount} match(s) ont reçu un score aléatoire.`);
   }
 
   function addTeam() {
