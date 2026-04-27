@@ -5808,9 +5808,7 @@ tbody tr:last-child td { border-bottom: none; }
   display:none !important;
 }
 
-.arbitrage-pending-card .pending-hide-when-arbitrage {
-  display: none !important;
-}
+
 .arbitrage-pending-card .btn-success {
   background: #078a53;
   color: #fff;

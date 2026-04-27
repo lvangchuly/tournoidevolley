@@ -31,3 +31,5 @@
     gap: 12px !important;
   }
 }
+
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}

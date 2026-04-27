@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34R';
+const APP_VERSION = 'V34S';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1440,16 +1440,12 @@ function isArbitrageRequestPending(match) {
 }
 
 function isArbitrageRequestAccepted(match) {
-  return match?.status === 'Match en cours';
+  return match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress;
 }
 
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
-  const status = getMatchStatusLabel(match, phaseRules);
-  if (status !== 'A saisir') return false;
-  if (match.status && match.status !== 'A saisir') return false;
-  if (match.refereeInProgress || match.matchInProgress) return false;
-  return true;
+  return getMatchStatusLabel(match, phaseRules) === 'A saisir';
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -1480,12 +1476,12 @@ function makeArbitrageRequestMatch(match) {
   return {
     ...match,
     status: 'Match en cours',
-    arbitrageRequestStatus: null,
-    arbitrageRequestedAt: null,
-    arbitrageAcceptedAt: null,
     refereeStartedAt: Date.now(),
     refereeInProgress: true,
     matchInProgress: true,
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
   };
 }
 
@@ -7001,7 +6997,8 @@ export default function App() {
 
   function requestArbitrageForMatch(match) {
     const liveMatch = getLiveRefereeMatch(match);
-    if (!isMatchSelectableByReferee(liveMatch, phaseRulesRef.current)) return;
+    if (!liveMatch) return;
+    if (getMatchStatusLabel(liveMatch, phaseRulesRef.current) !== 'A saisir') return;
     const startedMatch = makeArbitrageRequestMatch(liveMatch);
     updateMatchById(liveMatch.id, () => startedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);

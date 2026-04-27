@@ -5,3 +5,5 @@ html, body, #root {
 body {
   background-color: #1b1f2a !important;
 }
+
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}

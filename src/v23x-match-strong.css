@@ -26,3 +26,5 @@ td:first-child div {
 td:first-child {
   border-right: 2px solid rgba(255,255,255,0.2) !important;
 }
+
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}

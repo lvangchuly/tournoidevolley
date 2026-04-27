@@ -36,3 +36,5 @@ th.match-column {
     color: #ffffff !important;
   }
 }
+
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}
