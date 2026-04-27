@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34Q';
+const APP_VERSION = 'V34R';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1445,7 +1445,11 @@ function isArbitrageRequestAccepted(match) {
 
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
-  return getMatchStatusLabel(match, phaseRules) === 'A saisir';
+  const status = getMatchStatusLabel(match, phaseRules);
+  if (status !== 'A saisir') return false;
+  if (match.status && match.status !== 'A saisir') return false;
+  if (match.refereeInProgress || match.matchInProgress) return false;
+  return true;
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -1498,7 +1502,7 @@ function isWinningScoreReachedForMatch(match, phaseRules) {
 
 function getMatchStatusLabel(match, phaseRules) {
   if (match?.status === 'Résultats envoyés') return 'Résultats envoyés';
-  if (match?.status === 'Match en cours') return 'Match en cours';
+  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return 'Match en cours';
 
 
   const scoreA = toNumber(match.scoreA);
@@ -7323,7 +7327,7 @@ export default function App() {
 
   function getOrganizerStatusBadge(match) {
   if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success' };
-  if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'danger' };
+  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'danger' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);

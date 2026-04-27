@@ -5816,3 +5816,5 @@ tbody tr:last-child td { border-bottom: none; }
   color: #fff;
   border-color: #078a53;
 }
+
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}
