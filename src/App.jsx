@@ -37,7 +37,9 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34G';
+const APP_VERSION = 'V34H';
+const ARBITRAGE_REQUEST_TIMEOUT_MS = 2 * 60 * 1000;
+const ARBITRAGE_REQUEST_STATUS = 'Demande d’arbitrage envoyé';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -1417,7 +1419,35 @@ function isMatchResultValid(match, phaseRules) {
   return (scoreA >= target || scoreB >= target) && Math.abs(scoreA - scoreB) >= 2;
 }
 
+
+function isArbitrageRequestPending(match) {
+  return match?.arbitrageRequestStatus === 'pending' || match?.status === ARBITRAGE_REQUEST_STATUS;
+}
+
+function isArbitrageRequestExpired(match, now = Date.now()) {
+  if (!isArbitrageRequestPending(match)) return false;
+  const requestedAt = Number(match?.arbitrageRequestedAt || 0);
+  return requestedAt > 0 && now - requestedAt >= ARBITRAGE_REQUEST_TIMEOUT_MS;
+}
+
+function sanitizeExpiredArbitrageRequest(match, now = Date.now()) {
+  if (!isArbitrageRequestExpired(match, now)) return match;
+  return {
+    ...match,
+    status: 'A saisir',
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    refereeStartedAt: null,
+  };
+}
+
+function isScoreInputLockedByArbitrageRequest(match) {
+  return isArbitrageRequestPending(match);
+}
+
 function getMatchStatusLabel(match, phaseRules) {
+  if (isArbitrageRequestPending(match)) return ARBITRAGE_REQUEST_STATUS;
+
   const scoreA = toNumber(match.scoreA);
   const scoreB = toNumber(match.scoreB);
   if (scoreA === null || scoreB === null) return 'À saisir';
@@ -6910,6 +6940,148 @@ export default function App() {
     }
   }
 
+
+  function updateMatchById(matchId, updater) {
+    const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? updater(match) : match)) : matches);
+
+    setChampionshipLeg1((current) => {
+      const next = { ...current, matches: updateMatches(current.matches) };
+      championshipLeg1Ref.current = next;
+      return next;
+    });
+    setChampionshipLeg2((current) => {
+      const next = { ...current, matches: updateMatches(current.matches) };
+      championshipLeg2Ref.current = next;
+      return next;
+    });
+    setBrassage1((current) => {
+      const next = { ...current, matches: updateMatches(current.matches) };
+      brassage1Ref.current = next;
+      return next;
+    });
+    setBrassage2((current) => {
+      const next = { ...current, matches: updateMatches(current.matches) };
+      brassage2Ref.current = next;
+      return next;
+    });
+    setMainStage((current) => {
+      const next = {
+        ...current,
+        principaleMatches: updateMatches(current.principaleMatches),
+        consolanteMatches: updateMatches(current.consolanteMatches),
+      };
+      mainStageRef.current = next;
+      return next;
+    });
+    setKnockout((current) => {
+      const next = {
+        ...current,
+        principalEighths: updateMatches(current.principalEighths),
+        principalQuarters: updateMatches(current.principalQuarters),
+        principalSemis: updateMatches(current.principalSemis),
+        principalFinals: updateMatches(current.principalFinals),
+        consolanteEighths: updateMatches(current.consolanteEighths),
+        consolanteQuarters: updateMatches(current.consolanteQuarters),
+        consolanteSemis: updateMatches(current.consolanteSemis),
+        consolanteFinals: updateMatches(current.consolanteFinals),
+      };
+      knockoutRef.current = next;
+      return next;
+    });
+    setSingleKnockout((current) => {
+      const next = {
+        ...current,
+        quarters: updateMatches(current.quarters),
+        semis: updateMatches(current.semis),
+        finals: updateMatches(current.finals),
+      };
+      singleKnockoutRef.current = next;
+      return next;
+    });
+    refreshLatestPersistedSnapshot();
+    queueBackgroundCloudSave(250);
+  }
+
+  function acceptArbitrageRequest(matchId) {
+    updateMatchById(matchId, (match) => ({
+      ...match,
+      status: 'Match en cours',
+      arbitrageRequestStatus: 'accepted',
+      arbitrageAcceptedAt: Date.now(),
+      refereeStartedAt: match.refereeStartedAt || Date.now(),
+    }));
+  }
+
+  function expirePendingArbitrageRequestsInMatches(matches, now = Date.now()) {
+    let changed = false;
+    const nextMatches = (Array.isArray(matches) ? matches : []).map((match) => {
+      const nextMatch = sanitizeExpiredArbitrageRequest(match, now);
+      if (nextMatch !== match) changed = true;
+      return nextMatch;
+    });
+    return { matches: nextMatches, changed };
+  }
+
+  function expirePendingArbitrageRequests() {
+    const now = Date.now();
+    let changed = false;
+
+    const updateStageKey = (ref, setter, key) => {
+      const stage = ref.current || {};
+      const result = expirePendingArbitrageRequestsInMatches(stage[key], now);
+      if (!result.changed) return;
+      const nextStage = { ...stage, [key]: result.matches };
+      ref.current = nextStage;
+      setter(nextStage);
+      changed = true;
+    };
+
+    updateStageKey(championshipLeg1Ref, setChampionshipLeg1, 'matches');
+    updateStageKey(championshipLeg2Ref, setChampionshipLeg2, 'matches');
+    updateStageKey(brassage1Ref, setBrassage1, 'matches');
+    updateStageKey(brassage2Ref, setBrassage2, 'matches');
+    updateStageKey(mainStageRef, setMainStage, 'principaleMatches');
+    updateStageKey(mainStageRef, setMainStage, 'consolanteMatches');
+
+    const knockoutKeys = ['principalEighths', 'principalQuarters', 'principalSemis', 'principalFinals', 'consolanteEighths', 'consolanteQuarters', 'consolanteSemis', 'consolanteFinals'];
+    let nextKnockout = knockoutRef.current || {};
+    knockoutKeys.forEach((key) => {
+      const result = expirePendingArbitrageRequestsInMatches(nextKnockout[key], now);
+      if (result.changed) {
+        nextKnockout = { ...nextKnockout, [key]: result.matches };
+        changed = true;
+      }
+    });
+    if (nextKnockout !== knockoutRef.current) {
+      knockoutRef.current = nextKnockout;
+      setKnockout(nextKnockout);
+    }
+
+    let nextSingle = singleKnockoutRef.current || {};
+    ['quarters', 'semis', 'finals'].forEach((key) => {
+      const result = expirePendingArbitrageRequestsInMatches(nextSingle[key], now);
+      if (result.changed) {
+        nextSingle = { ...nextSingle, [key]: result.matches };
+        changed = true;
+      }
+    });
+    if (nextSingle !== singleKnockoutRef.current) {
+      singleKnockoutRef.current = nextSingle;
+      setSingleKnockout(nextSingle);
+    }
+
+    if (changed) {
+      refreshLatestPersistedSnapshot();
+      queueBackgroundCloudSave(250);
+    }
+  }
+
+  useEffect(() => {
+    expirePendingArbitrageRequests();
+    const timer = window.setInterval(expirePendingArbitrageRequests, 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   function updateMatchesInScope(scope, updater) {
     const applyUpdater = (matches) => dedupeMatches(
       typeof updater === 'function'
@@ -7969,6 +8141,11 @@ function releaseRefereeSelectedMatch(entry) {
                           </div>
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
+                            {isArbitrageRequestPending(match) ? (
+                              <button type="button" className="btn btn-success" onClick={() => acceptArbitrageRequest(match.id)}>
+                                Demande d'arbitrage
+                              </button>
+                            ) : null}
                             <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
