@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34O';
+const APP_VERSION = 'V34P';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1421,24 +1421,34 @@ function isMatchResultValid(match, phaseRules) {
 
 
 
-function makeArbitrageRequestMatch(match) {
-  return {
-    ...match,
-    status: ARBITRAGE_REQUEST_STATUS,
-    arbitrageRequestStatus: 'pending',
-    arbitrageRequestedAt: Date.now(),
-    refereeStartedAt: null,
-    refereeInProgress: false,
-    matchInProgress: false,
-  };
+function isRefereeScoreEditingLocked(match) {
+  const liveMatch = match?.id && typeof findMatchById === 'function' ? (findMatchById(match.id) || match) : match;
+  return isArbitrageRequestPending(liveMatch);
+}
+
+
+
+function getArbitrageState(match) {
+  if (!match) return 'none';
+  if (match.arbitrageRequestStatus === 'pending' || match.status === ARBITRAGE_REQUEST_STATUS) return 'pending';
+  if (match.arbitrageRequestStatus === 'accepted' || match.status === 'Match en cours' || match.refereeInProgress || match.matchInProgress) return 'accepted';
+  return 'none';
 }
 
 function isArbitrageRequestPending(match) {
-  return match?.arbitrageRequestStatus === 'pending' || match?.status === ARBITRAGE_REQUEST_STATUS;
+  return getArbitrageState(match) === 'pending';
 }
 
 function isArbitrageRequestAccepted(match) {
-  return match?.arbitrageRequestStatus === 'accepted' || match?.status === 'Match en cours';
+  return getArbitrageState(match) === 'accepted';
+}
+
+function isMatchSelectableByReferee(match, phaseRules) {
+  if (!match) return false;
+  if (isArbitrageRequestPending(match) || isArbitrageRequestAccepted(match)) return false;
+  const scoreA = toNumber(match.scoreA);
+  const scoreB = toNumber(match.scoreB);
+  return scoreA === null || scoreB === null;
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -1454,6 +1464,7 @@ function sanitizeExpiredArbitrageRequest(match, now = Date.now()) {
     status: 'A saisir',
     arbitrageRequestStatus: null,
     arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
     refereeStartedAt: null,
     refereeInProgress: false,
     matchInProgress: false,
@@ -1464,14 +1475,23 @@ function isScoreInputLockedByArbitrageRequest(match) {
   return isArbitrageRequestPending(match);
 }
 
-function isRefereeScoreEditingLocked(match) {
-  const liveMatch = match?.id && typeof findMatchById === 'function' ? (findMatchById(match.id) || match) : match;
-  return isArbitrageRequestPending(liveMatch);
+function makeArbitrageRequestMatch(match) {
+  return {
+    ...match,
+    status: ARBITRAGE_REQUEST_STATUS,
+    arbitrageRequestStatus: 'pending',
+    arbitrageRequestedAt: Date.now(),
+    arbitrageAcceptedAt: null,
+    refereeStartedAt: null,
+    refereeInProgress: false,
+    matchInProgress: false,
+  };
 }
-
 
 function getMatchStatusLabel(match, phaseRules) {
   if (isArbitrageRequestPending(match)) return ARBITRAGE_REQUEST_STATUS;
+  if (isArbitrageRequestAccepted(match)) return 'Match en cours';
+
 
   const scoreA = toNumber(match.scoreA);
   const scoreB = toNumber(match.scoreB);
@@ -6969,7 +6989,7 @@ export default function App() {
 
   function requestArbitrageForMatch(match) {
     const liveMatch = getLiveRefereeMatch(match);
-    if (!liveMatch || isArbitrageRequestPending(liveMatch) || getMatchStatusLabel(liveMatch, phaseRulesRef.current) !== 'A saisir') return;
+    if (!isMatchSelectableByReferee(liveMatch, phaseRulesRef.current)) return;
     const requestedMatch = makeArbitrageRequestMatch(liveMatch);
     updateMatchById(liveMatch.id, () => requestedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(requestedMatch);
@@ -7264,6 +7284,8 @@ export default function App() {
 
   function getOrganizerStatusBadge(match) {
   if (isArbitrageRequestPending(match)) return { text: 'En pause', className: 'warning' };
+  if (isArbitrageRequestAccepted(match)) return { text: 'Match en cours', className: 'danger' };
+
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
     if (officialStatus === 'Valide') {
@@ -8199,7 +8221,7 @@ function releaseRefereeSelectedMatch(entry) {
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             {isArbitrageRequestPending(match) ? (
-                              <button type="button" className="pending-hide-when-arbitrage btn btn-success" onClick={() => acceptArbitrageRequest(match.id)}>
+                              <button type="button" className="pending-hide-when-arbitrage btn btn-success arbitration-request-button" onClick={() => acceptArbitrageRequest(match.id)}>
                                 Arbitrage demandé
                               </button>
                             ) : null}
