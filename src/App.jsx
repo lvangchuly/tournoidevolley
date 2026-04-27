@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34N';
+const APP_VERSION = 'V34O';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1437,6 +1437,10 @@ function isArbitrageRequestPending(match) {
   return match?.arbitrageRequestStatus === 'pending' || match?.status === ARBITRAGE_REQUEST_STATUS;
 }
 
+function isArbitrageRequestAccepted(match) {
+  return match?.arbitrageRequestStatus === 'accepted' || match?.status === 'Match en cours';
+}
+
 function isArbitrageRequestExpired(match, now = Date.now()) {
   if (!isArbitrageRequestPending(match)) return false;
   const requestedAt = Number(match?.arbitrageRequestedAt || 0);
@@ -1459,6 +1463,12 @@ function sanitizeExpiredArbitrageRequest(match, now = Date.now()) {
 function isScoreInputLockedByArbitrageRequest(match) {
   return isArbitrageRequestPending(match);
 }
+
+function isRefereeScoreEditingLocked(match) {
+  const liveMatch = match?.id && typeof findMatchById === 'function' ? (findMatchById(match.id) || match) : match;
+  return isArbitrageRequestPending(liveMatch);
+}
+
 
 function getMatchStatusLabel(match, phaseRules) {
   if (isArbitrageRequestPending(match)) return ARBITRAGE_REQUEST_STATUS;
@@ -6958,10 +6968,43 @@ export default function App() {
 
 
   function requestArbitrageForMatch(match) {
-    if (!match || isArbitrageRequestPending(match) || getMatchStatusLabel(match, phaseRulesRef.current) !== 'A saisir') return;
-    const requestedMatch = makeArbitrageRequestMatch(match);
-    updateMatchById(match.id, () => requestedMatch);
+    const liveMatch = getLiveRefereeMatch(match);
+    if (!liveMatch || isArbitrageRequestPending(liveMatch) || getMatchStatusLabel(liveMatch, phaseRulesRef.current) !== 'A saisir') return;
+    const requestedMatch = makeArbitrageRequestMatch(liveMatch);
+    updateMatchById(liveMatch.id, () => requestedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(requestedMatch);
+  }
+
+
+  function findMatchById(matchId) {
+    const collections = [
+      championshipLeg1Ref.current?.matches,
+      championshipLeg2Ref.current?.matches,
+      brassage1Ref.current?.matches,
+      brassage2Ref.current?.matches,
+      mainStageRef.current?.principaleMatches,
+      mainStageRef.current?.consolanteMatches,
+      knockoutRef.current?.principalEighths,
+      knockoutRef.current?.principalQuarters,
+      knockoutRef.current?.principalSemis,
+      knockoutRef.current?.principalFinals,
+      knockoutRef.current?.consolanteEighths,
+      knockoutRef.current?.consolanteQuarters,
+      knockoutRef.current?.consolanteSemis,
+      knockoutRef.current?.consolanteFinals,
+      singleKnockoutRef.current?.quarters,
+      singleKnockoutRef.current?.semis,
+      singleKnockoutRef.current?.finals,
+    ];
+    for (const matches of collections) {
+      const found = (Array.isArray(matches) ? matches : []).find((match) => match.id === matchId);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function getLiveRefereeMatch(match) {
+    return match?.id ? (findMatchById(match.id) || match) : match;
   }
 
   function updateMatchById(matchId, updater) {
@@ -8156,7 +8199,7 @@ function releaseRefereeSelectedMatch(entry) {
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             {isArbitrageRequestPending(match) ? (
-                              <button type="button" className="btn btn-success" onClick={() => acceptArbitrageRequest(match.id)}>
+                              <button type="button" className="pending-hide-when-arbitrage btn btn-success" onClick={() => acceptArbitrageRequest(match.id)}>
                                 Arbitrage demandé
                               </button>
                             ) : null}
