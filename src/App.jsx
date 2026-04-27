@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34P';
+const APP_VERSION = 'V34Q';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1436,19 +1436,16 @@ function getArbitrageState(match) {
 }
 
 function isArbitrageRequestPending(match) {
-  return getArbitrageState(match) === 'pending';
+  return false;
 }
 
 function isArbitrageRequestAccepted(match) {
-  return getArbitrageState(match) === 'accepted';
+  return match?.status === 'Match en cours';
 }
 
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
-  if (isArbitrageRequestPending(match) || isArbitrageRequestAccepted(match)) return false;
-  const scoreA = toNumber(match.scoreA);
-  const scoreB = toNumber(match.scoreB);
-  return scoreA === null || scoreB === null;
+  return getMatchStatusLabel(match, phaseRules) === 'A saisir';
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -1472,25 +1469,36 @@ function sanitizeExpiredArbitrageRequest(match, now = Date.now()) {
 }
 
 function isScoreInputLockedByArbitrageRequest(match) {
-  return isArbitrageRequestPending(match);
+  return false;
 }
 
 function makeArbitrageRequestMatch(match) {
   return {
     ...match,
-    status: ARBITRAGE_REQUEST_STATUS,
-    arbitrageRequestStatus: 'pending',
-    arbitrageRequestedAt: Date.now(),
+    status: 'Match en cours',
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
     arbitrageAcceptedAt: null,
-    refereeStartedAt: null,
-    refereeInProgress: false,
-    matchInProgress: false,
+    refereeStartedAt: Date.now(),
+    refereeInProgress: true,
+    matchInProgress: true,
   };
 }
 
+function isWinningScoreReachedForMatch(match, phaseRules) {
+  if (!match) return false;
+  const scoreA = toNumber(match.scoreA);
+  const scoreB = toNumber(match.scoreB);
+  if (scoreA === null || scoreB === null) return false;
+  const maxScore = Math.max(scoreA, scoreB);
+  const diff = Math.abs(scoreA - scoreB);
+  const target = 21;
+  return maxScore >= target && diff >= 1;
+}
+
 function getMatchStatusLabel(match, phaseRules) {
-  if (isArbitrageRequestPending(match)) return ARBITRAGE_REQUEST_STATUS;
-  if (isArbitrageRequestAccepted(match)) return 'Match en cours';
+  if (match?.status === 'Résultats envoyés') return 'Résultats envoyés';
+  if (match?.status === 'Match en cours') return 'Match en cours';
 
 
   const scoreA = toNumber(match.scoreA);
@@ -6990,9 +6998,9 @@ export default function App() {
   function requestArbitrageForMatch(match) {
     const liveMatch = getLiveRefereeMatch(match);
     if (!isMatchSelectableByReferee(liveMatch, phaseRulesRef.current)) return;
-    const requestedMatch = makeArbitrageRequestMatch(liveMatch);
-    updateMatchById(liveMatch.id, () => requestedMatch);
-    if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(requestedMatch);
+    const startedMatch = makeArbitrageRequestMatch(liveMatch);
+    updateMatchById(liveMatch.id, () => startedMatch);
+    if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);
   }
 
 
@@ -7077,6 +7085,37 @@ export default function App() {
     });
     refreshLatestPersistedSnapshot();
     queueBackgroundCloudSave(250);
+  }
+
+  function validateSentRefereeResult(matchId) {
+    if (typeof validateMatch === 'function') {
+      validateMatch(matchId);
+      return;
+    }
+    if (typeof validateMatchById === 'function') {
+      validateMatchById(matchId);
+      return;
+    }
+    updateMatchById(matchId, (match) => ({
+      ...match,
+      status: 'Valide',
+      validatedAt: Date.now(),
+      refereeInProgress: false,
+      matchInProgress: false,
+    }));
+  }
+
+  function sendRefereeResults(matchId) {
+    updateMatchById(matchId, (match) => ({
+      ...match,
+      status: 'Résultats envoyés',
+      refereeInProgress: false,
+      matchInProgress: false,
+      resultsSentAt: Date.now(),
+    }));
+    if (typeof setSelectedRefereeMatch === 'function') {
+      setSelectedRefereeMatch((current) => current?.id === matchId ? { ...current, status: 'Résultats envoyés', refereeInProgress: false, matchInProgress: false, resultsSentAt: Date.now() } : current);
+    }
   }
 
   function acceptArbitrageRequest(matchId) {
@@ -7283,8 +7322,8 @@ export default function App() {
   }
 
   function getOrganizerStatusBadge(match) {
-  if (isArbitrageRequestPending(match)) return { text: 'En pause', className: 'warning' };
-  if (isArbitrageRequestAccepted(match)) return { text: 'Match en cours', className: 'danger' };
+  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success' };
+  if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'danger' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
@@ -8220,9 +8259,9 @@ function releaseRefereeSelectedMatch(entry) {
                           </div>
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
-                            {isArbitrageRequestPending(match) ? (
-                              <button type="button" className="pending-hide-when-arbitrage btn btn-success arbitration-request-button" onClick={() => acceptArbitrageRequest(match.id)}>
-                                Arbitrage demandé
+                            {match.status === 'Résultats envoyés' ? (
+                              <button type="button" className="btn btn-success" onClick={() => validateSentRefereeResult(match.id)}>
+                                Valider
                               </button>
                             ) : null}
                             <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
@@ -8629,7 +8668,7 @@ function releaseRefereeSelectedMatch(entry) {
               {!isLocked && pendingResultReady && !resultAlreadySent ? (
                 <div className="actions-row compact-actions">
                   <Button variant="success" onClick={() => submitRefereeMatchResult(scope, match.id)}>
-                    Envoyer le résultat
+                    Envoyer les résultats
                   </Button>
                 </div>
               ) : null}
