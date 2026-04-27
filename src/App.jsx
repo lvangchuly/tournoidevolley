@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34M';
+const APP_VERSION = 'V34N';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7220,6 +7220,8 @@ export default function App() {
   }
 
   function getOrganizerStatusBadge(match) {
+  if (isArbitrageRequestPending(match)) return { text: 'En pause', className: 'warning' };
+
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
     if (officialStatus === 'Valide') {
       return { text: 'Valide', className: 'badge-success' };
@@ -7475,7 +7477,7 @@ export default function App() {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: false, matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
   }
@@ -7524,8 +7526,7 @@ export default function App() {
         submittedScoreB: forcedScoreB,
         submittedAt,
         pendingResultSentAt: sendTimestamp,
-        refereeInProgress: false,
-        matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
     queueBackgroundCloudSave(0, sendTimestamp);
@@ -7614,7 +7615,7 @@ export default function App() {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: false, matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
 
@@ -9255,7 +9256,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                                 const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
                                   item.id === match.id
-                                    ? { ...item, refereeInProgress: false, matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(), submittedAt: refereeLockAt, pendingResultSentAt: null }
+                                    ? { ...item, refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(), submittedAt: refereeLockAt, pendingResultSentAt: null }
                                     : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
