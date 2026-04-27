@@ -37,9 +37,9 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34J';
-const ARBITRAGE_REQUEST_TIMEOUT_MS = 2 * 60 * 1000;
-const ARBITRAGE_REQUEST_STATUS = 'Demande d’arbitrage envoyé';
+const APP_VERSION = 'V34K';
+const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
+const ARBITRAGE_REQUEST_STATUS = 'Arbitrage demandé envoyé';
 const MASTER_PASSWORD = 'Chuly0ne';
 const POINTS_AVERAGE_TOOLTIP = "Les points de chaque match sont additionnés puis divisés par le nombre de matchs joués pour obtenir une moyenne par match. Cela permet de comparer équitablement des poules qui n’ont pas toutes le même nombre de matchs.";
 const DEFAULT_TOURNAMENT_NAME = 'SAISIR ICI LE NOM DU TOURNOI';
@@ -6941,6 +6941,23 @@ export default function App() {
   }
 
 
+
+  function requestArbitrageForMatch(match) {
+    if (!match || isArbitrageRequestPending(match) || getMatchStatusLabel(match, phaseRulesRef.current) !== 'A saisir') return;
+
+    const requestedAt = Date.now();
+    const requestedMatch = {
+      ...match,
+      status: ARBITRAGE_REQUEST_STATUS,
+      arbitrageRequestStatus: 'pending',
+      arbitrageRequestedAt: requestedAt,
+      refereeStartedAt: null,
+    };
+
+    updateMatchById(match.id, () => requestedMatch);
+    setSelectedRefereeMatch(requestedMatch);
+  }
+
   function updateMatchById(matchId, updater) {
     const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? updater(match) : match)) : matches);
 
@@ -8133,7 +8150,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             {isArbitrageRequestPending(match) ? (
                               <button type="button" className="btn btn-success" onClick={() => acceptArbitrageRequest(match.id)}>
-                                Demande d'arbitrage
+                                Arbitrage demandé
                               </button>
                             ) : null}
                             <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
