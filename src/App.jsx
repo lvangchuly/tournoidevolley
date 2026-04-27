@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34K';
+const APP_VERSION = 'V34L';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'Arbitrage demandé envoyé';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1419,6 +1419,19 @@ function isMatchResultValid(match, phaseRules) {
   return (scoreA >= target || scoreB >= target) && Math.abs(scoreA - scoreB) >= 2;
 }
 
+
+
+function makeArbitrageRequestMatch(match) {
+  return {
+    ...match,
+    status: ARBITRAGE_REQUEST_STATUS,
+    arbitrageRequestStatus: 'pending',
+    arbitrageRequestedAt: Date.now(),
+    refereeStartedAt: null,
+    refereeInProgress: false,
+    matchInProgress: false,
+  };
+}
 
 function isArbitrageRequestPending(match) {
   return match?.arbitrageRequestStatus === 'pending' || match?.status === ARBITRAGE_REQUEST_STATUS;
@@ -6944,18 +6957,9 @@ export default function App() {
 
   function requestArbitrageForMatch(match) {
     if (!match || isArbitrageRequestPending(match) || getMatchStatusLabel(match, phaseRulesRef.current) !== 'A saisir') return;
-
-    const requestedAt = Date.now();
-    const requestedMatch = {
-      ...match,
-      status: ARBITRAGE_REQUEST_STATUS,
-      arbitrageRequestStatus: 'pending',
-      arbitrageRequestedAt: requestedAt,
-      refereeStartedAt: null,
-    };
-
+    const requestedMatch = makeArbitrageRequestMatch(match);
     updateMatchById(match.id, () => requestedMatch);
-    setSelectedRefereeMatch(requestedMatch);
+    if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(requestedMatch);
   }
 
   function updateMatchById(matchId, updater) {
@@ -7017,6 +7021,8 @@ export default function App() {
       arbitrageRequestStatus: 'accepted',
       arbitrageAcceptedAt: Date.now(),
       refereeStartedAt: Date.now(),
+      refereeInProgress: true,
+      matchInProgress: true,
     }));
   }
 
@@ -7467,8 +7473,8 @@ export default function App() {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: true,
-        matchInProgress: true,
+        refereeInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
   }
@@ -7518,7 +7524,7 @@ export default function App() {
         submittedAt,
         pendingResultSentAt: sendTimestamp,
         refereeInProgress: false,
-        matchInProgress: true,
+        matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
     queueBackgroundCloudSave(0, sendTimestamp);
@@ -7607,8 +7613,8 @@ export default function App() {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: true,
-        matchInProgress: true,
+        refereeInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
       };
     }));
 
@@ -9249,7 +9255,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                                 const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
                                   item.id === match.id
-                                    ? { ...item, refereeInProgress: true, matchInProgress: true, submittedAt: refereeLockAt, pendingResultSentAt: null }
+                                    ? { ...item, refereeInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(), matchInProgress: false, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(), submittedAt: refereeLockAt, pendingResultSentAt: null }
                                     : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
