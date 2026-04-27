@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34H';
+const APP_VERSION = 'V34J';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 2 * 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'Demande d’arbitrage envoyé';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -6965,11 +6965,7 @@ export default function App() {
       return next;
     });
     setMainStage((current) => {
-      const next = {
-        ...current,
-        principaleMatches: updateMatches(current.principaleMatches),
-        consolanteMatches: updateMatches(current.consolanteMatches),
-      };
+      const next = { ...current, principaleMatches: updateMatches(current.principaleMatches), consolanteMatches: updateMatches(current.consolanteMatches) };
       mainStageRef.current = next;
       return next;
     });
@@ -6989,12 +6985,7 @@ export default function App() {
       return next;
     });
     setSingleKnockout((current) => {
-      const next = {
-        ...current,
-        quarters: updateMatches(current.quarters),
-        semis: updateMatches(current.semis),
-        finals: updateMatches(current.finals),
-      };
+      const next = { ...current, quarters: updateMatches(current.quarters), semis: updateMatches(current.semis), finals: updateMatches(current.finals) };
       singleKnockoutRef.current = next;
       return next;
     });
@@ -7008,7 +6999,7 @@ export default function App() {
       status: 'Match en cours',
       arbitrageRequestStatus: 'accepted',
       arbitrageAcceptedAt: Date.now(),
-      refereeStartedAt: match.refereeStartedAt || Date.now(),
+      refereeStartedAt: Date.now(),
     }));
   }
 
@@ -7025,7 +7016,6 @@ export default function App() {
   function expirePendingArbitrageRequests() {
     const now = Date.now();
     let changed = false;
-
     const updateStageKey = (ref, setter, key) => {
       const stage = ref.current || {};
       const result = expirePendingArbitrageRequestsInMatches(stage[key], now);
