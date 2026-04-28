@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZA';
+const APP_VERSION = 'V34ZB';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -4128,7 +4128,27 @@ export default function App() {
       })
   ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
-  const upcomingMatches = useMemo(() => (
+  
+function getPublicMatchPriority(match, phaseRules) {
+  const status = getMatchStatusLabel(match, phaseRules);
+  if (status === 'Match en cours' || match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return 0;
+  if (status === 'Résultats envoyés' || match?.status === 'Résultats envoyés') return 1;
+  if (status === 'A saisir' || status === 'À saisir') return 2;
+  return 3;
+}
+
+function sortPublicMatchesByPriority(matches, phaseRules) {
+  return [...(Array.isArray(matches) ? matches : [])].sort((a, b) => {
+    const priority = getPublicMatchPriority(a, phaseRules) - getPublicMatchPriority(b, phaseRules);
+    if (priority !== 0) return priority;
+    const orderA = Number(a?.rotation ?? a?.matchNumber ?? a?.order ?? a?.index ?? 0);
+    const orderB = Number(b?.rotation ?? b?.matchNumber ?? b?.order ?? b?.index ?? 0);
+    return orderA - orderB;
+  });
+}
+
+
+const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
     allCompetitionMatches
       .filter((match) => { if (match.status === 'Valide') return false;
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
@@ -4144,7 +4164,7 @@ export default function App() {
         scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
         estimatedDuration: estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules)),
       }))
-  ), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
+  , phaseRules), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
 
   const publicPodiumLeaders = useMemo(() => {
     const isResolvedPodiumTeam = (teamId) => {
