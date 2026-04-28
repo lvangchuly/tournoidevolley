@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZB';
+const APP_VERSION = 'V34ZC';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7131,6 +7131,26 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
     queueBackgroundCloudSave(250);
   }
 
+  function forceCancelOrganizerMatch(matchId) {
+    updateMatchById(matchId, (match) => ({
+      ...match,
+      status: 'A saisir',
+      scoreA: null,
+      scoreB: null,
+      validatedAt: null,
+      refereeInProgress: false,
+      matchInProgress: false,
+      refereeStartedAt: null,
+      pendingResultSentAt: null,
+      resultsSentAt: null,
+      submittedAt: null,
+      pendingResult: null,
+      arbitrageRequestStatus: null,
+      arbitrageRequestedAt: null,
+      arbitrageAcceptedAt: null,
+    }));
+  }
+
   function forceValidateOrganizerMatch(matchId) {
     updateMatchById(matchId, (match) => ({
       ...match,
@@ -8319,7 +8339,7 @@ function releaseRefereeSelectedMatch(entry) {
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             {match.status === 'Résultats envoyés' ? (
-                              <button type="button" className="btn btn-success" onClick={() => validateSentRefereeResult(match.id)}>
+                              <button type="button" className="btn btn-success" onClick={() => forceValidateOrganizerMatch(match.id)}>
                                 Valider
                               </button>
                             ) : null}
@@ -8328,7 +8348,7 @@ function releaseRefereeSelectedMatch(entry) {
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                           {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
+                              <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
                           {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
@@ -8340,7 +8360,7 @@ function releaseRefereeSelectedMatch(entry) {
                           ) : null}
                           {!isValid && Boolean(match.pendingResultSentAt) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant='danger' onClick={() => cancelRefereeResult(scope, match.id)}>
+                              <Button variant='danger' onClick={() => forceCancelOrganizerMatch(match.id)}>
                                 Annuler
                               </Button>
                             </div>
@@ -8440,7 +8460,7 @@ function releaseRefereeSelectedMatch(entry) {
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                         {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
-                            <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                            <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
                                                       </div>
                         ) : null}
                         {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
@@ -8538,7 +8558,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                             {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
                               <div className="actions-row compact-actions">
-                                <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
+                                <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
                                                               </div>
                             ) : null}
                           </>
@@ -8975,7 +8995,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
         <form className="login-grid" onSubmit={(e) => { e.preventDefault(); handleOrganizerLogin(); }}>
           <input ref={organizerLoginInputRef} type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
           <Button type="submit" variant="primary">Déverrouiller</Button>
-          <Button type="button" variant="secondary" onClick={() => { setShowOrganizerLogin(false); setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
+          <Button type="button" variant="secondary" onClick={() => forceCancelOrganizerMatch(match.id)}}>Annuler</Button>
         </form>
         {loginError ? <div className="error-text">{loginError}</div> : null}
       </section>
@@ -9121,7 +9141,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                   placeholder="Saisir le message d'accueil"
                 />
                 <div className="home-announcement-actions">
-                  <button type="button" className="home-announcement-action home-announcement-save" onClick={() => saveHomeAnnouncement(homeAnnouncementDraft)} disabled={homeAnnouncementSaving}>
+                  <button type="button" className="home-announcement-action home-announcement-save" onClick={() => forceCancelOrganizerMatch(match.id)} disabled={homeAnnouncementSaving}>
                     {homeAnnouncementSaving ? 'Enregistrement…' : 'Enregistrer'}
                   </button>
                   <button type="button" className="home-announcement-action home-announcement-cancel" onClick={cancelHomeAnnouncementEdit} disabled={homeAnnouncementSaving}>Annuler</button>
