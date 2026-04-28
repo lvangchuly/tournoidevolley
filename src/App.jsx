@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34X';
+const APP_VERSION = 'V34Y';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1446,7 +1446,7 @@ function isArbitrageRequestAccepted(match) {
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
   if (match.status === 'Valide' || match.status === 'Résultats envoyés') return false;
-  if (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) return false;
+  if (isRefereeAssignedMatch(match)) return false;
   const status = getMatchStatusLabel(match, phaseRules);
   return status === 'A saisir' || status === 'Match en cours';
 }
@@ -1513,7 +1513,7 @@ function isRefereeAssignedMatch(match) {
 
 function getMatchStatusLabel(match, phaseRules) {
   if (match?.status === 'Résultats envoyés') return 'Résultats envoyés';
-  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return 'Match en cours';
+  if (match?.status === 'Match en cours' || isRefereeAssignedMatch(match)) return 'Match en cours';
 
 
   const scoreA = toNumber(match.scoreA);
@@ -7343,8 +7343,8 @@ export default function App() {
 
   function getOrganizerStatusBadge(match) {
   if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
-  if (Boolean(match?.refereeInProgress) || Boolean(match?.matchInProgress)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
-  if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'neutral' };
+  if (isRefereeAssignedMatch(match)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
+  if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'neutral status-match-disponible badge-neutral' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
@@ -7908,7 +7908,7 @@ function rejectRefereeScore(scope, matchId) {
       return {
         ...match,
         refereeInProgress: false,
-        matchInProgress: false,
+        matchInProgress: false, status: 'Match en cours', refereeStartedAt: null,
       };
     }));
 
@@ -8295,7 +8295,7 @@ function releaseRefereeSelectedMatch(entry) {
                           ) : null}
                           {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant='info' onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                              <Button variant={isRefereeAssignedMatch(match) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
                                 Changer l’arbitre
                               </Button>
                             </div>

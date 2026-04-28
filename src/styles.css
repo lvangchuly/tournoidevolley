@@ -5836,3 +5836,13 @@ tbody tr:last-child td { border-bottom: none; }
   background: #dc2626 !important;
   color: #fff !important;
 }
+
+.status-match-disponible,
+.badge.status-match-disponible,
+.badge-neutral,
+.badge.neutral,
+.neutral {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+  border-color: #cbd5e1 !important;
+}
