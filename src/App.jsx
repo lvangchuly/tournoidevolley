@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34U';
+const APP_VERSION = 'V34V';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -6996,7 +6996,7 @@ export default function App() {
 
 
   function requestArbitrageForMatch(match) {
-    const liveMatch = getLiveRefereeMatch(match);
+    const liveMatch = getLiveRefereeMatch(match) || match;
     if (!liveMatch) return;
     if (getMatchStatusLabel(liveMatch, phaseRulesRef.current) !== 'A saisir') return;
     const startedMatch = makeArbitrageRequestMatch(liveMatch);
