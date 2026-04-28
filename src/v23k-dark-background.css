@@ -37,3 +37,13 @@ body {
   color: #374151 !important;
   border-color: #cbd5e1 !important;
 }
+
+.status-valide,
+.badge.status-valide,
+.badge-success,
+.badge.success,
+.success {
+  background: #16a34a !important;
+  color: #fff !important;
+  border-color: #16a34a !important;
+}
