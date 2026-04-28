@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZF';
+const APP_VERSION = 'V34ZG';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -675,7 +675,7 @@ function buildConsolanteSemisFromQuarters(rankedIds, quarterMatches, phaseRules)
   return [
     makeKnockoutMatch('Tableau consolante', 'Demi 1', resolveQuarterSlotWinner(rankedIds, quarterMatches, 0, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 1, phaseRules)),
     makeKnockoutMatch('Tableau consolante', 'Demi 2', resolveQuarterSlotWinner(rankedIds, quarterMatches, 2, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 3, phaseRules)),
-  ].filter((match) => match.status !== 'Valide' && match.teamAId && match.teamBId);
+  ].filter((match) => match.teamAId && match.teamBId);
 }
 
 
@@ -731,7 +731,7 @@ function buildSemisFromRanking(rankedIds) {
     return [
       makeKnockoutMatch('Demi-finale', 'Demi 1', team1, team4),
       makeKnockoutMatch('Demi-finale', 'Demi 2', team2, team3),
-    ].filter((match) => match.status !== 'Valide' && match.teamAId && match.teamBId);
+    ].filter((match) => match.teamAId && match.teamBId);
   }
   if (rankedIds.length === 3) {
     return [makeKnockoutMatch('Demi-finale', 'Demi 1', team2, team3)];
@@ -743,7 +743,7 @@ function buildSemisFromQuarters(rankedIds, quarterMatches, phaseRules) {
   return [
     makeKnockoutMatch('Demi-finale', 'Demi 1', resolveQuarterSlotWinner(rankedIds, quarterMatches, 0, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 3, phaseRules)),
     makeKnockoutMatch('Demi-finale', 'Demi 2', resolveQuarterSlotWinner(rankedIds, quarterMatches, 1, phaseRules), resolveQuarterSlotWinner(rankedIds, quarterMatches, 2, phaseRules)),
-  ].filter((match) => match.status !== 'Valide' && match.teamAId && match.teamBId);
+  ].filter((match) => match.teamAId && match.teamBId);
 }
 
 function assignBalancedReferees(matches, teamIds) {
@@ -1784,7 +1784,7 @@ function computeGroupStandings(pools, matches, teamMap, phaseRules, options = {}
     pool,
     rows: computeRanking(
       pool.teamIds,
-      matches.filter((match) => match.status !== 'Valide' && pool.teamIds.includes(match.teamAId) && pool.teamIds.includes(match.teamBId)),
+      matches.filter((match) => pool.teamIds.includes(match.teamAId) && pool.teamIds.includes(match.teamBId)),
       teamMap,
       phaseRules,
       options,
@@ -1918,7 +1918,7 @@ function printQrCode(url, title = 'QR Code') {
 
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
-  const remaining = dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRules) !== 'Valide');
+  const remaining = dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide');
   if (!remaining.length) {
     window.alert('Aucun match restant à imprimer.');
     return;
@@ -1980,7 +1980,7 @@ function getStandingsRowsForPool(standings, pools, targetPoolLetter) {
 }
 
 function sanitizeKnockoutMatches(matches) {
-  return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match.status !== 'Valide' && match?.teamAId && match?.teamBId);
+  return dedupeMatches(Array.isArray(matches) ? matches : []).filter((match) => match?.teamAId && match?.teamBId);
 }
 
 function hasBothTeamsDefined(match) {
@@ -2153,12 +2153,12 @@ function filterMatchesToPools(matches, pools, phaseLabel) {
 function filterMatchesBySelectedTeam(matches, selectedTeamId) {
   const safeMatches = Array.isArray(matches) ? matches : [];
   if (!selectedTeamId) return safeMatches;
-  return safeMatches.filter((match) => match.status !== 'Valide' && match?.teamAId === selectedTeamId || match?.teamBId === selectedTeamId);
+  return safeMatches.filter((match) => match?.teamAId === selectedTeamId || match?.teamBId === selectedTeamId);
 }
 
 function formatRemainingMatchesLabel(matches, phaseRules) {
   const uniqueMatches = dedupeMatches(Array.isArray(matches) ? matches : []);
-  const remainingCount = uniqueMatches.filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
+  const remainingCount = uniqueMatches.filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide').length;
   return `${remainingCount} match${remainingCount > 1 ? 's' : ''} restant${remainingCount > 1 ? 's' : ''} à jouer`;
 }
 
@@ -2915,7 +2915,7 @@ export default function App() {
   }, [allCompetitionMatches, phaseRules]);
 
   const activeOccupiedMatchCount = useMemo(() => (
-    allCompetitionMatches.filter((match) => match.status !== 'Valide' && isMatchCurrentlyInProgress(match, phaseRules)).length
+    allCompetitionMatches.filter((match) => isMatchCurrentlyInProgress(match, phaseRules)).length
   ), [allCompetitionMatches, phaseRules]);
 
   function setLastAutomaticSaveFilename(nextValue) {
@@ -4106,8 +4106,8 @@ export default function App() {
 
   const currentMatches = useMemo(() => (
     allCompetitionMatches
-      .filter((match) => match.status !== 'Valide' && isMatchCurrentlyInProgress(match, phaseRules))
-      .filter((match) => match.status !== 'Valide' && isPublicDisplayableMatch(match, resolveTeam))
+      .filter((match) => isMatchCurrentlyInProgress(match, phaseRules))
+      .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
       .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
       .slice(0, getMaxActiveCourts(courtCount))
       .map((match) => {
@@ -4265,7 +4265,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
     const currentIds = new Set(items.map((item) => item.match.id));
     const remainingSlots = Math.max(0, getMaxActiveCourts(courtCount) - items.length);
     upcomingMatches
-      .filter((match) => match.status !== 'Valide' && !currentIds.has(match.id))
+      .filter((match) => !currentIds.has(match.id))
       .slice(0, remainingSlots)
       .forEach((match, index) => {
         items.push({
@@ -4277,8 +4277,8 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
 
     if (items.length === 0) {
       allCompetitionMatches
-        .filter((match) => match.status !== 'Valide' && isPublicDisplayableMatch(match, resolveTeam))
-        .filter((match) => match.status !== 'Valide' && !isMatchResultValid(match, phaseRules) || isMatchCurrentlyInProgress(match, phaseRules))
+        .filter((match) => isPublicDisplayableMatch(match, resolveTeam))
+        .filter((match) => !isMatchResultValid(match, phaseRules) || isMatchCurrentlyInProgress(match, phaseRules))
         .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
         .slice(0, getMaxActiveCourts(courtCount))
         .forEach((match, index) => {
@@ -4426,7 +4426,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
       } else {
         const brassage2AlreadyGenerated = (brassage2Ref.current.matches.length > 0) || (brassage2Ref.current.pools.length > 0);
         if (!brassage2AlreadyGenerated) {
-          const validatedMatchCount = brassage1Ref.current.matches.filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide').length;
+          const validatedMatchCount = brassage1Ref.current.matches.filter((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide').length;
           const signature = `auto-brassage2-${validatedMatchCount}-${brassage1Ref.current.matches.map((match) => `${match.id}:${match.scoreA}-${match.scoreB}:${match.validatedAt || ''}`).join('|')}`;
           if (!autoGeneratedStageSignaturesRef.current.has(signature)) {
             try {
@@ -4583,7 +4583,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
 
   const filterRefereeVisibleMatches = useCallback((matches) => (
     dedupeMatches(Array.isArray(matches) ? matches : [])
-      .filter((match) => match.status !== 'Valide' && hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
+      .filter((match) => hasBothTeamsDefined(match) && getMatchStatusLabel(match, phaseRules) !== 'Valide')
   ), [phaseRules]);
 
   const refereeMatchGroups = useMemo(() => (
@@ -4846,7 +4846,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
   }, [showOrganizerLogin]);
 
   function countMatchesWithStatus(matches, targetStatus = 'Valide') {
-    return matches.filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRules) === targetStatus).length;
+    return matches.filter((match) => getMatchStatusLabel(match, phaseRules) === targetStatus).length;
   }
 
   function hasAnyValidMatch(matches) {
@@ -5002,17 +5002,17 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
     },
     finale: {
       locked: hasAnyValidMatch([
-        ...singleKnockout.finals.filter((match) => match.status !== 'Valide' && match.group === 'Finale'),
-        ...knockout.principalFinals.filter((match) => match.status !== 'Valide' && match.group === 'Finale'),
-        ...knockout.consolanteFinals.filter((match) => match.status !== 'Valide' && match.group === 'Finale')
+        ...singleKnockout.finals.filter((match) => match.group === 'Finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Finale')
       ]),
       reason: 'Paramètre verrouillé dès qu’une finale valide existe.'
     },
     petiteFinale: {
       locked: hasAnyValidMatch([
-        ...singleKnockout.finals.filter((match) => match.status !== 'Valide' && match.group === 'Petite finale'),
-        ...knockout.principalFinals.filter((match) => match.status !== 'Valide' && match.group === 'Petite finale'),
-        ...knockout.consolanteFinals.filter((match) => match.status !== 'Valide' && match.group === 'Petite finale')
+        ...singleKnockout.finals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.principalFinals.filter((match) => match.group === 'Petite finale'),
+        ...knockout.consolanteFinals.filter((match) => match.group === 'Petite finale')
       ]),
       reason: 'Paramètre verrouillé dès qu’une petite finale valide existe.'
     },
@@ -5893,7 +5893,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         if (match?.phase !== 'Brassage 1') return false;
         return teamIds.includes(match.teamAId) && teamIds.includes(match.teamBId);
       }));
-      const validMatches = poolMatches.filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      const validMatches = poolMatches.filter((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
       return {
         pool,
         expectedMatchCount,
@@ -6071,7 +6071,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         if (match?.phase !== 'Brassage 1') return false;
         return teamIds.includes(match.teamAId) && teamIds.includes(match.teamBId);
       }));
-      const validMatches = poolMatches.filter((match) => match.status !== 'Valide' && getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
+      const validMatches = poolMatches.filter((match) => getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide');
       return {
         pool,
         teamIds,
@@ -6345,7 +6345,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
       ), CURRENT_COURT_COUNT));
       const consolantePools = createChampionshipPool(rankedIds.slice(8, 12), CONSOLANTE_POOL_NAMES[0]);
-      const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.status !== 'Valide' && match.phase === 'Consolante'));
+      const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools, consolanteMatches };
       const nextKnockout = { principalQuarters, principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
       mainStageRef.current = nextMainStage;
@@ -6367,7 +6367,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         getPrincipalQuarterCourts(CURRENT_COURT_COUNT),
       ), CURRENT_COURT_COUNT));
       const consolantePools = createPools(rankedIds.slice(8, 11), [CONSOLANTE_POOL_NAMES[0]]);
-      const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.status !== 'Valide' && match.phase === 'Consolante'));
+      const consolanteMatches = stampGeneratedMatches(scheduleMainStageMatches([], consolantePools, startSlot).filter((match) => match.phase === 'Consolante'));
       const nextMainStage = { principalePools: [], principaleMatches: [], consolantePools, consolanteMatches };
       const nextKnockout = { principalQuarters, principalSemis: [], principalFinals: [], consolanteSemis: [], consolanteFinals: [] };
       mainStageRef.current = nextMainStage;
@@ -6395,9 +6395,9 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
 
     const nextMainStage = {
       principalePools,
-      principaleMatches: scheduled.filter((match) => match.status !== 'Valide' && match.phase === 'Principale'),
+      principaleMatches: scheduled.filter((match) => match.phase === 'Principale'),
       consolantePools,
-      consolanteMatches: scheduled.filter((match) => match.status !== 'Valide' && match.phase === 'Consolante'),
+      consolanteMatches: scheduled.filter((match) => match.phase === 'Consolante'),
     };
     const nextKnockout = { principalEighths: [], principalQuarters: [], principalSemis: [], principalFinals: [], consolanteEighths: [], consolanteQuarters: [], consolanteSemis: [], consolanteFinals: [] };
     mainStageRef.current = nextMainStage;
@@ -8176,7 +8176,7 @@ function releaseRefereeSelectedMatch(entry) {
 
     getCourtNumbers(courtCount).forEach((courtNumber) => {
       const courtMatches = safeMatches
-        .filter((match) => match.status !== 'Valide' && Number(match.court || 0) === courtNumber)
+        .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
         .sort((a, b) => {
           if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
@@ -8189,7 +8189,7 @@ function releaseRefereeSelectedMatch(entry) {
     const poolCards = safePools.map((pool) => {
       const poolTeamIds = Array.isArray(pool.teamIds) ? pool.teamIds.filter(Boolean) : [];
       const poolMatches = safeMatches
-        .filter((match) => match.status !== 'Valide' && match.group === pool.name || (poolTeamIds.includes(match.teamAId) && poolTeamIds.includes(match.teamBId)))
+        .filter((match) => match.group === pool.name || (poolTeamIds.includes(match.teamAId) && poolTeamIds.includes(match.teamBId)))
         .sort((a, b) => {
           if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
           return (a.court || 0) - (b.court || 0);
@@ -8387,7 +8387,7 @@ function releaseRefereeSelectedMatch(entry) {
     const terrainMatchMap = new Map();
     getCourtNumbers(courtCount).forEach((courtNumber) => {
       const courtMatches = safeMatches
-        .filter((match) => match.status !== 'Valide' && Number(match.court || 0) === courtNumber)
+        .filter((match) => Number(match.court || 0) === courtNumber)
         .slice()
         .sort((a, b) => {
           if ((a.slot || 0) !== (b.slot || 0)) return (a.slot || 0) - (b.slot || 0);
@@ -9012,10 +9012,10 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
   const finalsPrincipalFinalsMatches = ensureMatchArray(knockout.principalFinals);
   const finalsPrincipalQuarterOnlyMatches = ensureMatchArray(knockout.principalQuarters);
   const finalsConsolanteQuarterOnlyMatches = ensureMatchArray(knockout.consolanteQuarters);
-  const finalsPrincipalSmallFinalMatches = finalsPrincipalFinalsMatches.filter((match) => match.status !== 'Valide' && /^Petite finale/i.test(String(match?.group || '')));
-  const finalsPrincipalFinalOnlyMatches = finalsPrincipalFinalsMatches.filter((match) => match.status !== 'Valide' && /^Finale$/i.test(String(match?.group || '')));
-  const finalsConsolanteSmallFinalMatches = finalsConsolanteFinalsMatches.filter((match) => match.status !== 'Valide' && /^Petite finale/i.test(String(match?.group || '')));
-  const finalsConsolanteFinalOnlyMatches = finalsConsolanteFinalsMatches.filter((match) => match.status !== 'Valide' && /^Finale$/i.test(String(match?.group || '')));
+  const finalsPrincipalSmallFinalMatches = finalsPrincipalFinalsMatches.filter((match) => /^Petite finale/i.test(String(match?.group || '')));
+  const finalsPrincipalFinalOnlyMatches = finalsPrincipalFinalsMatches.filter((match) => /^Finale$/i.test(String(match?.group || '')));
+  const finalsConsolanteSmallFinalMatches = finalsConsolanteFinalsMatches.filter((match) => /^Petite finale/i.test(String(match?.group || '')));
+  const finalsConsolanteFinalOnlyMatches = finalsConsolanteFinalsMatches.filter((match) => /^Finale$/i.test(String(match?.group || '')));
   const finalsSingleQuarters = ensureMatchArray(singleKnockout.quarters);
   const finalsSingleSemis = ensureMatchArray(singleKnockout.semis);
   const finalsSingleFinals = ensureMatchArray(singleKnockout.finals);
@@ -9388,7 +9388,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                       <div className="mini-card-head">{group.title}</div>
                       {!group.isUnlocked ? <div className="referee-lock-note">{group.lockReason}</div> : null}
                       <div className="referee-selector-list">
-                        {group.matches.filter((match) => match.status !== 'Valide' && !match.pendingResultSentAt).map((match) => {
+                        {group.matches.filter((match) => !match.pendingResultSentAt).map((match) => {
                           const schedule = scheduleData.scheduleMap[match.id];
                           const pendingStatus = getPendingStatus(match);
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
