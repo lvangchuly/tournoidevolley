@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34W';
+const APP_VERSION = 'V34X';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1446,9 +1446,9 @@ function isArbitrageRequestAccepted(match) {
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
   if (match.status === 'Valide' || match.status === 'Résultats envoyés') return false;
-  if (isRefereeAssignedMatch(match)) return false;
+  if (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) return false;
   const status = getMatchStatusLabel(match, phaseRules);
-  return isStatusASaisir(status) || status === 'Match en cours';
+  return status === 'A saisir' || status === 'Match en cours';
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -7343,7 +7343,8 @@ export default function App() {
 
   function getOrganizerStatusBadge(match) {
   if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
-  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
+  if (Boolean(match?.refereeInProgress) || Boolean(match?.matchInProgress)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
+  if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'neutral' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
@@ -9350,13 +9351,13 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
                           const statusText = officialStatus === 'Valide'
                             ? 'Valide'
-                            : pendingStatus === 'Match en cours'
+                            : officialStatus === 'Match en cours' || pendingStatus === 'Match en cours'
                               ? 'Match en cours'
                               : 'À saisir';
                           const badgeClass = officialStatus === 'Valide'
                             ? 'badge-success'
-                            : ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
-                              ? 'badge-danger'
+                            : (officialStatus === 'Match en cours' && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
+                              ? 'badge-danger status-match-en-cours'
                               : 'badge-neutral';
                           const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);
                           const canSelectExistingInProgressMatch = false;
@@ -9380,7 +9381,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                                 const refereeLockAt = new Date().toISOString();
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
                                   item.id === match.id
-                                    ? { ...item, refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(), submittedAt: refereeLockAt, pendingResultSentAt: null }
+                                    ? { ...item, refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: null, arbitrageRequestedAt: null, arbitrageAcceptedAt: null, refereeStartedAt: refereeLockAt, submittedAt: refereeLockAt, pendingResultSentAt: null }
                                     : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
