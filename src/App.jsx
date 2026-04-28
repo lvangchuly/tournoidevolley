@@ -391,8 +391,9 @@ function dedupeMatches(matches) {
     if (!key) return;
     byKey.set(key, pickPreferredMatch(byKey.get(key), match));
   });
-  return Array.from(byKey.values()).filter((match) => match.status !== 'Valide' && {
-    if (!match) return false;
+  return Array.from(byKey.values()).filter((match) => {
+      if (!match) return false;
+      if (match.status === 'Valide') return false;
     if (!isKnockoutMatchSlot(match)) return true;
     return Boolean(match.teamAId && match.teamBId);
   });
@@ -2140,8 +2141,9 @@ function filterMatchesToPools(matches, pools, phaseLabel) {
     }
   });
 
-  return safeMatches.filter((match) => match.status !== 'Valide' && {
-    if (!match) return false;
+  return safeMatches.filter((match) => {
+      if (!match) return false;
+      if (match.status === 'Valide') return false;
     if (phaseLabel && match.phase !== phaseLabel) return false;
     const pairKey = teamPairKey(match, phaseLabel);
     if (!pairKey || !allowedPairs.has(pairKey)) return false;
@@ -4128,7 +4130,7 @@ export default function App() {
 
   const upcomingMatches = useMemo(() => (
     allCompetitionMatches
-      .filter((match) => match.status !== 'Valide' && {
+      .filter((match) => { if (match.status === 'Valide') return false;
         if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
         if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
         return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
@@ -5869,7 +5871,7 @@ export default function App() {
     const brassage1PoolChecks = (currentBrassage1.pools || []).map((pool) => {
       const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
       const expectedMatchCount = teamIds.length === 2 ? 2 : (teamIds.length >= 2 ? (teamIds.length * (teamIds.length - 1)) / 2 : 0);
-      const poolMatches = dedupeMatches((currentBrassage1.matches || []).filter((match) => match.status !== 'Valide' && {
+      const poolMatches = dedupeMatches((currentBrassage1.matches || []).filter((match) => { if (match.status === 'Valide') return false;
         if (match?.phase !== 'Brassage 1') return false;
         return teamIds.includes(match.teamAId) && teamIds.includes(match.teamBId);
       }));
@@ -6047,7 +6049,7 @@ export default function App() {
     const brassage1PoolChecks = currentBrassage1.pools.map((pool) => {
       const teamIds = Array.isArray(pool?.teamIds) ? pool.teamIds.filter(Boolean) : [];
       const expectedMatchCount = teamIds.length === 2 ? 2 : (teamIds.length >= 2 ? (teamIds.length * (teamIds.length - 1)) / 2 : 0);
-      const poolMatches = dedupeMatches(currentBrassage1.matches.filter((match) => match.status !== 'Valide' && {
+      const poolMatches = dedupeMatches(currentBrassage1.matches.filter((match) => { if (match.status === 'Valide') return false;
         if (match?.phase !== 'Brassage 1') return false;
         return teamIds.includes(match.teamAId) && teamIds.includes(match.teamBId);
       }));
