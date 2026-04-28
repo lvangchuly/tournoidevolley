@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZE';
+const APP_VERSION = 'V34ZF';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -393,7 +393,6 @@ function dedupeMatches(matches) {
   });
   return Array.from(byKey.values()).filter((match) => {
       if (!match) return false;
-      if (match.status === 'Valide') return false;
     if (!isKnockoutMatchSlot(match)) return true;
     return Boolean(match.teamAId && match.teamBId);
   });
@@ -2143,7 +2142,6 @@ function filterMatchesToPools(matches, pools, phaseLabel) {
 
   return safeMatches.filter((match) => {
       if (!match) return false;
-      if (match.status === 'Valide') return false;
     if (phaseLabel && match.phase !== phaseLabel) return false;
     const pairKey = teamPairKey(match, phaseLabel);
     if (!pairKey || !allowedPairs.has(pairKey)) return false;
