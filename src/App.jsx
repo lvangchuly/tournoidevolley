@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZC';
+const APP_VERSION = 'V34ZD';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -8348,7 +8348,7 @@ function releaseRefereeSelectedMatch(entry) {
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                           {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
+                              <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
                           {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
@@ -8558,7 +8558,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                             {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
                               <div className="actions-row compact-actions">
-                                <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
+                                <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                               </div>
                             ) : null}
                           </>
