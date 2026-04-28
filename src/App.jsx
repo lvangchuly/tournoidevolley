@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34T';
+const APP_VERSION = 'V34U';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7002,6 +7002,8 @@ export default function App() {
     const startedMatch = makeArbitrageRequestMatch(liveMatch);
     updateMatchById(liveMatch.id, () => startedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);
+    refreshLatestPersistedSnapshot();
+    queueBackgroundCloudSave(0);
   }
 
 
@@ -7323,8 +7325,8 @@ export default function App() {
   }
 
   function getOrganizerStatusBadge(match) {
-  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'status-resultats-envoyes badge-success success' };
-  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'status-match-en-cours badge-danger danger' };
+  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
+  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
