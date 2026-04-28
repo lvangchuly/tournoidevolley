@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34S';
+const APP_VERSION = 'V34T';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7323,8 +7323,8 @@ export default function App() {
   }
 
   function getOrganizerStatusBadge(match) {
-  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success' };
-  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'danger' };
+  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'status-resultats-envoyes badge-success success' };
+  if (match?.status === 'Match en cours' || match?.refereeInProgress || match?.matchInProgress) return { text: 'Match en cours', className: 'status-match-en-cours badge-danger danger' };
 
 
     const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
@@ -8265,7 +8265,7 @@ function releaseRefereeSelectedMatch(entry) {
                                 Valider
                               </button>
                             ) : null}
-                            <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
+                            <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                           {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
@@ -8377,7 +8377,7 @@ function releaseRefereeSelectedMatch(entry) {
                         </div>
                         <div className="compact-match-footer-v24n">
                           <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
-                          <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
+                          <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                         {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
@@ -8474,7 +8474,7 @@ function releaseRefereeSelectedMatch(entry) {
                     <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
                     <td>
                       <div className="status-cell">
-                        <span className={`badge ${getOrganizerStatusBadge(match).className}`}>{getOrganizerStatusBadge(match).text}</span>
+                        <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                         {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
                           <>
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
