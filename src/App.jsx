@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34V';
+const APP_VERSION = 'V34W';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1445,7 +1445,10 @@ function isArbitrageRequestAccepted(match) {
 
 function isMatchSelectableByReferee(match, phaseRules) {
   if (!match) return false;
-  return getMatchStatusLabel(match, phaseRules) === 'A saisir';
+  if (match.status === 'Valide' || match.status === 'Résultats envoyés') return false;
+  if (isRefereeAssignedMatch(match)) return false;
+  const status = getMatchStatusLabel(match, phaseRules);
+  return isStatusASaisir(status) || status === 'Match en cours';
 }
 
 function isArbitrageRequestExpired(match, now = Date.now()) {
@@ -1494,6 +1497,18 @@ function isWinningScoreReachedForMatch(match, phaseRules) {
   const diff = Math.abs(scoreA - scoreB);
   const target = 21;
   return maxScore >= target && diff >= 1;
+}
+
+function normalizeStatusLabel(status) {
+  return String(status || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function isStatusASaisir(status) {
+  return normalizeStatusLabel(status) === 'a saisir';
+}
+
+function isRefereeAssignedMatch(match) {
+  return Boolean(match?.refereeInProgress || match?.matchInProgress || match?.refereeStartedAt);
 }
 
 function getMatchStatusLabel(match, phaseRules) {
@@ -6998,7 +7013,9 @@ export default function App() {
   function requestArbitrageForMatch(match) {
     const liveMatch = getLiveRefereeMatch(match) || match;
     if (!liveMatch) return;
-    if (getMatchStatusLabel(liveMatch, phaseRulesRef.current) !== 'A saisir') return;
+    const currentStatus = getMatchStatusLabel(liveMatch, phaseRulesRef.current);
+    const canStart = isStatusASaisir(currentStatus) || (currentStatus === 'Match en cours' && !isRefereeAssignedMatch(liveMatch));
+    if (!canStart) return;
     const startedMatch = makeArbitrageRequestMatch(liveMatch);
     updateMatchById(liveMatch.id, () => startedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);
