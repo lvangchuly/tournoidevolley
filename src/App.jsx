@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34Z';
+const APP_VERSION = 'V34ZA';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7111,7 +7111,7 @@ export default function App() {
     queueBackgroundCloudSave(250);
   }
 
-  function validateSentRefereeResult(matchId) {
+  function forceValidateOrganizerMatch(matchId) {
     updateMatchById(matchId, (match) => ({
       ...match,
       status: 'Valide',
@@ -7120,6 +7120,7 @@ export default function App() {
       refereeStartedAt: null,
       pendingResultSentAt: null,
       resultsSentAt: null,
+      submittedAt: null,
       arbitrageRequestStatus: null,
       arbitrageRequestedAt: null,
       arbitrageAcceptedAt: null,
@@ -7129,10 +7130,16 @@ export default function App() {
       refereeStartedAt: null,
       pendingResultSentAt: null,
       resultsSentAt: null,
+      submittedAt: null,
+      pendingResult: null,
       arbitrageRequestStatus: null,
       arbitrageRequestedAt: null,
       arbitrageAcceptedAt: null,
     }));
+  }
+
+  function validateSentRefereeResult(matchId) {
+    forceValidateOrganizerMatch(matchId);
   }
 
   function sendRefereeResults(matchId) {
@@ -8290,7 +8297,7 @@ function releaseRefereeSelectedMatch(entry) {
                             </label>
                           </div>
                           <div className="compact-match-footer-v24n">
-                            <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
+                            <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                             {match.status === 'Résultats envoyés' ? (
                               <button type="button" className="btn btn-success" onClick={() => validateSentRefereeResult(match.id)}>
                                 Valider
@@ -8301,7 +8308,7 @@ function releaseRefereeSelectedMatch(entry) {
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                           {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                              <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
                           {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
@@ -8407,7 +8414,7 @@ function releaseRefereeSelectedMatch(entry) {
                           </label>
                         </div>
                         <div className="compact-match-footer-v24n">
-                          <button type="button" className="match-print-button-v24c" onClick={() => printMatchCard(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
+                          <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
                           <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
@@ -8511,7 +8518,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
                             {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
                               <div className="actions-row compact-actions">
-                                <Button variant="success" onClick={() => approveRefereeScore(scope, match.id)}>Valider</Button>
+                                <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                               </div>
                             ) : null}
                           </>
