@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZD';
+const APP_VERSION = 'V34ZE';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7403,23 +7403,10 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
   if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
   if (isRefereeAssignedMatch(match)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
   if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'neutral status-match-disponible badge-neutral' };
-
-
-    const officialStatus = getMatchStatusLabel(match, phaseRulesRef.current);
-    if (officialStatus === 'Valide') {
-      return { text: 'Valide', className: 'badge-success' };
-    }
-    if (officialStatus === 'Score invalide') {
-      return { text: 'Score invalide', className: 'badge-danger' };
-    }
-    if (Boolean(match.pendingResultSentAt)) {
-      return { text: 'Résultat envoyé', className: 'badge-info' };
-    }
-    if (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) {
-      return { text: 'Match en cours', className: 'badge-danger' };
-    }
-    return { text: 'À saisir', className: 'badge-neutral' };
-  }
+  const label = getMatchStatusLabel(match, null);
+  if (label === 'Valide') return { text: 'Valide', className: 'success status-valide badge-success' };
+  return { text: label, className: label === 'A saisir' ? 'neutral' : 'warning' };
+}
 
   function protectOrganizerLocalEdit(matchId, snapshot) {
     recentOrganizerLocalEditsRef.current.set(matchId, {
