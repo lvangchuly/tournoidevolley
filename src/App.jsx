@@ -8995,7 +8995,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
         <form className="login-grid" onSubmit={(e) => { e.preventDefault(); handleOrganizerLogin(); }}>
           <input ref={organizerLoginInputRef} type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
           <Button type="submit" variant="primary">Déverrouiller</Button>
-          <Button type="button" variant="secondary" onClick={() => forceCancelOrganizerMatch(match.id)}}>Annuler</Button>
+          <Button type="button" variant="secondary" onClick={() => forceCancelOrganizerMatch(match.id)}>Annuler</Button>
         </form>
         {loginError ? <div className="error-text">{loginError}</div> : null}
       </section>
