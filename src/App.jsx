@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZN';
+const APP_VERSION = 'V34ZO';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1509,7 +1509,8 @@ function isStatusASaisir(status) {
 }
 
 function isRefereeAssignedMatch(match) {
-  if (!match || match.status === 'Valide') return false;
+  if (!match) return false;
+  if (match.status === 'Valide') return false;
   return Boolean(match?.refereeInProgress || match?.matchInProgress || match?.refereeStartedAt);
 }
 
@@ -7652,47 +7653,34 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
   }
 
   function updateOfficialMatchScore(scope, matchId, field, value) {
-    const resolvedScope = !findMatchInScope(scope, matchId)
-      ? (findMatchInScope('principalFinals', matchId) ? 'principalFinals'
-        : findMatchInScope('consolanteFinals', matchId) ? 'consolanteFinals'
-        : findMatchInScope('principalSemis', matchId) ? 'principalSemis'
-        : findMatchInScope('consolanteSemis', matchId) ? 'consolanteSemis'
-        : findMatchInScope('principalQuarters', matchId) ? 'principalQuarters'
-        : findMatchInScope('consolanteQuarters', matchId) ? 'consolanteQuarters'
-        : scope)
-      : scope;
-    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
-    if (!fallbackMatch) return;
-    const currentValue = field === 'scoreA' ? (fallbackMatch.scoreA ?? '') : (fallbackMatch.scoreB ?? '');
-    const normalized = value === '' ? '' : Math.max(0, Number(value));
-    if (String(currentValue ?? '') === String(normalized ?? '')) return;
-    if (!confirmResetLaterStagesBeforeEdit(scope)) return;
-    const officialEditTimestamp = markPendingLocalMutation(new Date().toISOString());
-    const nextScoreA = field === 'scoreA' ? normalized : (fallbackMatch.scoreA ?? '');
-    const nextScoreB = field === 'scoreB' ? normalized : (fallbackMatch.scoreB ?? '');
-    const protectedSnapshot = {
-      scoreA: nextScoreA,
-      scoreB: nextScoreB,
-      officialAt: officialEditTimestamp,
-    };
-    protectOrganizerLocalEdit(matchId, protectedSnapshot);
-    updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
-      if (match.id !== matchId) return match;
-      const updated = {
+    updateMatchById(matchId, (match) => {
+      const normalizedValue = value === '' ? '' : String(value);
+      const nextMatch = {
         ...match,
-        [field]: normalized,
-        submittedScoreA: '',
-        submittedScoreB: '',
-        submittedAt: null,
-        pendingResultSentAt: null,
-        refereeInProgress: false,
-        matchInProgress: false,
-        manualOverrideAt: officialEditTimestamp,
+        [field]: normalizedValue,
       };
-      updated.validatedAt = isMatchResultValid(updated, phaseRulesRef.current) ? officialEditTimestamp : null;
-      return updated;
-    }));
-    queueBackgroundCloudSave(20, approvalTimestamp);
+
+      if (isMatchResultValid(nextMatch, phaseRulesRef.current)) {
+        return {
+          ...nextMatch,
+          status: 'Valide',
+          validatedAt: Date.now(),
+          refereeInProgress: false,
+          matchInProgress: false,
+          refereeStartedAt: null,
+          submittedScoreA: '',
+          submittedScoreB: '',
+          pendingResultSentAt: null,
+          resultsSentAt: null,
+          submittedAt: null,
+          arbitrageRequestStatus: null,
+          arbitrageRequestedAt: null,
+          arbitrageAcceptedAt: null,
+        };
+      }
+
+      return nextMatch;
+    });
   }
 
 
