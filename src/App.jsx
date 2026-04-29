@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZM';
+const APP_VERSION = 'V34ZN';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7106,8 +7106,47 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
 }
 
 
+  function makeScoreAutoValidatedIfWinning(match, phaseRules = null) {
+  if (!match) return match;
+  if (match.status === 'Valide') return {
+    ...match,
+    refereeInProgress: false,
+    matchInProgress: false,
+    refereeStartedAt: null,
+  };
+  if (!isMatchResultValid(match, phaseRulesRef?.current || phaseRules || null)) return match;
+  return {
+    ...match,
+    status: 'Valide',
+    validatedAt: Date.now(),
+    refereeInProgress: false,
+    matchInProgress: false,
+    refereeStartedAt: null,
+    submittedScoreA: '',
+    submittedScoreB: '',
+    pendingResultSentAt: null,
+    resultsSentAt: null,
+    submittedAt: null,
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
+  };
+}
+
+
+  function updateOrganizerMatchScoreLive(matchId, field, value) {
+    updateMatchById(matchId, (match) => {
+      const normalizedValue = value === '' ? '' : String(value);
+      const nextMatch = {
+        ...match,
+        [field]: normalizedValue,
+      };
+      return makeScoreAutoValidatedIfWinning(nextMatch, phaseRulesRef.current);
+    });
+  }
+
   function updateMatchById(matchId, updater) {
-    const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? updater(match) : match)) : matches);
+    const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? makeScoreAutoValidatedIfWinning(updater(match), phaseRulesRef.current) : match)) : matches);
 
     setChampionshipLeg1((current) => {
       const next = { ...current, matches: updateMatches(current.matches) };
