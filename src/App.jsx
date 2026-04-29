@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZG';
+const APP_VERSION = 'V34ZH';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7150,30 +7150,35 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
   }
 
   function forceValidateOrganizerMatch(matchId) {
-    updateMatchById(matchId, (match) => ({
-      ...match,
-      status: 'Valide',
-      refereeInProgress: false,
-      matchInProgress: false,
-      refereeStartedAt: null,
-      pendingResultSentAt: null,
-      resultsSentAt: null,
-      submittedAt: null,
-      arbitrageRequestStatus: null,
-      arbitrageRequestedAt: null,
-      arbitrageAcceptedAt: null,
-      validatedAt: Date.now(),
-      refereeInProgress: false,
-      matchInProgress: false,
-      refereeStartedAt: null,
-      pendingResultSentAt: null,
-      resultsSentAt: null,
-      submittedAt: null,
-      pendingResult: null,
-      arbitrageRequestStatus: null,
-      arbitrageRequestedAt: null,
-      arbitrageAcceptedAt: null,
-    }));
+    updateMatchById(matchId, (match) => {
+      const scoreA = match.scoreA ?? match.pendingResult?.scoreA ?? match.pendingScoreA ?? match.refereeScoreA ?? match.submittedScoreA ?? match.tempScoreA ?? null;
+      const scoreB = match.scoreB ?? match.pendingResult?.scoreB ?? match.pendingScoreB ?? match.refereeScoreB ?? match.submittedScoreB ?? match.tempScoreB ?? null;
+      return {
+        ...match,
+        scoreA,
+        scoreB,
+        status: 'Valide',
+        validatedAt: Date.now(),
+        refereeInProgress: false,
+        matchInProgress: false,
+        refereeStartedAt: null,
+        pendingResult: null,
+        pendingScoreA: null,
+        pendingScoreB: null,
+        refereeScoreA: null,
+        refereeScoreB: null,
+        submittedScoreA: null,
+        submittedScoreB: null,
+        tempScoreA: null,
+        tempScoreB: null,
+        pendingResultSentAt: null,
+        resultsSentAt: null,
+        submittedAt: null,
+        arbitrageRequestStatus: null,
+        arbitrageRequestedAt: null,
+        arbitrageAcceptedAt: null,
+      };
+    });
   }
 
   function validateSentRefereeResult(matchId) {
