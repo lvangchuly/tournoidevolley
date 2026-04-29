@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZH';
+const APP_VERSION = 'V34ZI';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1509,6 +1509,7 @@ function isStatusASaisir(status) {
 }
 
 function isRefereeAssignedMatch(match) {
+  if (!match || match.status === 'Valide') return false;
   return Boolean(match?.refereeInProgress || match?.matchInProgress || match?.refereeStartedAt);
 }
 
@@ -7151,8 +7152,8 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
 
   function forceValidateOrganizerMatch(matchId) {
     updateMatchById(matchId, (match) => {
-      const scoreA = match.scoreA ?? match.pendingResult?.scoreA ?? match.pendingScoreA ?? match.refereeScoreA ?? match.submittedScoreA ?? match.tempScoreA ?? null;
-      const scoreB = match.scoreB ?? match.pendingResult?.scoreB ?? match.pendingScoreB ?? match.refereeScoreB ?? match.submittedScoreB ?? match.tempScoreB ?? null;
+      const scoreA = match.scoreA !== '' && match.scoreA !== null && match.scoreA !== undefined ? match.scoreA : (match.submittedScoreA !== '' && match.submittedScoreA !== null && match.submittedScoreA !== undefined ? match.submittedScoreA : (match.pendingResult?.scoreA ?? match.pendingScoreA ?? match.refereeScoreA ?? match.tempScoreA ?? ''));
+      const scoreB = match.scoreB !== '' && match.scoreB !== null && match.scoreB !== undefined ? match.scoreB : (match.submittedScoreB !== '' && match.submittedScoreB !== null && match.submittedScoreB !== undefined ? match.submittedScoreB : (match.pendingResult?.scoreB ?? match.pendingScoreB ?? match.refereeScoreB ?? match.tempScoreB ?? ''));
       return {
         ...match,
         scoreA,
@@ -7167,8 +7168,8 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         pendingScoreB: null,
         refereeScoreA: null,
         refereeScoreB: null,
-        submittedScoreA: null,
-        submittedScoreB: null,
+        submittedScoreA: '',
+        submittedScoreB: '',
         tempScoreA: null,
         tempScoreB: null,
         pendingResultSentAt: null,
@@ -8450,7 +8451,7 @@ function releaseRefereeSelectedMatch(entry) {
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                         {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
-                            <Button variant="success" onClick={() => forceCancelOrganizerMatch(match.id)}>Valider</Button>
+                            <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                       </div>
                         ) : null}
                         {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
