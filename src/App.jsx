@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZL';
+const APP_VERSION = 'V34ZM';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7083,6 +7083,28 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
   function getLiveRefereeMatch(match) {
     return match?.id ? (findMatchById(match.id) || match) : match;
   }
+
+  function makeOrganizerScoreAutoValidMatch(match, phaseRules = null) {
+  if (!match || match.status === 'Valide') return match;
+  if (!isMatchResultValid(match, phaseRulesRef?.current || phaseRules || null)) return match;
+  return {
+    ...match,
+    status: 'Valide',
+    validatedAt: Date.now(),
+    refereeInProgress: false,
+    matchInProgress: false,
+    refereeStartedAt: null,
+    submittedScoreA: '',
+    submittedScoreB: '',
+    pendingResultSentAt: null,
+    resultsSentAt: null,
+    submittedAt: null,
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
+  };
+}
+
 
   function updateMatchById(matchId, updater) {
     const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? updater(match) : match)) : matches);
