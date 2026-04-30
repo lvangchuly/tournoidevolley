@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V34ZO';
+const APP_VERSION = 'V34ZP++';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -4157,23 +4157,30 @@ function sortPublicMatchesByPriority(matches, phaseRules) {
 }
 
 
-const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
-    allCompetitionMatches
-      .filter((match) => { if (match.status === 'Valide') return false;
-        if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
-        if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
-        return toNumber(match.scoreA) === null || toNumber(match.scoreB) === null || !isMatchResultValid(match, phaseRules);
-      })
-      .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
-      .slice(0, getMaxActiveCourts(courtCount))
-      .map((match) => ({
-        ...match,
-        time: scheduleData.scheduleMap[match.id]?.startText || match.time,
-        scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
-        scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
-        estimatedDuration: estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules)),
-      }))
-  , phaseRules), [allCompetitionMatches, phaseRules, resolveTeam, scheduleData]);
+const upcomingMatches = useMemo(() => {
+    const currentIds = new Set(currentMatches.map((match) => match.id));
+    return sortPublicMatchesByPriority(
+      allCompetitionMatches
+        .filter((match) => {
+          if (match.status === 'Valide') return false;
+          if (currentIds.has(match.id)) return false;
+          if (isMatchCurrentlyInProgress(match, phaseRules)) return false;
+          if (!isPublicDisplayableMatch(match, resolveTeam)) return false;
+          const status = getMatchStatusLabel(match, phaseRules);
+          return status === 'A saisir' || status === 'À saisir';
+        })
+        .sort((a, b) => (scheduleData.scheduleMap[a.id]?.startMinutes || 0) - (scheduleData.scheduleMap[b.id]?.startMinutes || 0))
+        .slice(0, getMaxActiveCourts(courtCount))
+        .map((match) => ({
+          ...match,
+          time: scheduleData.scheduleMap[match.id]?.startText || match.time,
+          scheduledStartText: scheduleData.scheduleMap[match.id]?.startText || match.time,
+          scheduledEndText: scheduleData.scheduleMap[match.id]?.endText || '',
+          estimatedDuration: estimatePhaseDurationMinutes(getRuleForMatch(match, phaseRules)),
+        })),
+      phaseRules
+    );
+  }, [allCompetitionMatches, currentMatches, phaseRules, resolveTeam, scheduleData, courtCount]);
 
   const publicPodiumLeaders = useMemo(() => {
     const isResolvedPodiumTeam = (teamId) => {
@@ -7741,7 +7748,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
       };
     }));
   }
@@ -7790,7 +7797,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         submittedScoreB: forcedScoreB,
         submittedAt,
         pendingResultSentAt: sendTimestamp,
-        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
       };
     }));
     queueBackgroundCloudSave(0, sendTimestamp);
@@ -7879,7 +7886,7 @@ const upcomingMatches = useMemo(() => sortPublicMatchesByPriority(
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: false, matchInProgress: false, status: ARBITRAGE_REQUEST_STATUS, arbitrageRequestStatus: 'pending', arbitrageRequestedAt: Date.now(),
+        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
       };
     }));
 
