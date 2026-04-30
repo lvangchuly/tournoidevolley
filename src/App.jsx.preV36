@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V36 stable';
+const APP_VERSION = 'V34ZP++';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -7116,52 +7116,30 @@ const upcomingMatches = useMemo(() => {
 
   function makeScoreAutoValidatedIfWinning(match, phaseRules = null) {
   if (!match) return match;
-  const rules = phaseRulesRef?.current || phaseRules || null;
-  const isWinning = isMatchResultValid(match, rules);
-
-  if (isWinning) {
-    return {
-      ...match,
-      status: 'Valide',
-      validatedAt: match.validatedAt || Date.now(),
-      refereeInProgress: false,
-      matchInProgress: false,
-      refereeStartedAt: null,
-      submittedScoreA: '',
-      submittedScoreB: '',
-      pendingResultSentAt: null,
-      resultsSentAt: null,
-      submittedAt: null,
-      arbitrageRequestStatus: null,
-      arbitrageRequestedAt: null,
-      arbitrageAcceptedAt: null,
-    };
-  }
-
-  // V36 stable : si l'organisateur modifie un match déjà Valide avec un score non gagnant,
-  // le match redevient disponible pour les arbitres sans rester verrouillé par un arbitre.
-  if (match.status === 'Valide') {
-    return {
-      ...match,
-      status: 'Match en cours',
-      validatedAt: null,
-      refereeInProgress: false,
-      matchInProgress: false,
-      refereeStartedAt: null,
-      submittedScoreA: '',
-      submittedScoreB: '',
-      pendingResultSentAt: null,
-      resultsSentAt: null,
-      submittedAt: null,
-      arbitrageRequestStatus: null,
-      arbitrageRequestedAt: null,
-      arbitrageAcceptedAt: null,
-    };
-  }
-
-  return match;
+  if (match.status === 'Valide') return {
+    ...match,
+    refereeInProgress: false,
+    matchInProgress: false,
+    refereeStartedAt: null,
+  };
+  if (!isMatchResultValid(match, phaseRulesRef?.current || phaseRules || null)) return match;
+  return {
+    ...match,
+    status: 'Valide',
+    validatedAt: Date.now(),
+    refereeInProgress: false,
+    matchInProgress: false,
+    refereeStartedAt: null,
+    submittedScoreA: '',
+    submittedScoreB: '',
+    pendingResultSentAt: null,
+    resultsSentAt: null,
+    submittedAt: null,
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
+  };
 }
-
 
 
   function updateOrganizerMatchScoreLive(matchId, field, value) {
@@ -7694,25 +7672,6 @@ const upcomingMatches = useMemo(() => {
           ...nextMatch,
           status: 'Valide',
           validatedAt: Date.now(),
-          refereeInProgress: false,
-          matchInProgress: false,
-          refereeStartedAt: null,
-          submittedScoreA: '',
-          submittedScoreB: '',
-          pendingResultSentAt: null,
-          resultsSentAt: null,
-          submittedAt: null,
-          arbitrageRequestStatus: null,
-          arbitrageRequestedAt: null,
-          arbitrageAcceptedAt: null,
-        };
-      }
-
-      if (match.status === 'Valide') {
-        return {
-          ...nextMatch,
-          status: 'Match en cours',
-          validatedAt: null,
           refereeInProgress: false,
           matchInProgress: false,
           refereeStartedAt: null,
