@@ -12,8 +12,8 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V42';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V41', 'tournoidevolley-react-vite-V40', 'tournoidevolley-react-vite-V39', 'tournoidevolley-react-vite-V38', 'tournoidevolley-react-vite-V37', 'tournoidevolley-react-vite-V36A', 'tournoidevolley-react-vite-V36A stable', 'tournoidevolley-react-vite-V36 stable', 'tournoidevolley-react-vite-V27BH', 'tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V44';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V43', 'tournoidevolley-react-vite-V42', 'tournoidevolley-react-vite-V41', 'tournoidevolley-react-vite-V40', 'tournoidevolley-react-vite-V39', 'tournoidevolley-react-vite-V38', 'tournoidevolley-react-vite-V37', 'tournoidevolley-react-vite-V36A', 'tournoidevolley-react-vite-V36A stable', 'tournoidevolley-react-vite-V36 stable', 'tournoidevolley-react-vite-V27BH', 'tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const DEFAULT_COURT_COUNT = 3;
 const MIN_COURT_COUNT = 3;
 const MAX_COURT_COUNT = 6;
@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V42';
+const APP_VERSION = 'V44';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -2561,6 +2561,7 @@ export default function App() {
   const [organizerPassword, setOrganizerPassword] = useState(initialOrganizerPassword);
   const [passwordDraft, setPasswordDraft] = useState(initialOrganizerPassword);
   const [tournamentName, setTournamentName] = useState(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
+  const [tournamentRemarks, setTournamentRemarks] = useState(initial?.settings?.tournamentRemarks || '');
   const [tournamentLogo, setTournamentLogo] = useState(initial?.settings?.tournamentLogo || '');
   const [sharedTournamentId, setSharedTournamentId] = useState(initial?.settings?.sharedTournamentId || buildDefaultSharedTournamentId(initial?.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME));
   const [disableBrassage2, setDisableBrassage2] = useState(Boolean(initial?.settings?.disableBrassage2));
@@ -2630,6 +2631,7 @@ export default function App() {
   }, [tournamentName]);
   const organizerPasswordRef = useRef(organizerPassword);
   const tournamentNameRef = useRef(tournamentName);
+  const tournamentRemarksRef = useRef(tournamentRemarks);
   const tournamentLogoRef = useRef(tournamentLogo);
   const sharedTournamentIdRef = useRef(sharedTournamentId);
   const disableBrassage2Ref = useRef(disableBrassage2);
@@ -2977,6 +2979,7 @@ export default function App() {
         phaseRules: safeClone(overrides.phaseRules ?? phaseRulesRef.current, DEFAULT_PHASE_RULES),
         organizerPassword: overrides.organizerPassword ?? organizerPasswordRef.current,
         tournamentName: overrides.tournamentName ?? tournamentNameRef.current,
+        tournamentRemarks: overrides.tournamentRemarks ?? tournamentRemarksRef.current,
         tournamentLogo: overrides.tournamentLogo ?? tournamentLogoRef.current,
         sharedTournamentId: overrides.sharedTournamentId ?? sharedTournamentIdRef.current,
         disableBrassage2: overrides.disableBrassage2 ?? disableBrassage2Ref.current,
@@ -3023,6 +3026,7 @@ export default function App() {
       setPasswordDraft(nextPassword);
     }
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentName')) setTournamentName(parsed.settings?.tournamentName || DEFAULT_TOURNAMENT_NAME);
+    if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentRemarks')) setTournamentRemarks(String(parsed.settings?.tournamentRemarks || ''));
     if (!preserveLocalSettings && Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'tournamentLogo')) setTournamentLogo(String(parsed.settings?.tournamentLogo || ''));
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'sharedTournamentId')) setSharedTournamentId(parsed.settings?.sharedTournamentId || '');
     if (Object.prototype.hasOwnProperty.call(parsed.settings || {}, 'disableBrassage2')) setDisableBrassage2(Boolean(parsed.settings?.disableBrassage2));
@@ -3794,6 +3798,7 @@ export default function App() {
   useEffect(() => { phaseRulesRef.current = phaseRules; }, [phaseRules]);
   useEffect(() => { organizerPasswordRef.current = organizerPassword; }, [organizerPassword]);
   useEffect(() => { tournamentNameRef.current = tournamentName; }, [tournamentName]);
+  useEffect(() => { tournamentRemarksRef.current = tournamentRemarks; }, [tournamentRemarks]);
   useEffect(() => { tournamentLogoRef.current = tournamentLogo; }, [tournamentLogo]);
   useEffect(() => { sharedTournamentIdRef.current = sharedTournamentId; }, [sharedTournamentId]);
   useEffect(() => { createdAtRef.current = createdAt; }, [createdAt]);
@@ -3811,7 +3816,7 @@ export default function App() {
     latestPersistedStateRef.current = getPersistedStateSnapshot();
     if (typeof window === 'undefined') return;
     safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(latestPersistedStateRef.current));
-  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentLogo, sharedTournamentId, disableBrassage2, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+  }, [teams, startTime, slotDuration, phaseRules, organizerPassword, tournamentName, tournamentRemarks, tournamentLogo, sharedTournamentId, disableBrassage2, remoteSavedAt, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
     const previousName = previousTournamentNameRef.current;
@@ -3955,6 +3960,7 @@ export default function App() {
 
   const organizerCloudSignature = useMemo(() => JSON.stringify({
     tournamentName,
+    tournamentRemarks,
     sharedTournamentId,
     disableBrassage2,
     teams,
@@ -3968,7 +3974,7 @@ export default function App() {
     championshipLeg1,
     championshipLeg2,
     singleKnockout,
-  }), [tournamentName, sharedTournamentId, disableBrassage2, teams, startTime, slotDuration, phaseRules, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+  }), [tournamentName, tournamentRemarks, sharedTournamentId, disableBrassage2, teams, startTime, slotDuration, phaseRules, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
 
   useEffect(() => {
     if (mode !== 'organizer' || !sharedTournamentId) return;
@@ -5196,6 +5202,7 @@ const upcomingMatches = useMemo(() => {
         organizerPassword: nextOrganizerPassword,
         tournamentName: DEFAULT_TOURNAMENT_NAME,
         tournamentLogo: '',
+        tournamentRemarks: '',
         sharedTournamentId: nextSharedTournamentId,
         disableBrassage2: false,
         courtCount: DEFAULT_COURT_COUNT,
@@ -9776,6 +9783,18 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
               <Button variant="danger" onClick={startNewTournament}>Nouveau tournoi</Button>
             </div>
             <div className="muted small banner-meta">Identifiant du tournoi : <strong>{sharedTournamentId}</strong></div>
+            <textarea
+              className="organizer-remarks-input"
+              value={tournamentRemarks}
+              onChange={(e) => {
+                setTournamentRemarks(e.target.value);
+                queueBackgroundCloudSave(350);
+              }}
+              onBlur={() => queueBackgroundCloudSave(0)}
+              placeholder="Tapez vos remarques ici..."
+              aria-label="Remarques de l'organisateur"
+              rows={4}
+            />
             {lastAutomaticSaveFilename ? <div className="muted small banner-meta">Dernière sauvegarde automatique : <strong>{lastAutomaticSaveFilename}</strong></div> : null}
           </div>
           <div className="banner-side banner-right">

@@ -5856,3 +5856,31 @@ tbody tr:last-child td { border-bottom: none; }
   color: #fff !important;
   border-color: #16a34a !important;
 }
+
+/* V43 - Remarques organisateur synchronisées Firebase */
+.organizer-remarks-input {
+  display: block;
+  width: min(100%, 940px);
+  min-height: 110px;
+  margin: 10px auto 0;
+  padding: 16px 20px;
+  resize: vertical;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  border-radius: 26px;
+  background: rgba(15, 23, 42, 0.42);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  outline: none;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.26);
+}
+
+.organizer-remarks-input::placeholder {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.organizer-remarks-input:focus {
+  border-color: #ffffff;
+  background: rgba(15, 23, 42, 0.62);
+}
