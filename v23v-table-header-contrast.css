@@ -1,45 +1,42 @@
-.public-rankings-grid,
-.public-ranking-card,
-.public-ranking,
-.public-standings,
-.ranking-section,
-.standings-section {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+th, thead th { color:#fff !important; background:#0f172a !important; font-weight:700 !important;}
+.badge.danger,.badge-danger{background:#dc2626!important;color:#fff!important;}
+
+.status-match-en-cours,
+.badge.status-match-en-cours,
+.badge-danger,
+.badge.danger,
+.danger {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
 }
 
-.public-ranking-card {
-  overflow-x: auto !important;
-  max-width: 100% !important;
+.match-in-progress-card {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.28) !important;
 }
 
-.public-ranking-card table,
-.public-ranking-card .table-wrap,
-.public-ranking-card .ranking-table {
-  min-width: 640px !important;
-  width: max-content !important;
+.match-in-progress-card .status-match-en-cours {
+  background: #dc2626 !important;
+  color: #fff !important;
 }
 
-@media (min-width: 769px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px !important;
-    align-items: start !important;
-  }
+.status-match-disponible,
+.badge.status-match-disponible,
+.badge-neutral,
+.badge.neutral,
+.neutral {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+  border-color: #cbd5e1 !important;
 }
 
-@media (max-width: 768px) {
-  .public-rankings-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
-  }
-
-  .public-ranking-card {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 4px !important;
-  }
+.status-valide,
+.badge.status-valide,
+.badge-success,
+.badge.success,
+.success {
+  background: #16a34a !important;
+  color: #fff !important;
+  border-color: #16a34a !important;
 }
