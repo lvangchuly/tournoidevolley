@@ -12,8 +12,8 @@ import homeLogoUrl from './home-logo.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
-const STORAGE_KEY = 'tournoidevolley-react-vite-V38';
-const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V37', 'tournoidevolley-react-vite-V36A', 'tournoidevolley-react-vite-V36A stable', 'tournoidevolley-react-vite-V36 stable', 'tournoidevolley-react-vite-V27BH', 'tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
+const STORAGE_KEY = 'tournoidevolley-react-vite-V39';
+const LEGACY_STORAGE_KEYS = ['tournoidevolley-react-vite-V38', 'tournoidevolley-react-vite-V37', 'tournoidevolley-react-vite-V36A', 'tournoidevolley-react-vite-V36A stable', 'tournoidevolley-react-vite-V36 stable', 'tournoidevolley-react-vite-V27BH', 'tournoidevolley-react-vite-V27BE', 'tournoidevolley-react-vite-V27BD', 'tournoidevolley-react-vite-V27BB', 'tournoidevolley-react-vite-V27AO', 'tournoidevolley-react-vite-V27AN', 'tournoidevolley-react-vite-V27AL', 'tournoidevolley-react-vite-V27AK', 'tournoidevolley-react-vite-V27AM', 'tournoidevolley-react-vite-V27Z', 'tournoidevolley-react-vite-V27Y', 'tournoidevolley-react-vite-V27U', 'tournoidevolley-react-vite-V27T', 'tournoidevolley-react-vite-V27S', 'tournoidevolley-react-vite-V27R', 'tournoidevolley-react-vite-V27Q', 'tournoidevolley-react-vite-V26V', 'tournoidevolley-react-vite-V26T', 'tournoidevolley-react-vite-V26S', 'tournoidevolley-react-vite-V26R', 'tournoidevolley-react-vite-V26Q', 'tournoidevolley-react-vite-V26P', 'tournoidevolley-react-vite-V25L', 'tournoidevolley-react-vite-V25K', 'tournoidevolley-react-vite-V25G', 'tournoidevolley-react-vite-V25F', 'tournoidevolley-react-vite-V25E', 'tournoidevolley-react-vite-V25D', 'tournoidevolley-react-vite-V25C', 'tournoidevolley-react-vite-V25B', 'tournoidevolley-react-vite-V24W', 'tournoidevolley-react-vite-V24V', 'tournoidevolley-react-vite-V24U', 'tournoidevolley-react-vite-V24Q', 'tournoidevolley-react-vite-V24I', 'tournoidevolley-react-vite-V24H', 'tournoidevolley-react-vite-V24D', 'tournoidevolley-react-vite-V24C', 'tournoidevolley-react-vite-V24B', 'tournoidevolley-react-vite-V24A', 'tournoidevolley-react-vite-V23AA', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23G', 'tournoidevolley-react-vite-V23Y', 'tournoidevolley-react-vite-V23D', 'tournoidevolley-react-vite-V23C', 'tournoidevolley-react-vite-V23B', 'tournoidevolley-react-vite-V23', 'tournoidevolley-react-vite-V22E', 'tournoidevolley-react-vite-V22D', 'tournoidevolley-react-vite-V22C', 'tournoidevolley-react-vite-V22B', 'tournoidevolley-react-vite-V22A', 'tournoidevolley-react-vite-V21U', 'tournoidevolley-react-vite-V21T', 'tournoidevolley-react-vite-V21S', 'tournoidevolley-react-vite-V21R', 'tournoidevolley-react-vite-V21O', 'tournoidevolley-react-vite-V21N', 'tournoidevolley-react-vite-V21L', 'tournoidevolley-react-vite-V21K', 'tournoidevolley-react-vite-V21J', 'tournoidevolley-react-vite-V21I', 'tournoidevolley-react-vite-V21H', 'tournoidevolley-react-vite-V21G', 'tournoidevolley-react-vite-V21F', 'tournoidevolley-react-vite-V21E', 'tournoidevolley-react-vite-V21D', 'tournoidevolley-react-vite-V21C', 'tournoidevolley-react-vite-V21B', 'tournoidevolley-react-vite-V21A', 'tournoidevolley-react-vite-V21', 'tournoidevolley-react-vite-V20R4', 'tournoidevolley-react-vite-V20R3', 'tournoidevolley-react-vite-V20R2', 'tournoidevolley-react-vite-V20R1', 'tournoidevolley-react-vite-V20Q', 'tournoidevolley-react-vite-V20P', 'tournoidevolley-react-vite-V20O', 'tournoidevolley-react-vite-V20N', 'tournoidevolley-react-vite-V20M', 'tournoidevolley-react-vite-V20L', 'tournoidevolley-react-vite-V20K', 'tournoidevolley-react-vite-V20J', 'tournoidevolley-react-vite-V20I', 'tournoidevolley-react-vite-V20H', 'tournoidevolley-react-vite-V20G', 'tournoidevolley-react-vite-V20F', 'tournoidevolley-react-vite-V20E', 'tournoidevolley-react-vite-V20D', 'tournoidevolley-react-vite-V20C', 'tournoidevolley-react-vite-V20B', 'tournoidevolley-react-vite-V20A', 'tournoidevolley-react-vite-V19Y', 'tournoidevolley-react-vite-V19X', 'tournoidevolley-react-vite-V19W', 'tournoidevolley-react-vite-V19V', 'tournoidevolley-react-vite-V19U', 'tournoidevolley-react-vite-V19T', 'tournoidevolley-react-vite-V19S', 'tournoidevolley-react-vite-V19R', 'tournoidevolley-react-vite-V19Q', 'tournoidevolley-react-vite-V19P', 'tournoidevolley-react-vite-V19O', 'tournoidevolley-react-vite-V19N', 'tournoidevolley-react-vite-V19M', 'tournoidevolley-react-vite-V19L', 'tournoidevolley-react-vite-V19K', 'tournoidevolley-react-vite-V19J', 'tournoidevolley-react-vite-V19I', 'tournoidevolley-react-vite-V19H', 'tournoidevolley-react-vite-V19G', 'tournoidevolley-react-vite-V19F', 'tournoidevolley-react-vite-V19E', 'tournoidevolley-react-vite-V19D', 'tournoidevolley-react-vite-V19C', 'tournoidevolley-react-vite-V19B', 'tournoidevolley-react-vite-V19', 'tournoidevolley-react-vite-v18I', 'tournoidevolley-react-vite-v18H', 'tournoidevolley-react-vite-V18G', 'tournoidevolley-react-vite-v18F', 'tournoidevolley-react-vite-V18D', 'tournoidevolley-react-vite-v18C', 'tournoidevolley-react-vite-V18B', 'tournoidevolley-react-vite-v18A', 'tournoidevolley-react-vite-v18', 'tournoidevolley-react-vite-v17D'];
 const DEFAULT_COURT_COUNT = 3;
 const MIN_COURT_COUNT = 3;
 const MAX_COURT_COUNT = 6;
@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V38';
+const APP_VERSION = 'V39';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1521,6 +1521,39 @@ function getDisplayScoreA(match) {
 
 function getDisplayScoreB(match) {
   return match?.scoreB !== '' && match?.scoreB !== null && match?.scoreB !== undefined ? match.scoreB : (match?.submittedScoreB ?? '');
+}
+
+function getInitialRefereeScoreA(match) {
+  return match?.scoreA !== '' && match?.scoreA !== null && match?.scoreA !== undefined
+    ? String(match.scoreA)
+    : String(match?.submittedScoreA ?? '');
+}
+
+function getInitialRefereeScoreB(match) {
+  return match?.scoreB !== '' && match?.scoreB !== null && match?.scoreB !== undefined
+    ? String(match.scoreB)
+    : String(match?.submittedScoreB ?? '');
+}
+
+function makeRefereeSelectedMatchForOrganizer(match, startedAt = new Date().toISOString()) {
+  const initialScoreA = getInitialRefereeScoreA(match);
+  const initialScoreB = getInitialRefereeScoreB(match);
+  return {
+    ...match,
+    scoreA: '',
+    scoreB: '',
+    submittedScoreA: initialScoreA,
+    submittedScoreB: initialScoreB,
+    submittedAt: startedAt,
+    pendingResultSentAt: null,
+    refereeInProgress: true,
+    matchInProgress: true,
+    status: 'Match en cours',
+    arbitrageRequestStatus: null,
+    arbitrageRequestedAt: null,
+    arbitrageAcceptedAt: null,
+    refereeStartedAt: startedAt,
+  };
 }
 
 function getMatchStatusLabel(match, phaseRules) {
@@ -4722,8 +4755,8 @@ const upcomingMatches = useMemo(() => {
       return;
     }
     const match = refereeSelectedEntry.match;
-    const baseScoreA = match.submittedScoreA ?? '';
-    const baseScoreB = match.submittedScoreB ?? '';
+    const baseScoreA = getInitialRefereeScoreA(match);
+    const baseScoreB = getInitialRefereeScoreB(match);
     setRefereeSelectedScoreDraft((current) => {
       if (current?.matchId === match.id) {
         return {
@@ -7062,7 +7095,7 @@ const upcomingMatches = useMemo(() => {
   function requestArbitrageForMatch(match) {
     const liveMatch = getLiveRefereeMatch(match) || match;
     if (!liveMatch || !isMatchSelectableByReferee(liveMatch, phaseRulesRef.current)) return;
-    const startedMatch = makeArbitrageRequestMatch(liveMatch);
+    const startedMatch = makeRefereeSelectedMatchForOrganizer(liveMatch);
     updateMatchById(liveMatch.id, () => startedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);
     refreshLatestPersistedSnapshot();
@@ -9591,21 +9624,23 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                               onClick={() => {
                                 if (!canSelect) return;
                                 const refereeLockAt = new Date().toISOString();
+                                const initialScoreA = getInitialRefereeScoreA(match);
+                                const initialScoreB = getInitialRefereeScoreB(match);
                                 updateMatchesInScope(group.scope, (matches) => matches.map((item) => (
                                   item.id === match.id
-                                    ? { ...item, refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: null, arbitrageRequestedAt: null, arbitrageAcceptedAt: null, refereeStartedAt: refereeLockAt, submittedAt: refereeLockAt, pendingResultSentAt: null }
+                                    ? makeRefereeSelectedMatchForOrganizer(item, refereeLockAt)
                                     : item
                                 )));
                                 recentRefereeLocalEditsRef.current.set(match.id, {
-                                  submittedScoreA: match.submittedScoreA ?? '',
-                                  submittedScoreB: match.submittedScoreB ?? '',
+                                  submittedScoreA: initialScoreA,
+                                  submittedScoreB: initialScoreB,
                                   submittedAt: refereeLockAt,
                                   until: Date.now() + 90000,
                                 });
                                 setRefereeSelectedScoreDraft({
                                   matchId: match.id,
-                                  scoreA: match.submittedScoreA ?? '',
-                                  scoreB: match.submittedScoreB ?? '',
+                                  scoreA: initialScoreA,
+                                  scoreB: initialScoreB,
                                   submittedAt: refereeLockAt,
                                 });
                                 setRefereeSelectedMatch({ scope: group.scope, matchId: match.id });
