@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V45';
+const APP_VERSION = 'V46';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1749,8 +1749,7 @@ function compareStandingRows(a, b, options = {}) {
   if (b.wins !== a.wins) return b.wins - a.wins;
   if (b.pointDiff !== a.pointDiff) return b.pointDiff - a.pointDiff;
   if (b.pointsFor !== a.pointsFor) return b.pointsFor - a.pointsFor;
-  if ((a.initialOrder ?? 0) !== (b.initialOrder ?? 0)) return (a.initialOrder ?? 0) - (b.initialOrder ?? 0);
-  return a.teamName.localeCompare(b.teamName, 'fr');
+  return 0;
 }
 
 function formatStandingPoints(row, normalizeByMatches = false) {
@@ -1766,7 +1765,6 @@ function computeRanking(teamIds, matches, teamMap, phaseRules, options = {}) {
     teamId,
     teamName: teamMap.get(teamId)?.name || teamId,
     level: normalizeLevelValue(teamMap.get(teamId)?.level, ''),
-    initialOrder: index,
     played: 0,
     wins: 0,
     losses: 0,
