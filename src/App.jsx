@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V46';
+const APP_VERSION = 'V47';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -9227,7 +9227,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
         <form className="login-grid" onSubmit={(e) => { e.preventDefault(); handleOrganizerLogin(); }}>
           <input ref={organizerLoginInputRef} type="password" value={organizerAttempt} onChange={(e) => setOrganizerAttempt(e.target.value)} placeholder="Mot de passe" />
           <Button type="submit" variant="primary">Déverrouiller</Button>
-          <Button type="button" variant="secondary" onClick={() => forceCancelOrganizerMatch(match.id)}>Annuler</Button>
+          <Button type="button" variant="secondary" onClick={() => { setOrganizerAttempt(''); setLoginError(''); }}>Annuler</Button>
         </form>
         {loginError ? <div className="error-text">{loginError}</div> : null}
       </section>
@@ -9373,7 +9373,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                   placeholder="Saisir le message d'accueil"
                 />
                 <div className="home-announcement-actions">
-                  <button type="button" className="home-announcement-action home-announcement-save" onClick={() => forceCancelOrganizerMatch(match.id)} disabled={homeAnnouncementSaving}>
+                  <button type="button" className="home-announcement-action home-announcement-save" onClick={() => saveHomeAnnouncement(homeAnnouncementDraft)} disabled={homeAnnouncementSaving}>
                     {homeAnnouncementSaving ? 'Enregistrement…' : 'Enregistrer'}
                   </button>
                   <button type="button" className="home-announcement-action home-announcement-cancel" onClick={cancelHomeAnnouncementEdit} disabled={homeAnnouncementSaving}>Annuler</button>
