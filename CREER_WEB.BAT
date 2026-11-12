@@ -1,9 +1,9 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title NEO TOURNOIVOLLEY WEB V56
+title NEO TOURNOIVOLLEY WEB V57
 echo ==============================================
-echo   NEO TOURNOIVOLLEY WEB V56 - CONSTRUCTION
+echo   NEO TOURNOIVOLLEY WEB V57 - CONSTRUCTION
 echo ==============================================
 where node.exe >nul 2>&1
 if errorlevel 1 (
@@ -22,7 +22,7 @@ if not exist "node_modules\.bin\vite.cmd" (
 )
 call npm run build
 if errorlevel 1 goto :error
-echo [OK] Web V56 compile : dossier dist
+echo [OK] Web V57 compile : dossier dist
 pause
 exit /b 0
 :error

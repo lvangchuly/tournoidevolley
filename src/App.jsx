@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V56';
+const APP_VERSION = 'V57';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1514,7 +1514,7 @@ function isRefereeAssignedMatch(match) {
 }
 
 
-// V56 : afficher le score recu de l'arbitre dans les cases organisateur,
+// V57 : afficher le score recu de l'arbitre dans les cases organisateur,
 // sans l'enregistrer comme score officiel avant le clic sur Valider.
 function hasSentRefereeResultToReview(match, phaseRules) {
   if (!match || match.status === 'Valide') return false;
@@ -1585,7 +1585,7 @@ function isMatchCurrentlyInProgress(match, phaseRules) {
   return Boolean(match.refereeInProgress || match.matchInProgress);
 }
 
-// V56 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
+// V57 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
 // jusqu'a la validation officielle du match par l'organisateur.
 function isPublicResultAwaitingValidation(match) {
   return Boolean(match && match.status !== 'Valide'
@@ -1991,7 +1991,7 @@ function printQrCode(url, title = 'QR Code') {
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // Mise en page V56 : les matchs restants uniquement, un match par ligne,
+  // Mise en page V57 : les matchs restants uniquement, un match par ligne,
   // une feuille A4 portrait par terrain tant que la place le permet.
   // Les pages supplementaires sont construites explicitement pour repeter
   // TERRAIN n°X en haut de CHAQUE feuille, sans match coupe entre deux pages.
@@ -7584,6 +7584,12 @@ const upcomingMatches = useMemo(() => {
   function forceValidateOrganizerMatch(matchId) {
     const existing = findMatchById(matchId);
     if (!existing) return;
+    // V57 : les scores saisis en direct ne sont pas encore un résultat envoyé.
+    // Le bouton Valider (et son action) n'est actif qu'après l'envoi de l'arbitre.
+    if (!hasSentRefereeResultToReview(existing, phaseRulesRef.current)) {
+      window.alert('Le résultat doit être envoyé par l’arbitre avant de pouvoir être validé.');
+      return;
+    }
     const pendingSnapshot = { ...existing, scoreA: existing.submittedScoreA, scoreB: existing.submittedScoreB };
     const useSubmitted = isMatchResultValid(pendingSnapshot, phaseRulesRef.current);
     const officialSnapshot = { ...existing, scoreA: existing.scoreA, scoreB: existing.scoreB };
@@ -7592,6 +7598,7 @@ const upcomingMatches = useMemo(() => {
       return;
     }
     updateMatchById(matchId, (match) => {
+      if (!hasSentRefereeResultToReview(match, phaseRulesRef.current)) return match;
       const scoreA = useSubmitted ? match.submittedScoreA : match.scoreA;
       const scoreB = useSubmitted ? match.submittedScoreB : match.scoreB;
       const approvedAt = Date.now();
@@ -8934,7 +8941,7 @@ function releaseRefereeSelectedMatch(entry) {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
                     const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
@@ -9094,7 +9101,7 @@ function releaseRefereeSelectedMatch(entry) {
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
                     const isFinalStage = /quart|demi|finale|petite finale|petite final|principale|principal/i.test(`${match.phase || ''} ${match.group || ''}`);
-                    const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
                     const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
                     const matchNumber = index + 1;
 
@@ -9192,7 +9199,7 @@ function releaseRefereeSelectedMatch(entry) {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
                     const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
