@@ -1,13 +1,13 @@
 @echo off
 setlocal EnableExtensions
 cd /d "%~dp0"
-title NEO TOURNOIVOLLEY WEB V48
+title NEO TOURNOIVOLLEY WEB V49
 echo ==============================================
-echo   NEO TOURNOIVOLLEY WEB V48 - CONSTRUCTION
+echo   NEO TOURNOIVOLLEY WEB V49 - CONSTRUCTION
 echo ==============================================
 where node.exe >nul 2>&1
 if errorlevel 1 (
-  echo [ERREUR] Node.js 20 doit etre installe : https://nodejs.org/
+  echo [ERREUR] Node.js doit etre installe (Node.js 26 pour Vercel) : https://nodejs.org/
   goto :error
 )
 where npm.cmd >nul 2>&1
@@ -22,7 +22,7 @@ if not exist "node_modules\.bin\vite.cmd" (
 )
 call npm run build
 if errorlevel 1 goto :error
-echo [OK] Web V48 compile : dossier dist
+echo [OK] Web V49 compile : dossier dist
 pause
 exit /b 0
 :error

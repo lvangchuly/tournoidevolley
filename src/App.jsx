@@ -9,6 +9,7 @@ import './v23l-public-mobile-ranking.css';
 import './v23o-public-ranking.css';
 import './v23q-public-ranking.css';
 import homeLogoUrl from './home-logo.png';
+import neoDevLogoUrl from './logochu.png';
 
 const PODIUM_PLAYERS_HUMAN_URL = '/podium-players-human.png';
 
@@ -37,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V48';
+const APP_VERSION = 'V49';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -9880,7 +9881,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
               title="Accès arbitres"
               alt="QR code d’accès au mode arbitres"
               caption="Scanne ce QR code pour ouvrir directement le mode Arbitres."
-              topImageSrc="/organizer-banner-bg.png"
+              topImageSrc={neoDevLogoUrl}
               topImageAlt="Logo NEO DEV ChulyOne"
               onOpen={enterRefereeMode}
             />
