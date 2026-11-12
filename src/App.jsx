@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V49';
+const APP_VERSION = 'V50';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -2424,6 +2424,48 @@ const CLOUD_MATCH_FIELDS = [
   'arbitrageAcceptedAt',
 ];
 
+// V50 : accusé de réception d'un résultat arbitre, conservé en dehors des listes
+// de matchs. Il survit aux sauvegardes complètes / changements de phase.
+function mergeRefereeReceiptsIntoPayload(payload, phaseRules) {
+  const receipts = payload?.refereeResults;
+  if (!receipts || typeof receipts !== 'object' || Array.isArray(receipts)) return payload;
+  let result = payload;
+  for (const receipt of Object.values(receipts)) {
+    if (!receipt || !receipt.matchId || !CLOUD_MATCH_PATH_BY_SCOPE[receipt.scope]) continue;
+    const sentAt = toTimestamp(receipt.sentAt);
+    if (!sentAt || !isMatchResultValid({ scope: receipt.scope, phase: receipt.phase, group: receipt.group, scoreA: receipt.scoreA, scoreB: receipt.scoreB }, phaseRules)) continue;
+    const [stage, collection] = CLOUD_MATCH_PATH_BY_SCOPE[receipt.scope].split('/');
+    const currentMatches = result?.[stage]?.[collection];
+    if (!Array.isArray(currentMatches)) continue;
+    const matchIndex = currentMatches.findIndex((match) => String(match?.id) === String(receipt.matchId));
+    if (matchIndex < 0) continue;
+    const match = currentMatches[matchIndex];
+    // Ne jamais réinjecter le résultat d'un ancien match régénéré avec d'autres équipes.
+    if (String(match.teamAId || '') !== String(receipt.teamAId || '')
+      || String(match.teamBId || '') !== String(receipt.teamBId || '')) continue;
+    if (match.status === 'Valide' || isMatchResultValid(match, phaseRules) && match.validatedAt) continue;
+    // Une annulation / correction manuelle postérieure au résultat fait foi.
+    if (toTimestamp(match.manualOverrideAt) >= sentAt || toTimestamp(match.validatedAt) >= sentAt) continue;
+    if (toTimestamp(match.pendingResultSentAt) > sentAt) continue;
+    const nextMatch = {
+      ...match,
+      submittedScoreA: String(receipt.scoreA),
+      submittedScoreB: String(receipt.scoreB),
+      submittedAt: receipt.submittedAt || receipt.sentAt,
+      pendingResultSentAt: receipt.sentAt,
+      status: 'Résultats envoyés',
+      refereeInProgress: false,
+      matchInProgress: false,
+      refereeStartedAt: null,
+      arbitrageRequestStatus: null,
+    };
+    const nextMatches = currentMatches.slice();
+    nextMatches[matchIndex] = nextMatch;
+    result = { ...result, [stage]: { ...result[stage], [collection]: nextMatches } };
+  }
+  return result;
+}
+
 function buildFirebaseTournamentsCollectionUrl() {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments.json`;
 }
@@ -3122,7 +3164,7 @@ export default function App() {
     if (!payload) {
       throw new Error('Aucune sauvegarde distante trouvée pour cet identifiant.');
     }
-    return payload;
+    return mergeRefereeReceiptsIntoPayload(payload, phaseRulesRef.current);
   }
 
   function mergeRemoteMatches(localMatches, remoteMatches = [], replaceOnExplicitEmpty = false) {
@@ -3243,13 +3285,29 @@ export default function App() {
           refereeInProgress: false,
           matchInProgress: false,
         };
+      } else if (Boolean(remoteMatch.pendingResultSentAt)
+        && toTimestamp(remoteMatch.pendingResultSentAt) >= toTimestamp(localMatch.pendingResultSentAt)
+        && (!hasRecentProtectedOrganizerEdit || toTimestamp(remoteMatch.pendingResultSentAt) > localOfficialAt)) {
+        // Un envoi final est prioritaire sur le dernier brouillon (submittedAt),
+        // même si un autre appareil a une saisie locale plus récente.
+        nextMatch = {
+          ...nextMatch,
+          submittedScoreA: remoteMatch.submittedScoreA ?? '',
+          submittedScoreB: remoteMatch.submittedScoreB ?? '',
+          submittedAt: remoteMatch.submittedAt ?? null,
+          pendingResultSentAt: remoteMatch.pendingResultSentAt,
+          status: 'Résultats envoyés',
+          refereeInProgress: false,
+          matchInProgress: false,
+          refereeStartedAt: null,
+        };
       } else if (!shouldIgnoreRemoteOfficialBecauseLocalEdit && !shouldIgnoreRemotePendingBecauseLocalEdit && (remoteSubmittedAt >= localSubmittedAt || shouldAdoptRemotePendingWithoutTimestamp)) {
         nextMatch = {
           ...nextMatch,
           submittedScoreA: remoteMatch.submittedScoreA ?? '',
           submittedScoreB: remoteMatch.submittedScoreB ?? '',
           submittedAt: remoteMatch.submittedAt ?? null,
-          pendingResultSentAt: remoteMatch.pendingResultSentAt ?? localMatch.pendingResultSentAt ?? null,
+          pendingResultSentAt: remoteMatch.pendingResultSentAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : (remoteMatchInProgress || Boolean(remoteMatch.pendingResultSentAt)),
         };
@@ -3376,6 +3434,9 @@ export default function App() {
 
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
+    // Reconstitue les demandes de validation depuis leurs reçus durables,
+    // même si une sauvegarde générale a remplacé l'ancien objet Match.
+    payload = mergeRefereeReceiptsIntoPayload(payload, phaseRulesRef.current);
 
     // Les écritures ciblées sur les matchs n'actualisent pas la date globale
     // meta.remoteSavedAt. Une comparaison globale des dates bloquerait donc
@@ -3745,8 +3806,21 @@ export default function App() {
       const protectedOrganizer = recentOrganizerLocalEditsRef.current.get(local.id);
       const isProtected = protectedOrganizer && protectedOrganizer.until > Date.now()
         && localOfficial >= toTimestamp(protectedOrganizer.officialAt);
-      if (remoteOfficial > localOfficial && !isProtected) {
+      if ((remoteOfficial > localOfficial || (remote.status === 'Valide' && remoteOfficial >= localOfficial)) && !isProtected) {
         return { ...local, ...Object.fromEntries(CLOUD_MATCH_FIELDS.map((key) => [key, remote[key] ?? null])) };
+      }
+      // Les demandes 'Résultats envoyés' ne doivent jamais être perdues par
+      // une sauvegarde générale ayant un brouillon local plus récent.
+      if (remote.pendingResultSentAt && remotePending > localOfficial && !isProtected) {
+        return {
+          ...local,
+          ...Object.fromEntries(CLOUD_MATCH_FIELDS
+            .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','refereeStartedAt','status'].includes(field))
+            .map((field) => [field, remote[field] ?? null])),
+          status: 'Résultats envoyés',
+          refereeInProgress: false,
+          matchInProgress: false,
+        };
       }
       if (remotePending > localPending && remoteOfficial >= localOfficial && !isProtected) {
         return { ...local, ...Object.fromEntries(CLOUD_MATCH_FIELDS
@@ -3770,6 +3844,10 @@ export default function App() {
       ['singleKnockout','quarters'], ['singleKnockout','semis'], ['singleKnockout','finals'],
     ];
     const result = safeClone(localPayload, {});
+    // La sauvegarde intégrale préserve les accusés de réception des arbitres.
+    if (remotePayload.refereeResults && typeof remotePayload.refereeResults === 'object') {
+      result.refereeResults = safeClone(remotePayload.refereeResults, {});
+    }
     collections.forEach(([stage, key]) => {
       if (!Array.isArray(result?.[stage]?.[key]) || !Array.isArray(remotePayload?.[stage]?.[key])) return;
       result[stage][key] = preserveNewerRemoteMatches(result[stage][key], remotePayload[stage][key]);
@@ -7367,6 +7445,9 @@ const upcomingMatches = useMemo(() => {
       scoreA: null,
       scoreB: null,
       validatedAt: null,
+      manualOverrideAt: Date.now(),
+      submittedScoreA: '',
+      submittedScoreB: '',
       refereeInProgress: false,
       matchInProgress: false,
       refereeStartedAt: null,
@@ -7381,19 +7462,26 @@ const upcomingMatches = useMemo(() => {
   }
 
   function forceValidateOrganizerMatch(matchId) {
+    const existing = findMatchById(matchId);
+    if (!existing) return;
+    const pendingSnapshot = { ...existing, scoreA: existing.submittedScoreA, scoreB: existing.submittedScoreB };
+    const useSubmitted = isMatchResultValid(pendingSnapshot, phaseRulesRef.current);
+    const officialSnapshot = { ...existing, scoreA: existing.scoreA, scoreB: existing.scoreB };
+    if (!useSubmitted && !isMatchResultValid(officialSnapshot, phaseRulesRef.current)) {
+      window.alert('Aucun score gagnant à valider pour ce match. Recharge Firebase ou récupère le résultat arbitre.');
+      return;
+    }
     updateMatchById(matchId, (match) => {
-      const scoreA = match.scoreA !== '' && match.scoreA !== null && match.scoreA !== undefined
-        ? match.scoreA
-        : (match.submittedScoreA !== '' && match.submittedScoreA !== null && match.submittedScoreA !== undefined ? match.submittedScoreA : '');
-      const scoreB = match.scoreB !== '' && match.scoreB !== null && match.scoreB !== undefined
-        ? match.scoreB
-        : (match.submittedScoreB !== '' && match.submittedScoreB !== null && match.submittedScoreB !== undefined ? match.submittedScoreB : '');
+      const scoreA = useSubmitted ? match.submittedScoreA : match.scoreA;
+      const scoreB = useSubmitted ? match.submittedScoreB : match.scoreB;
+      const approvedAt = Date.now();
       return {
         ...match,
         scoreA,
         scoreB,
         status: 'Valide',
-        validatedAt: Date.now(),
+        validatedAt: approvedAt,
+        manualOverrideAt: approvedAt,
         refereeInProgress: false,
         matchInProgress: false,
         refereeStartedAt: null,
@@ -7601,6 +7689,47 @@ const upcomingMatches = useMemo(() => {
     throw new Error('Conflit de synchronisation du match : réessaie dans quelques instants.');
   }
 
+  async function persistRefereeResultReceipt(scope, match, scoreA, scoreB, submittedAt, sentAt) {
+    const tournamentId = String(sharedTournamentIdRef.current || '').trim();
+    if (!tournamentId || !match?.id) throw new Error('Tournoi ou match absent pour le reçu Firebase.');
+    const root = buildFirebaseTournamentUrl(tournamentId).replace(/\.json$/, '');
+    const receiptKey = encodeURIComponent(`${scope}__${String(match.id)}`).replace(/\./g, '_');
+    const receiptUrl = `${root}/refereeResults/${receiptKey}.json`;
+    const receipt = {
+      matchId: String(match.id),
+      scope,
+      phase: String(match.phase || ''),
+      group: String(match.group || ''),
+      teamAId: String(match.teamAId || ''),
+      teamBId: String(match.teamBId || ''),
+      scoreA: String(scoreA),
+      scoreB: String(scoreB),
+      submittedAt,
+      sentAt,
+    };
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const readResponse = await fetch(receiptUrl, {
+        headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store',
+      });
+      if (!readResponse.ok) throw new Error(`Lecture du reçu Firebase impossible (HTTP ${readResponse.status}).`);
+      const etag = readResponse.headers.get('etag');
+      if (!etag) throw new Error('ETag indisponible pour le reçu du résultat.');
+      const previous = await readResponse.json();
+      if (previous?.sentAt && toTimestamp(previous.sentAt) > toTimestamp(sentAt)) {
+        throw new Error('Un résultat plus récent existe déjà pour ce match.');
+      }
+      const response = await fetch(receiptUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+        body: JSON.stringify(receipt),
+      });
+      if (response.status === 412) continue;
+      if (!response.ok) throw new Error(`Reçu Firebase non sauvegardé (HTTP ${response.status}).`);
+      return receipt;
+    }
+    throw new Error('Conflit de synchronisation du reçu du score.');
+  }
+
   function scheduleMatchPersistence(scope, matchId, patch, delay = 160) {
     if (mode === 'home' || mode === 'public' || !matchId || !Object.keys(patch).length) return;
     const key = `${scope}:${matchId}`;
@@ -7768,7 +7897,9 @@ const upcomingMatches = useMemo(() => {
 
   function getOrganizerStatusBadge(match) {
   if (match?.status === 'Valide') return { text: 'Valide', className: 'success status-valide badge-success' };
-  if (match?.status === 'Résultats envoyés') return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
+  if (match?.status === 'Résultats envoyés' || (match?.pendingResultSentAt && isRefereePendingResultReady(match, phaseRulesRef.current))) {
+    return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
+  }
   if (isRefereeAssignedMatch(match)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
   if (match?.status === 'Match en cours') return { text: 'Match en cours', className: 'neutral status-match-disponible badge-neutral' };
   const label = getMatchStatusLabel(match, null);
@@ -8063,17 +8194,35 @@ const upcomingMatches = useMemo(() => {
       submittedScoreB: forcedScoreB,
       submittedAt,
       pendingResultSentAt: sendTimestamp,
-      refereeInProgress: true,
-      matchInProgress: true,
-      status: 'Match en cours',
-      arbitrageRequestStatus: 'accepted',
+      refereeInProgress: false,
+      matchInProgress: false,
+      refereeStartedAt: null,
+      status: 'Résultats envoyés',
+      arbitrageRequestStatus: null,
       arbitrageRequestedAt: null,
-      arbitrageAcceptedAt: Date.now(),
+      arbitrageAcceptedAt: null,
     }));
     try {
-      // La saisie et l'envoi du résultat doivent être confirmés sur Firebase AVANT
-      // de fermer la feuille de score. Pas de reload forcé qui pourrait l'écraser.
-      await flushMatchPersistence(scope, matchId);
+      // V50 : deux traces Firebase indépendantes. Le reçu durable permet au PC
+      // organisateur de récupérer le résultat même si la liste a été remplacée.
+      let receiptSaved = false;
+      let matchSaved = false;
+      let receiptError = null;
+      try {
+        await persistRefereeResultReceipt(scope, fallbackMatch, forcedScoreA, forcedScoreB, submittedAt, sendTimestamp);
+        receiptSaved = true;
+      } catch (error) {
+        receiptError = error;
+        console.error('Accusé de réception du score non sauvegardé :', error);
+      }
+      try {
+        await flushMatchPersistence(scope, matchId);
+        matchSaved = true;
+      } catch (error) {
+        if (!receiptSaved) throw new Error(`Envoi du score impossible : ${error.message || ''} / ${receiptError?.message || ''}`);
+        console.warn('Résultat récupérable via le reçu Firebase ; écriture du match à reprendre :', error);
+      }
+      if (!receiptSaved && !matchSaved) throw receiptError || new Error('Aucun enregistrement Firebase confirmé.');
       setRefereeSelectedScoreDraft(null);
       refereeSelectedScoreDraftRef.current = null;
       setRefereeSelectedMatch(null);
@@ -8665,7 +8814,7 @@ function releaseRefereeSelectedMatch(entry) {
                       const pendingA = toNumber(match.submittedScoreA);
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
-                      const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                      const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -8731,7 +8880,7 @@ function releaseRefereeSelectedMatch(entry) {
                             <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                          {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
+                          {canApprovePending ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
                               <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                           </div>
@@ -8816,7 +8965,7 @@ function releaseRefereeSelectedMatch(entry) {
                     const pendingB = toNumber(match.submittedScoreB);
                     const isValid = status === 'Valide';
                     const isFinalStage = /quart|demi|finale|petite finale|petite final|principale|principal/i.test(`${match.phase || ''} ${match.group || ''}`);
-                    const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                    const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                     const matchNumber = index + 1;
 
                     return (
@@ -8843,7 +8992,7 @@ function releaseRefereeSelectedMatch(entry) {
                           <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
-                        {!isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules) ? (
+                        {canApprovePending ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
                             <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                       </div>
@@ -8914,7 +9063,7 @@ function releaseRefereeSelectedMatch(entry) {
                 const pendingA = toNumber(match.submittedScoreA);
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
-                const canApprovePending = !isValid && Boolean(match.pendingResultSentAt) && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
+                const canApprovePending = !isValid && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -8938,13 +9087,13 @@ function releaseRefereeSelectedMatch(entry) {
                     <td>
                       <div className="status-cell">
                         <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
-                        {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
+                        {!isValid && (pendingA !== null || pendingB !== null) ? (
                           <>
                             <span className="muted tiny">Saisie arbitre : {match.submittedScoreA} - {match.submittedScoreB}</span>
-                            {(canApprovePending || (isFinalStage && pendingA !== null && pendingB !== null && isMatchResultValid(getPendingMatchSnapshot(match), phaseRules))) ? (
+                            {canApprovePending ? (
                               <div className="actions-row compact-actions">
                                 <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
-                                                              </div>
+                              </div>
                             ) : null}
                           </>
                         ) : null}
