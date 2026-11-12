@@ -5886,7 +5886,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 
-/* V53 : le nom de l’arbitre permet la même sélection que les équipes jouant le match. */
+/* V54 : le nom de l’arbitre permet la même sélection que les équipes jouant le match. */
 .compact-referee-select-button-v53 {
   display: block;
   width: 100%;
