@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V57';
+const APP_VERSION = 'V58';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1514,11 +1514,12 @@ function isRefereeAssignedMatch(match) {
 }
 
 
-// V57 : afficher le score recu de l'arbitre dans les cases organisateur,
+// V58 : afficher le score recu de l'arbitre dans les cases organisateur,
 // sans l'enregistrer comme score officiel avant le clic sur Valider.
 function hasSentRefereeResultToReview(match, phaseRules) {
-  if (!match || match.status === 'Valide') return false;
-  if (!match.pendingResultSentAt && match.status !== 'Résultats envoyés') return false;
+  // V58 : seule la transition explicite vers « Résultats envoyés » ouvre
+  // la validation. Un ancien pendingResultSentAt ne doit jamais suffire.
+  if (!match || match.status !== 'Résultats envoyés') return false;
   return isMatchResultValid({
     ...match,
     scoreA: match.submittedScoreA,
@@ -1585,7 +1586,7 @@ function isMatchCurrentlyInProgress(match, phaseRules) {
   return Boolean(match.refereeInProgress || match.matchInProgress);
 }
 
-// V57 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
+// V58 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
 // jusqu'a la validation officielle du match par l'organisateur.
 function isPublicResultAwaitingValidation(match) {
   return Boolean(match && match.status !== 'Valide'
@@ -1991,7 +1992,7 @@ function printQrCode(url, title = 'QR Code') {
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // Mise en page V57 : les matchs restants uniquement, un match par ligne,
+  // Mise en page V58 : les matchs restants uniquement, un match par ligne,
   // une feuille A4 portrait par terrain tant que la place le permet.
   // Les pages supplementaires sont construites explicitement pour repeter
   // TERRAIN n°X en haut de CHAQUE feuille, sans match coupe entre deux pages.
@@ -7584,7 +7585,7 @@ const upcomingMatches = useMemo(() => {
   function forceValidateOrganizerMatch(matchId) {
     const existing = findMatchById(matchId);
     if (!existing) return;
-    // V57 : les scores saisis en direct ne sont pas encore un résultat envoyé.
+    // V58 : les scores saisis en direct ne sont pas encore un résultat envoyé.
     // Le bouton Valider (et son action) n'est actif qu'après l'envoi de l'arbitre.
     if (!hasSentRefereeResultToReview(existing, phaseRulesRef.current)) {
       window.alert('Le résultat doit être envoyé par l’arbitre avant de pouvoir être validé.');
@@ -7638,6 +7639,9 @@ const upcomingMatches = useMemo(() => {
       submittedScoreA: nextScoreA,
       submittedScoreB: nextScoreB,
       submittedAt: Date.now(),
+      // V58 : un nouveau score en direct n'est pas un résultat transmis.
+      pendingResultSentAt: null,
+      resultsSentAt: null,
       refereeInProgress: match.status === 'Valide' ? false : true,
       matchInProgress: match.status === 'Valide' ? false : true,
       refereeStartedAt: match.refereeStartedAt || Date.now(),
@@ -8024,7 +8028,7 @@ const upcomingMatches = useMemo(() => {
 
   function getOrganizerStatusBadge(match) {
   if (match?.status === 'Valide') return { text: 'Valide', className: 'success status-valide badge-success' };
-  if (match?.status === 'Résultats envoyés' || (match?.pendingResultSentAt && isRefereePendingResultReady(match, phaseRulesRef.current))) {
+  if (match?.status === 'Résultats envoyés') {
     return { text: 'Résultats envoyés', className: 'success status-resultats-envoyes' };
   }
   if (isRefereeAssignedMatch(match)) return { text: 'Match en cours', className: 'danger status-match-en-cours badge-danger' };
