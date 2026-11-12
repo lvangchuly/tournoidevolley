@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V51';
+const APP_VERSION = 'V53';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -8825,7 +8825,17 @@ function releaseRefereeSelectedMatch(entry) {
                         <div key={match.id} id={`match-card-${match.id}`} className={`compact-match-card-v24n ${matchHighlightClass}`.trim()}>
                           <div className="compact-match-header-v24n">
                             <span className="compact-match-chip compact-match-chip-v24n">T{match.court || courtNumber}</span>
-                            <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-match-referee-badge-v24n" />
+                            <button
+                              type="button"
+                              className={`compact-team-select-button-v27c compact-referee-select-button-v53 ${selectedTeamId === refereeTeamId ? 'is-team-highlighted' : ''}`.trim()}
+                              onClick={() => selectTeamInScope(refereeTeamId)}
+                              disabled={!refereeTeamId}
+                              aria-pressed={refereeTeamId ? selectedTeamId === refereeTeamId : undefined}
+                              aria-label={refereeTeamId ? `Afficher les matchs et la poule de l’arbitre ${refereeTeam?.name || ''}` : 'Aucun arbitre désigné'}
+                              title={refereeTeamId ? `Voir les matchs joués, les arbitrages et la poule de ${refereeTeam?.name || 'l’arbitre'}` : 'Aucun arbitre désigné'}
+                            >
+                              <TeamBadge name={refereeTeam ? refereeTeam.name : '—'} level={refereeTeam?.level} className="compact-match-referee-badge-v24n" />
+                            </button>
                             <span className="compact-match-chip compact-match-chip-v24n">M{index + 1}</span>
                           </div>
                           <div className="compact-match-team-row-v24n">
@@ -8871,8 +8881,7 @@ function releaseRefereeSelectedMatch(entry) {
                             </label>
                           </div>
                           <div className="compact-match-footer-v24n">
-                            <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
-                            <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
+                                                        <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                           {canApprovePending ? (
@@ -8983,8 +8992,7 @@ function releaseRefereeSelectedMatch(entry) {
                           </label>
                         </div>
                         <div className="compact-match-footer-v24n">
-                          <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
-                          <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
+                                                    <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                         </div>
                         {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
                         {canApprovePending ? (
