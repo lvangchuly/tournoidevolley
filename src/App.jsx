@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V58';
+const APP_VERSION = 'V59';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1514,10 +1514,10 @@ function isRefereeAssignedMatch(match) {
 }
 
 
-// V58 : afficher le score recu de l'arbitre dans les cases organisateur,
+// V59 : afficher le score recu de l'arbitre dans les cases organisateur,
 // sans l'enregistrer comme score officiel avant le clic sur Valider.
 function hasSentRefereeResultToReview(match, phaseRules) {
-  // V58 : seule la transition explicite vers « Résultats envoyés » ouvre
+  // V59 : seule la transition explicite vers « Résultats envoyés » ouvre
   // la validation. Un ancien pendingResultSentAt ne doit jamais suffire.
   if (!match || match.status !== 'Résultats envoyés') return false;
   return isMatchResultValid({
@@ -1586,7 +1586,7 @@ function isMatchCurrentlyInProgress(match, phaseRules) {
   return Boolean(match.refereeInProgress || match.matchInProgress);
 }
 
-// V58 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
+// V59 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
 // jusqu'a la validation officielle du match par l'organisateur.
 function isPublicResultAwaitingValidation(match) {
   return Boolean(match && match.status !== 'Valide'
@@ -1950,6 +1950,20 @@ function renderMatchCardMarkup(match, resolveTeam, poolTeamIds = [], phaseRules 
     </div>`;
 }
 
+// V59 Android : l'impression dans l'APK utilise le service d'impression Android.
+// Le navigateur Web continue a utiliser la fenetre d'impression habituelle.
+function printUsingAndroidService(title, html) {
+  if (typeof window === 'undefined' || !window.NeoAndroidPrint) return false;
+  try {
+    window.NeoAndroidPrint.printHtml(String(title || 'NEO TOURNOIVOLLEY'), html);
+  } catch (error) {
+    console.error('Erreur impression Android', error);
+    window.alert("Impossible d'ouvrir l'impression Android.");
+  }
+  // Ne jamais ouvrir un nouvel onglet dans le WebView si le bridge Android existe.
+  return true;
+}
+
 function printMatchCard(matchId) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const node = document.getElementById(`match-card-${matchId}`);
@@ -1961,12 +1975,14 @@ function printMatchCard(matchId) {
     const label = String(entry.textContent || '').trim();
     if (label === 'À saisir') entry.remove();
   });
-  const printWindow = window.open('', '_blank', 'width=1000,height=700');
-  if (!printWindow) return;
   const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
     .map((entry) => entry.outerHTML)
     .join('\n');
-  printWindow.document.write(`<!doctype html><html><head><title>Impression match</title>${styles}<style>body{margin:0;padding:24px;background:#ffffff;font-family:Inter,Arial,sans-serif}.print-wrap{display:flex;justify-content:center;align-items:flex-start}.compact-match-card-v24c{width:420px!important;max-width:420px!important;box-shadow:none!important;border:1px solid #0f172a!important}.match-print-button-v24c,.compact-match-card-actions{display:none!important}.compact-match-score-row,.compact-match-score-row-v24c,.compact-match-score-row-v24e,.compact-match-score-row-v24n{min-height:88px!important;gap:16px!important;align-items:stretch!important}.compact-score-box,.compact-score-box-v24c,.compact-score-box-v24e,.compact-score-box-v24n{min-height:88px!important;padding:12px!important}.compact-score-box input,.compact-score-box-v24c input,.compact-score-box-v24e input,.compact-score-box-v24n input{min-height:64px!important;height:64px!important;font-size:28px!important;text-align:center!important}.compact-match-team-row-v24c .team-badge,.compact-match-team-row-v24e .team-badge,.compact-match-team-row-v24n .team-badge,.compact-team-strip-badge,.compact-team-strip-badge-v24c,.compact-team-strip-badge-v24e,.compact-team-strip-badge-v24n{font-size:24px!important;line-height:1.15!important;padding-top:10px!important;padding-bottom:10px!important}.compact-match-referee-badge-v24d,.compact-match-referee-badge-v24e,.compact-match-referee-badge-v24n{font-size:24px!important;line-height:1.15!important;padding-top:10px!important;padding-bottom:10px!important}</style></head><body><div class="print-wrap">${printableNode.outerHTML}</div></body></html>`);
+  const printHtml = `<!doctype html><html><head><title>Impression match</title>${styles}<style>body{margin:0;padding:24px;background:#ffffff;font-family:Inter,Arial,sans-serif}.print-wrap{display:flex;justify-content:center;align-items:flex-start}.compact-match-card-v24c{width:420px!important;max-width:420px!important;box-shadow:none!important;border:1px solid #0f172a!important}.match-print-button-v24c,.compact-match-card-actions{display:none!important}.compact-match-score-row,.compact-match-score-row-v24c,.compact-match-score-row-v24e,.compact-match-score-row-v24n{min-height:88px!important;gap:16px!important;align-items:stretch!important}.compact-score-box,.compact-score-box-v24c,.compact-score-box-v24e,.compact-score-box-v24n{min-height:88px!important;padding:12px!important}.compact-score-box input,.compact-score-box-v24c input,.compact-score-box-v24e input,.compact-score-box-v24n input{min-height:64px!important;height:64px!important;font-size:28px!important;text-align:center!important}.compact-match-team-row-v24c .team-badge,.compact-match-team-row-v24e .team-badge,.compact-match-team-row-v24n .team-badge,.compact-team-strip-badge,.compact-team-strip-badge-v24c,.compact-team-strip-badge-v24e,.compact-team-strip-badge-v24n{font-size:24px!important;line-height:1.15!important;padding-top:10px!important;padding-bottom:10px!important}.compact-match-referee-badge-v24d,.compact-match-referee-badge-v24e,.compact-match-referee-badge-v24n{font-size:24px!important;line-height:1.15!important;padding-top:10px!important;padding-bottom:10px!important}</style></head><body><div class="print-wrap">${printableNode.outerHTML}</div></body></html>`;
+  if (printUsingAndroidService('Impression match', printHtml)) return;
+  const printWindow = window.open('', '_blank', 'width=1000,height=700');
+  if (!printWindow) return;
+  printWindow.document.write(printHtml);
   printWindow.document.close();
   printWindow.focus();
   window.setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
@@ -1975,16 +1991,18 @@ function printMatchCard(matchId) {
 function printQrCode(url, title = 'QR Code') {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(url)}`;
-  const printWindow = window.open('', '_blank', 'width=700,height=700');
-  if (!printWindow) return;
   const safeTitle = escapeHtml(title);
-  printWindow.document.write(`<!doctype html><html><head><title>${safeTitle}</title><style>
+  const printHtml = `<!doctype html><html><head><title>${safeTitle}</title><style>
     @page { margin: 1cm; }
     html,body{margin:0;padding:0;background:#fff;font-family:Arial,sans-serif}
     .page{min-height:100vh;display:flex;align-items:center;justify-content:center}
     .qr-wrap{width:5cm;height:5cm;display:flex;align-items:center;justify-content:center}
     .qr-wrap img{width:5cm;height:5cm;display:block;object-fit:contain}
-  </style></head><body><div class="page"><div class="qr-wrap"><img src="${qrSrc}" alt="${safeTitle}" /></div></div><script>window.addEventListener('load',function(){setTimeout(function(){window.focus();window.print();},150);});</script></body></html>`);
+  </style></head><body><div class="page"><div class="qr-wrap"><img src="${qrSrc}" alt="${safeTitle}" /></div></div><script>window.addEventListener('load',function(){setTimeout(function(){window.focus();window.print();},150);});</script></body></html>`;
+  if (printUsingAndroidService(title, printHtml)) return;
+  const printWindow = window.open('', '_blank', 'width=700,height=700');
+  if (!printWindow) return;
+  printWindow.document.write(printHtml);
   printWindow.document.close();
 }
 
@@ -1992,7 +2010,7 @@ function printQrCode(url, title = 'QR Code') {
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // Mise en page V58 : les matchs restants uniquement, un match par ligne,
+  // Mise en page V59 : les matchs restants uniquement, un match par ligne,
   // une feuille A4 portrait par terrain tant que la place le permet.
   // Les pages supplementaires sont construites explicitement pour repeter
   // TERRAIN n°X en haut de CHAQUE feuille, sans match coupe entre deux pages.
@@ -2060,11 +2078,6 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
       }
     });
 
-  const printWindow = window.open('', '_blank', 'width=900,height=1100');
-  if (!printWindow) {
-    window.alert("La fenêtre d'impression a été bloquée par le navigateur.");
-    return;
-  }
   const css = `
     @page { size: A4 portrait; margin: 10mm; }
     * { box-sizing: border-box; }
@@ -2093,7 +2106,15 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
       .print-terrain-sheet { margin: 0; padding: 0; min-height: 0; }
     }
   `;
-  printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${pages.join('')}</body></html>`);
+  const printHtml = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${pages.join('')}</body></html>`;
+  // Impression native : aucune navigation ni popup externe sur Android.
+  if (printUsingAndroidService(title, printHtml)) return;
+  const printWindow = window.open('', '_blank', 'width=900,height=1100');
+  if (!printWindow) {
+    window.alert("La fenêtre d'impression a été bloquée par le navigateur.");
+    return;
+  }
+  printWindow.document.write(printHtml);
   printWindow.document.close();
   printWindow.addEventListener('afterprint', () => printWindow.close(), { once: true });
   window.setTimeout(() => {
@@ -7585,7 +7606,7 @@ const upcomingMatches = useMemo(() => {
   function forceValidateOrganizerMatch(matchId) {
     const existing = findMatchById(matchId);
     if (!existing) return;
-    // V58 : les scores saisis en direct ne sont pas encore un résultat envoyé.
+    // V59 : les scores saisis en direct ne sont pas encore un résultat envoyé.
     // Le bouton Valider (et son action) n'est actif qu'après l'envoi de l'arbitre.
     if (!hasSentRefereeResultToReview(existing, phaseRulesRef.current)) {
       window.alert('Le résultat doit être envoyé par l’arbitre avant de pouvoir être validé.');
@@ -7639,7 +7660,7 @@ const upcomingMatches = useMemo(() => {
       submittedScoreA: nextScoreA,
       submittedScoreB: nextScoreB,
       submittedAt: Date.now(),
-      // V58 : un nouveau score en direct n'est pas un résultat transmis.
+      // V59 : un nouveau score en direct n'est pas un résultat transmis.
       pendingResultSentAt: null,
       resultsSentAt: null,
       refereeInProgress: match.status === 'Valide' ? false : true,
