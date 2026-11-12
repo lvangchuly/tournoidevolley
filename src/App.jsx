@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V50';
+const APP_VERSION = 'V51';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -8872,11 +8872,6 @@ function releaseRefereeSelectedMatch(entry) {
                           </div>
                           <div className="compact-match-footer-v24n">
                             <button type="button" className="match-print-button-v24c" onClick={() => forceValidateOrganizerMatch(match.id)} title="Imprimer ce match" aria-label="Imprimer ce match">🖨️</button>
-                            {match.status === 'Résultats envoyés' ? (
-                              <button type="button" className="btn btn-success" onClick={() => forceValidateOrganizerMatch(match.id)}>
-                                Valider
-                              </button>
-                            ) : null}
                             <span className={`badge ${getOrganizerStatusBadge(match).className} ${getOrganizerStatusBadge(match).text === "Match en cours" ? "status-match-en-cours" : ""}`}>{getOrganizerStatusBadge(match).text}</span>
                           </div>
                           {!isValid && pendingA !== null && pendingB !== null ? <div className="muted tiny compact-pending-score-v24n">Arbitre : {match.submittedScoreA} - {match.submittedScoreB}</div> : null}
