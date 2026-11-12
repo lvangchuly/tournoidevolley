@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V54';
+const APP_VERSION = 'V55';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1966,7 +1966,10 @@ function printQrCode(url, title = 'QR Code') {
 function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn = () => ({ name: '—', level: '' }), phaseRules = PHASE_RULES_DEFAULT) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  // Uniquement les matchs restant a jouer ou a valider, comme dans les versions precedentes.
+  // Mise en page V55 : les matchs restants uniquement, un match par ligne,
+  // une feuille A4 portrait par terrain tant que la place le permet.
+  // Les pages supplementaires sont construites explicitement pour repeter
+  // TERRAIN n°X en haut de CHAQUE feuille, sans match coupe entre deux pages.
   const remaining = dedupeMatches(Array.isArray(matches) ? matches : [])
     .filter((match) => getMatchStatusLabel(match, phaseRules) !== 'Valide');
   if (!remaining.length) {
@@ -1974,7 +1977,6 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
     return;
   }
 
-  // A4 portrait : un tableau par terrain, un match par ligne, dans l'ordre des matchs.
   const poolByName = new Map((Array.isArray(pools) ? pools : []).map((pool) => [pool?.name, pool]));
   const courts = new Map();
   remaining.forEach((match, originalIndex) => {
@@ -1985,9 +1987,13 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
     courts.get(key).matches.push({ match, originalIndex });
   });
 
-  const courtPages = [...courts.values()]
+  // 6 cartes maxi : avec le dimensionnement fixe A4 ci-dessous,
+  // l'entete + les 6 lignes tiennent dans la zone imprimable de 277 mm.
+  const MATCHES_PER_PRINTED_PAGE = 6;
+  const pages = [];
+  [...courts.values()]
     .sort((a, b) => (a.courtNumber ?? Infinity) - (b.courtNumber ?? Infinity))
-    .map(({ courtNumber, matches: courtMatches }) => {
+    .forEach(({ courtNumber, matches: courtMatches }) => {
       courtMatches.sort((a, b) => {
         const aSlot = Number(a.match?.slot);
         const bSlot = Number(b.match?.slot);
@@ -1995,68 +2001,73 @@ function printRemainingBrassageMatches(title, matches, pools = [], resolveTeamFn
         const bOrder = Number.isFinite(bSlot) && bSlot > 0 ? bSlot : Infinity;
         return aOrder - bOrder || a.originalIndex - b.originalIndex;
       });
-      const rows = courtMatches.map(({ match }, index) => {
-        const pool = poolByName.get(match?.group);
-        const poolTeamIds = Array.isArray(pool?.teamIds) ? pool.teamIds : [];
-        const refereeId = match?.refereeTeamId || poolTeamIds.find((teamId) => teamId !== match?.teamAId && teamId !== match?.teamBId);
-        const teamA = resolveTeamFn(match?.teamAId);
-        const teamB = resolveTeamFn(match?.teamBId);
-        const referee = refereeId ? resolveTeamFn(refereeId) : null;
-        const matchSlot = Number(match?.slot);
-        const matchLabel = Number.isFinite(matchSlot) && matchSlot > 0 ? matchSlot : index + 1;
-        const scoreA = match?.scoreA === null || match?.scoreA === undefined || match?.scoreA === '' ? '___' : String(match.scoreA);
-        const scoreB = match?.scoreB === null || match?.scoreB === undefined || match?.scoreB === '' ? '___' : String(match.scoreB);
-        const group = match?.group || match?.phase || '—';
-        return `<tr>
-          <td class="col-match">M${escapeHtml(matchLabel)}</td>
-          <td class="col-pool">${escapeHtml(group)}</td>
-          <td class="col-team">${escapeHtml(teamA?.name || '—')}</td>
-          <td class="col-score">${escapeHtml(scoreA)} - ${escapeHtml(scoreB)}</td>
-          <td class="col-team">${escapeHtml(teamB?.name || '—')}</td>
-          <td class="col-referee">${escapeHtml(referee?.name || '—')}</td>
-        </tr>`;
-      }).join('');
-      const courtTitle = courtNumber === null ? 'Terrain non attribué' : `Terrain ${courtNumber}`;
-      return `<section class="terrain-page">
-        <h1>${escapeHtml(title)}</h1>
-        <div class="terrain-heading"><h2>${escapeHtml(courtTitle)}</h2><span>${courtMatches.length} match${courtMatches.length > 1 ? 's' : ''}</span></div>
-        <table>
-          <colgroup><col style="width:9%"/><col style="width:17%"/><col style="width:21%"/><col style="width:10%"/><col style="width:21%"/><col style="width:22%"/></colgroup>
-          <thead><tr><th>Match</th><th>Poule / phase</th><th>Équipe A</th><th>Score</th><th>Équipe B</th><th>Arbitre</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </section>`;
-    }).join('');
+      const terrainTitle = courtNumber === null ? 'TERRAIN NON ATTRIBUÉ' : `TERRAIN n°${courtNumber}`;
+      const pageCount = Math.ceil(courtMatches.length / MATCHES_PER_PRINTED_PAGE);
+      for (let pageIndex = 0; pageIndex < pageCount; pageIndex += 1) {
+        const currentMatches = courtMatches.slice(pageIndex * MATCHES_PER_PRINTED_PAGE, (pageIndex + 1) * MATCHES_PER_PRINTED_PAGE);
+        const rows = currentMatches.map(({ match }, indexOnPage) => {
+          const indexOnCourt = pageIndex * MATCHES_PER_PRINTED_PAGE + indexOnPage;
+          const pool = poolByName.get(match?.group);
+          const poolTeamIds = Array.isArray(pool?.teamIds) ? pool.teamIds : [];
+          const refereeId = match?.refereeTeamId || poolTeamIds.find((id) => id !== match?.teamAId && id !== match?.teamBId);
+          const referee = refereeId ? resolveTeamFn(refereeId) : null;
+          const teamA = resolveTeamFn(match?.teamAId);
+          const teamB = resolveTeamFn(match?.teamBId);
+          const slotNumber = Number(match?.slot);
+          const matchNumber = Number.isInteger(slotNumber) && slotNumber > 0 ? slotNumber : indexOnCourt + 1;
+          return `<article class="print-match-line">
+            <div class="print-match-number"><span>MATCH</span><strong>n°${escapeHtml(matchNumber)}</strong></div>
+            <div class="print-match-drawing">
+              <div class="print-referee">${escapeHtml(referee?.name || 'Arbitre à désigner')}</div>
+              <div class="print-opponents">
+                <div class="print-team print-team-a">${escapeHtml(teamA?.name || '—')}</div>
+                <div class="print-team print-team-b">${escapeHtml(teamB?.name || '—')}</div>
+              </div>
+              <div class="print-scores"><div class="print-score-box"></div><div class="print-score-box"></div></div>
+            </div>
+          </article>`;
+        }).join('');
+        pages.push(`<section class="print-terrain-sheet">
+          <header class="print-terrain-heading">${escapeHtml(terrainTitle)}</header>
+          <main class="print-terrain-matches">${rows}</main>
+        </section>`);
+      }
+    });
 
-  const printWindow = window.open('', '_blank', 'width=850,height=1100');
+  const printWindow = window.open('', '_blank', 'width=900,height=1100');
   if (!printWindow) {
     window.alert("La fenêtre d'impression a été bloquée par le navigateur.");
     return;
   }
   const css = `
-    @page { size: A4 portrait; margin: 12mm 10mm; }
+    @page { size: A4 portrait; margin: 10mm; }
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: #fff; color: #172033; font-family: Arial, Helvetica, sans-serif; }
-    .terrain-page { page-break-after: always; break-after: page; }
-    .terrain-page:last-child { page-break-after: auto; break-after: auto; }
-    h1 { margin: 0 0 10px; font-size: 17px; line-height: 1.25; }
-    .terrain-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 12px; border-bottom: 2px solid #24364d; padding-bottom: 7px; }
-    .terrain-heading h2 { margin: 0; font-size: 15px; }
-    .terrain-heading span { color: #526275; font-size: 11px; }
-    table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10px; }
-    thead { display: table-header-group; }
-    tr { page-break-inside: avoid; break-inside: avoid; }
-    th { padding: 8px 4px; background: #e6ebf1; border: 1px solid #bdc7d1; text-align: left; font-weight: 700; }
-    td { padding: 8px 4px; border: 1px solid #c5cdd7; line-height: 1.35; vertical-align: middle; overflow-wrap: anywhere; }
-    tbody tr:nth-child(even) { background: #f6f8fa; }
-    .col-match, .col-score { text-align: center; font-weight: 700; white-space: nowrap; }
+    html, body { margin: 0; padding: 0; background: #fff; color: #080f1e; font-family: Arial, Helvetica, sans-serif; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-terrain-sheet { width: 190mm; break-after: page; page-break-after: always; }
+    .print-terrain-sheet:last-child { break-after: auto; page-break-after: auto; }
+    .print-terrain-heading { height: 18mm; margin: 0 0 6mm; border-radius: 5mm; display: flex; align-items: center; justify-content: center; background: #063778; color: #fff; font-size: 25px; letter-spacing: .5px; font-weight: 900; }
+    .print-terrain-matches { display: flex; flex-direction: column; gap: 3mm; }
+    .print-match-line { display: grid; grid-template-columns: 30mm minmax(0,1fr); gap: 3mm; align-items: stretch; height: 37mm; padding: 2mm; border: 1px solid #183c72; border-radius: 4mm; break-inside: avoid; page-break-inside: avoid; overflow: hidden; }
+    .print-match-number { border-radius: 3mm; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #063778; color: white; font-size: 16px; font-weight: 900; line-height: 1.15; text-align: center; }
+    .print-match-number strong { margin-top: 1mm; font-size: 18px; }
+    .print-match-drawing { display: grid; min-width: 0; grid-template-rows: 9mm 10mm 9mm; gap: 1mm; }
+    .print-referee, .print-team { display: flex; align-items: center; justify-content: center; text-align: center; min-width: 0; border-radius: 3mm; font-size: 14px; font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; padding: 1mm 2mm; }
+    .print-referee { background: #ffe78a; }
+    .print-opponents, .print-scores { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1.6mm; min-width: 0; }
+    .print-team-a { background: #ffd0d0; }
+    .print-team-b { background: #ffe78a; }
+    .print-score-box { min-height: 0; border: 1px solid #b8c9df; border-radius: 2.5mm; background: #fff; }
     @media screen {
-      body { background: #e9edf3; padding: 24px; }
-      .terrain-page { background: white; max-width: 190mm; min-height: 265mm; padding: 10mm; margin: 0 auto 24px; box-shadow: 0 2px 10px #b8c0c8; }
+      body { background: #e8ecf2; padding: 18px 0; }
+      .print-terrain-sheet { background: #fff; min-height: 297mm; padding: 10mm; width: 210mm; margin: 0 auto 18px; box-shadow: 0 3px 14px #aab5c5; }
     }
-    @media print { body { background: #fff; } }
+    @media print {
+      html,body { background: #fff; }
+      .print-terrain-sheet { margin: 0; padding: 0; min-height: 0; }
+    }
   `;
-  printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8" /><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${courtPages}</body></html>`);
+  printWindow.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${css}</style></head><body>${pages.join('')}</body></html>`);
   printWindow.document.close();
   printWindow.addEventListener('afterprint', () => printWindow.close(), { once: true });
   window.setTimeout(() => {
