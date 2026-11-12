@@ -37,7 +37,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V47';
+const APP_VERSION = 'V48';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1616,6 +1616,12 @@ function buildDirectRankingPodiumFallback(pools, poolMatches, semiMatches, final
 }
 
 function toTimestamp(value) {
+  // Firebase conserve des dates ISO ET des Date.now() numériques.
+  // Date.parse(nombre) peut retourner NaN ou une date sans rapport.
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value >= 1e12 ? value : (value >= 1e9 ? value * 1000 : 0);
+  }
+  if (typeof value === 'string' && /^\d{13}$/.test(value)) return Number(value);
   const stamp = Date.parse(value || '');
   return Number.isFinite(stamp) ? stamp : 0;
 }
@@ -2398,6 +2404,25 @@ function buildFirebaseTournamentUrl(sharedTournamentId) {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments/${effectiveId}.json`;
 }
 
+// V48 : les scores sont stockés match par match, jamais par PUT global de l'arbitre.
+const CLOUD_MATCH_PATH_BY_SCOPE = Object.freeze({
+  brassage1: 'brassage1/matches', brassage2: 'brassage2/matches',
+  principale: 'mainStage/principaleMatches', consolante: 'mainStage/consolanteMatches',
+  championshipLeg1: 'championshipLeg1/matches', championshipLeg2: 'championshipLeg2/matches',
+  principalEighths: 'knockout/principalEighths', principalQuarters: 'knockout/principalQuarters',
+  principalSemis: 'knockout/principalSemis', principalFinals: 'knockout/principalFinals',
+  consolanteEighths: 'knockout/consolanteEighths', consolanteQuarters: 'knockout/consolanteQuarters',
+  consolanteSemis: 'knockout/consolanteSemis', consolanteFinals: 'knockout/consolanteFinals',
+  quarters: 'singleKnockout/quarters', semis: 'singleKnockout/semis', finals: 'singleKnockout/finals',
+});
+const CLOUD_MATCH_FIELDS = [
+  'scoreA', 'scoreB', 'status', 'validatedAt', 'manualOverrideAt',
+  'submittedScoreA', 'submittedScoreB', 'submittedAt', 'pendingResultSentAt',
+  'pendingResult', 'resultsSentAt', 'refereeInProgress', 'matchInProgress',
+  'refereeStartedAt', 'arbitrageRequestStatus', 'arbitrageRequestedAt',
+  'arbitrageAcceptedAt',
+];
+
 function buildFirebaseTournamentsCollectionUrl() {
   return `${FIREBASE_DATABASE_URL.replace(/\/$/, '')}/tournaments.json`;
 }
@@ -2610,6 +2635,12 @@ export default function App() {
   const refereeSelectedScoreDraftRef = useRef(refereeSelectedScoreDraft);
   const refereeScoreDraftsRef = useRef(refereeScoreDrafts);
   const cloudSaveInFlightRef = useRef(false);
+  const matchSyncTimersRef = useRef(new Map());
+  const matchSyncQueueRef = useRef(new Map());
+  const matchSyncPromisesRef = useRef(new Map());
+  const cloudMatchSyncErrorsRef = useRef(new Map());
+  const [sendingRefereeMatchId, setSendingRefereeMatchId] = useState(null);
+
   const createdAtRef = useRef(createdAt);
   const queuedCloudSaveRequestRef = useRef(null);
   const teamsRef = useRef(teams);
@@ -3068,6 +3099,7 @@ export default function App() {
   function queueBackgroundCloudSave(delay = 80, timestamp = null) {
     const mutationTimestamp = timestamp || new Date().toISOString();
     markPendingLocalMutation(mutationTimestamp);
+    if (mode === 'referee') return; // interdit les PUT du tournoi entier depuis un arbitre
     if (typeof window === 'undefined' || !sharedTournamentId) return;
     if (backgroundCloudSaveTimeoutRef.current) {
       window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
@@ -3344,11 +3376,11 @@ export default function App() {
   function mergeRemoteRefereeState(payload) {
     if (!payload) return;
 
+    // Les écritures ciblées sur les matchs n'actualisent pas la date globale
+    // meta.remoteSavedAt. Une comparaison globale des dates bloquerait donc
+    // définitivement les nouveaux scores Firebase. Seules les opérations de
+    // structure utilisent plus bas leur propre garde anti-retour-arrière.
     const remotePayloadTimestamp = toTimestamp(payload?.meta?.remoteSavedAt || payload?.meta?.lastSavedAt || null);
-    const localSnapshotTimestamp = toTimestamp(latestPersistedStateRef.current?.meta?.lastSavedAt || latestPersistedStateRef.current?.meta?.remoteSavedAt || null);
-    if (remotePayloadTimestamp && localSnapshotTimestamp && remotePayloadTimestamp < localSnapshotTimestamp) {
-      return;
-    }
 
     const pendingStructureSyncTimestamp = pendingStructureSyncTimestampRef.current;
     if (pendingStructureSyncTimestamp) {
@@ -3371,7 +3403,8 @@ export default function App() {
     const pendingLocalMutationTimestamp = pendingLocalMutationTimestampRef.current;
     if (pendingLocalMutationTimestamp) {
       const pendingLocalTimestamp = toTimestamp(pendingLocalMutationTimestamp);
-      if (!remotePayloadTimestamp || remotePayloadTimestamp < pendingLocalTimestamp) {
+      if ((!remotePayloadTimestamp || remotePayloadTimestamp < pendingLocalTimestamp)
+        && Date.now() - pendingLocalTimestamp < 1200) {
         return;
       }
       pendingLocalMutationTimestampRef.current = null;
@@ -3698,22 +3731,54 @@ export default function App() {
     fetchHomeTournamentCatalog();
   }
 
+  function preserveNewerRemoteMatches(localMatches, remoteMatches) {
+    if (!Array.isArray(localMatches) || !Array.isArray(remoteMatches)) return localMatches;
+    const remoteById = new Map(remoteMatches.filter(Boolean).map((match) => [match.id, match]));
+    return localMatches.map((local) => {
+      const remote = remoteById.get(local?.id);
+      if (!remote) return local;
+      const localOfficial = Math.max(toTimestamp(local.validatedAt), toTimestamp(local.manualOverrideAt));
+      const remoteOfficial = Math.max(toTimestamp(remote.validatedAt), toTimestamp(remote.manualOverrideAt));
+      const localPending = toTimestamp(local.pendingResultSentAt) || toTimestamp(local.submittedAt);
+      const remotePending = toTimestamp(remote.pendingResultSentAt) || toTimestamp(remote.submittedAt);
+      const protectedOrganizer = recentOrganizerLocalEditsRef.current.get(local.id);
+      const isProtected = protectedOrganizer && protectedOrganizer.until > Date.now()
+        && localOfficial >= toTimestamp(protectedOrganizer.officialAt);
+      if (remoteOfficial > localOfficial && !isProtected) {
+        return { ...local, ...Object.fromEntries(CLOUD_MATCH_FIELDS.map((key) => [key, remote[key] ?? null])) };
+      }
+      if (remotePending > localPending && remoteOfficial >= localOfficial && !isProtected) {
+        return { ...local, ...Object.fromEntries(CLOUD_MATCH_FIELDS
+          .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','status'].includes(field))
+          .map((field) => [field, remote[field] ?? null])) };
+      }
+      return local;
+    });
+  }
+
+  function preserveNewerRemoteScoresForFullSave(localPayload, remotePayload) {
+    if (!remotePayload) return localPayload;
+    const collections = [
+      ['brassage1', 'matches'], ['brassage2', 'matches'],
+      ['mainStage', 'principaleMatches'], ['mainStage', 'consolanteMatches'],
+      ['knockout', 'principalEighths'], ['knockout', 'principalQuarters'],
+      ['knockout', 'principalSemis'], ['knockout', 'principalFinals'],
+      ['knockout', 'consolanteEighths'], ['knockout', 'consolanteQuarters'],
+      ['knockout', 'consolanteSemis'], ['knockout', 'consolanteFinals'],
+      ['championshipLeg1','matches'], ['championshipLeg2','matches'],
+      ['singleKnockout','quarters'], ['singleKnockout','semis'], ['singleKnockout','finals'],
+    ];
+    const result = safeClone(localPayload, {});
+    collections.forEach(([stage, key]) => {
+      if (!Array.isArray(result?.[stage]?.[key]) || !Array.isArray(remotePayload?.[stage]?.[key])) return;
+      result[stage][key] = preserveNewerRemoteMatches(result[stage][key], remotePayload[stage][key]);
+    });
+    return result;
+  }
+
   async function saveTournamentToCloud(showMessage = true, silent = false) {
-    if (mode === 'referee' && !remoteStateInitialized) {
-      queuedCloudSaveRequestRef.current = { showMessage, silent: true };
-      if (!silent) {
-        setRemoteSyncMessage('Chargement Firebase en cours...');
-      }
-      if (typeof window !== 'undefined') {
-        if (backgroundCloudSaveTimeoutRef.current) {
-          window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
-        }
-        backgroundCloudSaveTimeoutRef.current = window.setTimeout(() => {
-          saveTournamentToCloud(false, true);
-        }, 350);
-      }
-      return false;
-    }
+    // Un appareil arbitre n'est jamais autorisé à remplacer le tournoi complet.
+    if (mode === 'referee') return false;
 
     if (cloudSaveInFlightRef.current) {
       queuedCloudSaveRequestRef.current = { showMessage, silent };
@@ -3740,22 +3805,35 @@ export default function App() {
       setRemoteSyncMessage('Sauvegarde Firebase en cours...');
     }
     try {
-      const response = await fetch(buildFirebaseTournamentUrl(effectiveId), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(body?.error || 'Impossible de sauvegarder sur Firebase.');
+      let committedPayload = null;
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const serverRead = await fetch(buildFirebaseTournamentUrl(effectiveId), {
+          cache: 'no-store', headers: { 'X-Firebase-ETag': 'true' },
+        });
+        if (!serverRead.ok) throw new Error(`Lecture Firebase impossible (HTTP ${serverRead.status}).`);
+        const etag = serverRead.headers.get('etag');
+        if (!etag) throw new Error('Impossible de vérifier la version distante (ETag).');
+        const serverPayload = await serverRead.json();
+        const candidate = preserveNewerRemoteScoresForFullSave(payload, serverPayload);
+        const response = await fetch(buildFirebaseTournamentUrl(effectiveId), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+          body: JSON.stringify(candidate),
+        });
+        if (response.status === 412) continue;
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || 'Impossible de sauvegarder sur Firebase.');
+        committedPayload = candidate;
+        break;
       }
+      if (!committedPayload) throw new Error('Conflit de sauvegarde : Firebase a changé, réessaie.');
       pendingStructureSyncTimestampRef.current = null;
       pendingLocalMutationTimestampRef.current = savedAt;
       setLastSavedAt(savedAt);
       setRemoteSavedAt(savedAt);
       setRemoteSyncMessage(`Dernière synchro Firebase : ${formatRemoteTimestamp(savedAt)}`);
       if (typeof window !== 'undefined') {
-        safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(payload));
+        safeSetLocalStorageItem(STORAGE_KEY, JSON.stringify(committedPayload));
       }
       if (showMessage) window.alert('Tournoi partagé sauvegardé sur Firebase.');
       return true;
@@ -3943,16 +4021,28 @@ export default function App() {
     sf: singleKnockout.finals.map(({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress }) => ({ id, submittedScoreA, submittedScoreB, submittedAt, refereeInProgress, matchInProgress })),
   }), [refereeSelectedMatch, brassage1.matches, brassage2.matches, mainStage.principaleMatches, mainStage.consolanteMatches, knockout.principalQuarters, knockout.principalSemis, knockout.principalFinals, knockout.consolanteSemis, knockout.consolanteFinals, championshipLeg1.matches, championshipLeg2.matches, singleKnockout.quarters, singleKnockout.semis, singleKnockout.finals]);
 
-  useEffect(() => {
-    if (mode !== 'referee' || !sharedTournamentId || !remoteStateInitialized) return;
-    if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
-    autoRefereeSyncTimeoutRef.current = window.setTimeout(() => {
-      saveTournamentToCloud(false, true);
-    }, 80);
-    return () => {
-      if (autoRefereeSyncTimeoutRef.current) window.clearTimeout(autoRefereeSyncTimeoutRef.current);
-    };
-  }, [mode, sharedTournamentId, remoteStateInitialized, refereeRealtimeSignature]);
+  // V48 : AUCUNE sauvegarde globale déclenchée par un rafraîchissement arbitre.
+  // Les modifications de l'arbitre passent exclusivement par persistSingleMatchPatch.
+
+  async function saveOrganizerConfigurationToCloud() {
+    if (mode !== 'organizer' || !remoteStateInitialized) return;
+    const tournamentId = String(sharedTournamentIdRef.current || '').trim();
+    if (!tournamentId) return;
+    const snapshot = getPersistedStateSnapshot();
+    // PATCH racine limité aux paramètres : un rafraîchissement de classement
+    // n'entraîne jamais un écrasement des scores des arbitres.
+    try {
+      const response = await fetch(buildFirebaseTournamentUrl(tournamentId), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teams: snapshot.teams, settings: snapshot.settings }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    } catch (error) {
+      console.error('Synchronisation des paramètres organisateur impossible :', error);
+      setRemoteSyncMessage(`Paramètres non synchronisés : ${error.message}`);
+    }
+  }
 
   const organizerCloudSignature = useMemo(() => JSON.stringify({
     tournamentName,
@@ -3963,20 +4053,13 @@ export default function App() {
     startTime,
     slotDuration,
     phaseRules,
-    brassage1,
-    brassage2,
-    mainStage,
-    knockout,
-    championshipLeg1,
-    championshipLeg2,
-    singleKnockout,
-  }), [tournamentName, tournamentRemarks, sharedTournamentId, disableBrassage2, teams, startTime, slotDuration, phaseRules, brassage1, brassage2, mainStage, knockout, championshipLeg1, championshipLeg2, singleKnockout]);
+  }), [tournamentName, tournamentRemarks, sharedTournamentId, disableBrassage2, teams, startTime, slotDuration, phaseRules]);
 
   useEffect(() => {
     if (mode !== 'organizer' || !sharedTournamentId) return;
     if (backgroundCloudSaveTimeoutRef.current) window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
     backgroundCloudSaveTimeoutRef.current = window.setTimeout(() => {
-      saveTournamentToCloud(false, true);
+      void saveOrganizerConfigurationToCloud();
     }, 800);
     return () => {
       if (backgroundCloudSaveTimeoutRef.current) window.clearTimeout(backgroundCloudSaveTimeoutRef.current);
@@ -4701,7 +4784,9 @@ const upcomingMatches = useMemo(() => {
     if (scope === 'brassage2') return brassage2Ref.current?.matches || [];
     if (scope === 'principale') return mainStageRef.current?.principaleMatches || [];
     if (scope === 'consolante') return mainStageRef.current?.consolanteMatches || [];
+    if (scope === 'principalEighths') return knockoutRef.current?.principalEighths || [];
     if (scope === 'principalQuarters') return knockoutRef.current?.principalQuarters || [];
+    if (scope === 'consolanteEighths') return knockoutRef.current?.consolanteEighths || [];
     if (scope === 'consolanteQuarters') return knockoutRef.current?.consolanteQuarters || [];
     if (scope === 'principalSemis') return knockoutRef.current?.principalSemis || [];
     if (scope === 'principalFinals') return knockoutRef.current?.principalFinals || [];
@@ -7136,7 +7221,6 @@ const upcomingMatches = useMemo(() => {
     updateMatchById(liveMatch.id, () => startedMatch);
     if (typeof setSelectedRefereeMatch === 'function') setSelectedRefereeMatch(startedMatch);
     refreshLatestPersistedSnapshot();
-    queueBackgroundCloudSave(0);
   }
 
 
@@ -7255,55 +7339,24 @@ const upcomingMatches = useMemo(() => {
   }
 
   function updateMatchById(matchId, updater) {
-    const updateMatches = (matches) => (Array.isArray(matches) ? matches.map((match) => (match.id === matchId ? makeScoreAutoValidatedIfWinning(updater(match), phaseRulesRef.current) : match)) : matches);
-
-    setChampionshipLeg1((current) => {
-      const next = { ...current, matches: updateMatches(current.matches) };
-      championshipLeg1Ref.current = next;
+    // V48 : ne modifier QUE la collection contenant le match. L'ancien code
+    // recréait 7 états simultanément et déclenchait des sauvegardes globales.
+    const scope = Object.keys(CLOUD_MATCH_PATH_BY_SCOPE)
+      .find((candidate) => getMatchesInScope(candidate).some((match) => match.id === matchId));
+    if (!scope) return;
+    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+      if (match.id !== matchId) return match;
+      const edited = updater(match);
+      const next = makeScoreAutoValidatedIfWinning(edited, phaseRulesRef.current);
+      const officialScoreChanged = String(match.scoreA ?? '') !== String(next.scoreA ?? '')
+        || String(match.scoreB ?? '') !== String(next.scoreB ?? '');
+      // Une correction manuelle gagnante doit avoir sa propre date de validation.
+      if (officialScoreChanged && isMatchResultValid(next, phaseRulesRef.current)
+        && String(next.validatedAt ?? '') === String(match.validatedAt ?? '')) {
+        return { ...next, validatedAt: Date.now(), manualOverrideAt: Date.now() };
+      }
       return next;
-    });
-    setChampionshipLeg2((current) => {
-      const next = { ...current, matches: updateMatches(current.matches) };
-      championshipLeg2Ref.current = next;
-      return next;
-    });
-    setBrassage1((current) => {
-      const next = { ...current, matches: updateMatches(current.matches) };
-      brassage1Ref.current = next;
-      return next;
-    });
-    setBrassage2((current) => {
-      const next = { ...current, matches: updateMatches(current.matches) };
-      brassage2Ref.current = next;
-      return next;
-    });
-    setMainStage((current) => {
-      const next = { ...current, principaleMatches: updateMatches(current.principaleMatches), consolanteMatches: updateMatches(current.consolanteMatches) };
-      mainStageRef.current = next;
-      return next;
-    });
-    setKnockout((current) => {
-      const next = {
-        ...current,
-        principalEighths: updateMatches(current.principalEighths),
-        principalQuarters: updateMatches(current.principalQuarters),
-        principalSemis: updateMatches(current.principalSemis),
-        principalFinals: updateMatches(current.principalFinals),
-        consolanteEighths: updateMatches(current.consolanteEighths),
-        consolanteQuarters: updateMatches(current.consolanteQuarters),
-        consolanteSemis: updateMatches(current.consolanteSemis),
-        consolanteFinals: updateMatches(current.consolanteFinals),
-      };
-      knockoutRef.current = next;
-      return next;
-    });
-    setSingleKnockout((current) => {
-      const next = { ...current, quarters: updateMatches(current.quarters), semis: updateMatches(current.semis), finals: updateMatches(current.finals) };
-      singleKnockoutRef.current = next;
-      return next;
-    });
-    refreshLatestPersistedSnapshot();
-    queueBackgroundCloudSave(250);
+    }));
   }
 
   function forceCancelOrganizerMatch(matchId) {
@@ -7374,7 +7427,6 @@ const upcomingMatches = useMemo(() => {
       refereeStartedAt: match.refereeStartedAt || Date.now(),
     }));
     refreshLatestPersistedSnapshot();
-    queueBackgroundCloudSave(0);
   }
 
   function handleRefereeScoreChange(field, value) {
@@ -7492,12 +7544,111 @@ const upcomingMatches = useMemo(() => {
     return () => window.clearInterval(timer);
   }, []);
 
-  function updateMatchesInScope(scope, updater) {
-    const applyUpdater = (matches) => dedupeMatches(
-      typeof updater === 'function'
-        ? updater(dedupeMatches(Array.isArray(matches) ? matches : []))
-        : dedupeMatches(Array.isArray(matches) ? matches : [])
-    );
+  // Chaque envoi utilise une lecture ETag + une écriture conditionnelle sur UN match.
+  // Les modifications de deux arbitres ne réécrivent jamais les autres poules.
+  async function persistSingleMatchPatch(scope, matchId, patch) {
+    const collection = CLOUD_MATCH_PATH_BY_SCOPE[scope];
+    const tournamentId = String(sharedTournamentIdRef.current || '').trim();
+    if (!FIREBASE_DATABASE_URL || !tournamentId || !collection) {
+      throw new Error('Tournoi Firebase introuvable pour la synchronisation du match.');
+    }
+    const root = buildFirebaseTournamentUrl(tournamentId).replace(/\.json$/, '');
+    const collectionUrl = `${root}/${collection}.json`;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      // L'ordre des listes peut changer après génération ou déduplication : toujours chercher l'ID.
+      const listResponse = await fetch(collectionUrl, { cache: 'no-store' });
+      if (!listResponse.ok) throw new Error(`Lecture Firebase impossible (HTTP ${listResponse.status}).`);
+      const remoteList = await listResponse.json();
+      const entries = Array.isArray(remoteList)
+        ? remoteList.map((match, index) => [String(index), match])
+        : Object.entries(remoteList || {});
+      const found = entries.find(([, match]) => match && String(match.id) === String(matchId));
+      if (!found) throw new Error('Match introuvable sur Firebase : recharge le tournoi avant de renvoyer.');
+      const matchUrl = `${root}/${collection}/${encodeURIComponent(found[0])}.json`;
+      const readResponse = await fetch(matchUrl, {
+        headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store',
+      });
+      if (!readResponse.ok) throw new Error(`Lecture du match impossible (HTTP ${readResponse.status}).`);
+      const etag = readResponse.headers.get('etag');
+      if (!etag) throw new Error('Firebase ne fournit pas de contrôle de version (ETag).');
+      const serverMatch = await readResponse.json();
+      if (!serverMatch || String(serverMatch.id) !== String(matchId)) continue;
+      // Ne jamais renvoyer un score provisoire sur un match déjà validé.
+      const isRefereePendingPatch = mode === 'referee' || (
+        ('submittedScoreA' in patch || 'submittedScoreB' in patch)
+        && !('validatedAt' in patch));
+      if ((serverMatch.status === 'Valide' || serverMatch.validatedAt)
+        && isRefereePendingPatch) {
+        throw new Error('Ce match a déjà été validé par l’organisateur.');
+      }
+      const remoteOfficialAt = Math.max(toTimestamp(serverMatch.validatedAt), toTimestamp(serverMatch.manualOverrideAt));
+      const incomingOfficialAt = Math.max(toTimestamp(patch.validatedAt), toTimestamp(patch.manualOverrideAt));
+      if (incomingOfficialAt && remoteOfficialAt > incomingOfficialAt) {
+        throw new Error('Un résultat officiel plus récent existe sur Firebase. Recharge le tournoi.');
+      }
+      const next = { ...serverMatch, ...patch };
+      const saveResponse = await fetch(matchUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'If-Match': etag },
+        body: JSON.stringify(next),
+      });
+      if (saveResponse.status === 412) continue; // un autre appareil a écrit entre temps
+      if (!saveResponse.ok) throw new Error(`Enregistrement du match impossible (HTTP ${saveResponse.status}).`);
+      cloudMatchSyncErrorsRef.current.delete(`${scope}:${matchId}`);
+      return next;
+    }
+    throw new Error('Conflit de synchronisation du match : réessaie dans quelques instants.');
+  }
+
+  function scheduleMatchPersistence(scope, matchId, patch, delay = 160) {
+    if (mode === 'home' || mode === 'public' || !matchId || !Object.keys(patch).length) return;
+    const key = `${scope}:${matchId}`;
+    const existing = matchSyncTimersRef.current.get(key);
+    if (existing?.timer) window.clearTimeout(existing.timer);
+    const mergedPatch = { ...(existing?.patch || {}), ...patch };
+    const timer = window.setTimeout(() => {
+      void flushMatchPersistence(scope, matchId).catch((error) => {
+        console.error('Échec de synchronisation de score', scope, matchId, error);
+        cloudMatchSyncErrorsRef.current.set(key, error.message || 'Erreur Firebase');
+        setRemoteSyncMessage(`Score non synchronisé : ${error.message || 'Erreur Firebase'}`);
+      });
+    }, delay);
+    matchSyncTimersRef.current.set(key, { timer, patch: mergedPatch });
+  }
+
+  function flushMatchPersistence(scope, matchId) {
+    const key = `${scope}:${matchId}`;
+    const pending = matchSyncTimersRef.current.get(key);
+    if (pending?.timer) window.clearTimeout(pending.timer);
+    matchSyncTimersRef.current.delete(key);
+    if (!pending) return matchSyncPromisesRef.current.get(key) || Promise.resolve();
+    const previous = matchSyncQueueRef.current.get(key) || Promise.resolve();
+    const next = previous.catch(() => {}).then(() => persistSingleMatchPatch(scope, matchId, pending.patch));
+    matchSyncQueueRef.current.set(key, next);
+    matchSyncPromisesRef.current.set(key, next);
+    return next;
+  }
+
+  function updateMatchesInScope(scope, updater, options = {}) {
+    const applyUpdater = (matches) => {
+      const before = dedupeMatches(Array.isArray(matches) ? matches : []);
+      const after = dedupeMatches(typeof updater === 'function' ? updater(before) : before);
+      const previousById = new Map(before.map((match) => [match.id, match]));
+      after.forEach((match) => {
+        const previous = previousById.get(match.id);
+        if (!previous) return;
+        const changed = {};
+        CLOUD_MATCH_FIELDS.forEach((field) => {
+          if (JSON.stringify(previous[field] ?? null) !== JSON.stringify(match[field] ?? null)) {
+            changed[field] = match[field] ?? null;
+          }
+        });
+        if (!options.skipCloud && Object.keys(changed).length) {
+          scheduleMatchPersistence(scope, match.id, changed, mode === 'referee' ? 220 : 35);
+        }
+      });
+      return after;
+    };
 
     if (scope === 'championshipLeg1') {
       const next = { ...championshipLeg1Ref.current, matches: applyUpdater(championshipLeg1Ref.current?.matches) };
@@ -7875,32 +8026,29 @@ const upcomingMatches = useMemo(() => {
   }
 
 
-  function submitRefereeMatchResult(scope, matchId) {
+  async function submitRefereeMatchResult(scope, matchId) {
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return false;
+    if (sendingRefereeMatchId) return false;
 
     const displayedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
       ? refereeSelectedScoreDraftRef.current
       : (refereeScoreDraftsRef.current?.[matchId] || null);
-
     const forcedScoreA = String(displayedDraft?.scoreA ?? fallbackMatch.submittedScoreA ?? '');
     const forcedScoreB = String(displayedDraft?.scoreB ?? fallbackMatch.submittedScoreB ?? '');
     const forcedSnapshot = {
       ...fallbackMatch,
-      submittedScoreA: forcedScoreA,
-      submittedScoreB: forcedScoreB,
       scoreA: forcedScoreA === '' ? null : Number(forcedScoreA),
       scoreB: forcedScoreB === '' ? null : Number(forcedScoreB),
     };
-
     if (!isMatchResultValid(forcedSnapshot, phaseRulesRef.current)) {
-      window.alert("Le score doit être gagnant avant d'envoyer le résultat.");
+      window.alert('Le score doit être gagnant avant d’envoyer le résultat.');
       return false;
     }
 
-    const submittedAt = displayedDraft?.submittedAt || fallbackMatch.submittedAt || new Date().toISOString();
-    const sendTimestamp = markPendingLocalMutation(new Date().toISOString());
-
+    const sendTimestamp = new Date().toISOString();
+    const submittedAt = displayedDraft?.submittedAt || fallbackMatch.submittedAt || sendTimestamp;
+    setSendingRefereeMatchId(matchId);
     recentRefereeLocalEditsRef.current.set(matchId, {
       submittedScoreA: forcedScoreA,
       submittedScoreB: forcedScoreB,
@@ -7908,49 +8056,49 @@ const upcomingMatches = useMemo(() => {
       pendingResultSentAt: sendTimestamp,
       until: Date.now() + 90000,
     });
-
-    updateMatchesInScope(scope, (matches) => matches.map((match) => {
-      if (match.id !== matchId) return match;
-      if (getMatchStatusLabel(match, phaseRulesRef.current) === 'Valide') return match;
-      return {
-        ...match,
-        submittedScoreA: forcedScoreA,
-        submittedScoreB: forcedScoreB,
-        submittedAt,
-        pendingResultSentAt: sendTimestamp,
-        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
-      };
+    updateMatchesInScope(scope, (matches) => matches.map((match) => match.id !== matchId ? match : {
+      ...match,
+      submittedScoreA: forcedScoreA,
+      submittedScoreB: forcedScoreB,
+      submittedAt,
+      pendingResultSentAt: sendTimestamp,
+      refereeInProgress: true,
+      matchInProgress: true,
+      status: 'Match en cours',
+      arbitrageRequestStatus: 'accepted',
+      arbitrageRequestedAt: null,
+      arbitrageAcceptedAt: Date.now(),
     }));
-    queueBackgroundCloudSave(0, sendTimestamp);
-    if (typeof window !== 'undefined') {
-      window.setTimeout(() => {
-        saveTournamentToCloud(false, true);
-      }, 0);
-      window.setTimeout(() => {
-        saveTournamentToCloud(false, true);
-      }, 40);
-      window.setTimeout(() => {
-        saveTournamentToCloud(false, true);
-      }, 140);
-      window.setTimeout(() => {
-        if (sharedTournamentIdRef.current) {
-          loadTournamentFromCloud(sharedTournamentIdRef.current, false);
-        }
-      }, 80);
-      window.setTimeout(() => {
-        if (sharedTournamentIdRef.current) {
-          loadTournamentFromCloud(sharedTournamentIdRef.current, false);
-        }
-      }, 220);
-      window.setTimeout(() => {
-        setRefereeSelectedScoreDraft(null);
-        setRefereeSelectedMatch(null);
-      }, 80);
-    } else {
+    try {
+      // La saisie et l'envoi du résultat doivent être confirmés sur Firebase AVANT
+      // de fermer la feuille de score. Pas de reload forcé qui pourrait l'écraser.
+      await flushMatchPersistence(scope, matchId);
       setRefereeSelectedScoreDraft(null);
+      refereeSelectedScoreDraftRef.current = null;
       setRefereeSelectedMatch(null);
+      commitRefereeScoreDrafts((current) => {
+        const next = { ...current };
+        delete next[matchId];
+        return next;
+      });
+      setRemoteSyncMessage('Résultat transmis à l’organisateur et enregistré sur Firebase.');
+      return true;
+    } catch (error) {
+      // Conserver le match et les scores à l'écran pour pouvoir renvoyer directement.
+      // Le score reste affiché et modifiable ; restaurer le bouton "Envoyer".
+      // Ce rollback est purement local : ne pas réécrire la date d'envoi sur Firebase.
+      updateMatchesInScope(scope, (matches) => matches.map((match) => match.id === matchId
+        ? { ...match, pendingResultSentAt: null }
+        : match), { skipCloud: true });
+      const retryDraft = { matchId, scoreA: forcedScoreA, scoreB: forcedScoreB, submittedAt };
+      setRefereeSelectedScoreDraft(retryDraft);
+      refereeSelectedScoreDraftRef.current = retryDraft;
+      window.alert(`Le score n’a pas été enregistré sur Firebase. Réessaie sans changer d’arbitre.\n${error.message || 'Erreur réseau.'}`);
+      setRemoteSyncMessage(`Échec de l’envoi : ${error.message || 'Erreur Firebase'}`);
+      return false;
+    } finally {
+      setSendingRefereeMatchId(null);
     }
-    return true;
   }
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
@@ -8025,7 +8173,7 @@ const upcomingMatches = useMemo(() => {
       : scope;
     recentRefereeLocalEditsRef.current.delete(matchId);
     const approvalTimestamp = markPendingLocalMutation(new Date().toISOString());
-    const fallbackMatch = findMatchInScope(scope, matchId);
+    const fallbackMatch = findMatchInScope(resolvedScope, matchId);
     if (fallbackMatch) {
       protectOrganizerLocalEdit(matchId, {
         scoreA: fallbackMatch.submittedScoreA ?? fallbackMatch.scoreA ?? '',
@@ -8033,7 +8181,7 @@ const upcomingMatches = useMemo(() => {
         officialAt: approvalTimestamp,
       });
     }
-    updateMatchesInScope(scope, (matches) => matches.map((match) => {
+    updateMatchesInScope(resolvedScope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       const approved = {
         ...match,
@@ -8062,7 +8210,8 @@ const upcomingMatches = useMemo(() => {
       }
       return approved;
     }));
-    queueBackgroundCloudSave(20, approvalTimestamp);
+    // La validation est envoyée sur ce match uniquement (ETag + contrôle de conflit).
+    const approvalSaved = flushMatchPersistence(resolvedScope, matchId);
 
     const tryGenerateBrassage2AfterValidation = () => {
       try {
@@ -8097,7 +8246,7 @@ const upcomingMatches = useMemo(() => {
       return false;
     };
 
-    queueMicrotask(() => {
+    void approvalSaved.then(() => queueMicrotask(() => {
       if (tryGenerateBrassage2AfterValidation()) return;
       if (generateQuartersIfFinalsStartAtQuarters({ silent: true })) return;
       if (forceSmallChampionshipQuartersIfReady({ silent: true })) return;
@@ -8122,6 +8271,9 @@ const upcomingMatches = useMemo(() => {
           tryGenerateMainStageAfterValidation();
         }, 220);
       }
+    })).catch((error) => {
+      console.error('Validation non enregistrée sur Firebase :', error);
+      window.alert(`Validation non enregistrée sur Firebase : ${error.message}`);
     });
   }
 
@@ -8978,8 +9130,8 @@ function releaseRefereeSelectedMatch(entry) {
 
               {!isLocked && pendingResultReady && !resultAlreadySent ? (
                 <div className="actions-row compact-actions">
-                  <Button variant="success" onClick={() => submitRefereeMatchResult(scope, match.id)}>
-                    Envoyer les résultats
+                  <Button variant="success" disabled={Boolean(sendingRefereeMatchId)} onClick={() => submitRefereeMatchResult(scope, match.id)}>
+                    {sendingRefereeMatchId === match.id ? 'Enregistrement Firebase...' : 'Envoyer les résultats'}
                   </Button>
                 </div>
               ) : null}
