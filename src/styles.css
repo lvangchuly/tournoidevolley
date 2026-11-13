@@ -5901,3 +5901,66 @@ tbody tr:last-child td { border-bottom: none; }
 .compact-referee-select-button-v53:disabled {
   cursor: default;
 }
+
+/* V60 - Podium collectif 3D (4 joueurs par équipe), or/argent/bronze. */
+.neo-podium-v60 {
+  border: 1px solid rgba(148, 163, 184, .32);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0b1524;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, .16);
+}
+.neo-podium-v60-artwork {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+.neo-podium-v60-winners {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(180deg, #131e2d 0%, #1c2b3e 100%);
+}
+.neo-podium-v60-winner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  text-align: center;
+}
+.neo-podium-v60-position {
+  display: block;
+  border: 1px solid currentColor;
+  border-radius: 9px;
+  padding: 6px 3px;
+  font-size: clamp(10px, 1vw, 14px);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.neo-podium-v60-silver .neo-podium-v60-position { color: #d9e2ed; background: rgba(198, 208, 218, .16); }
+.neo-podium-v60-gold .neo-podium-v60-position { color: #ffda62; background: rgba(255, 204, 48, .16); }
+.neo-podium-v60-bronze .neo-podium-v60-position { color: #f4aa76; background: rgba(193, 93, 41, .16); }
+.neo-podium-v60-team {
+  color: #f8fafc;
+  font-weight: 600;
+  min-height: 28px;
+  overflow-wrap: anywhere;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.neo-podium-v60-team .team-badge {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .neo-podium-v60-winners { gap: 5px; padding: 7px; }
+  .neo-podium-v60-position { font-size: 10px; padding: 5px 2px; }
+}
