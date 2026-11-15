@@ -1,0 +1,311 @@
+/* NEO TOURNOIVOLLEY V61 — site Web mobile (accès Public / Arbitre).
+   Chargé après styles.css pour neutraliser les dimensions de bureau sans
+   modifier la vue Organisateur ni les écrans de bureau.
+   Les interfaces fonctionnent en portrait ET en paysage, sans zoom forcé. */
+
+.public-page,
+.referee-page {
+  min-width: 0;
+  max-width: 100%;
+}
+.public-page .container,
+.referee-page .container {
+  min-width: 0;
+}
+.public-page img,
+.referee-page img,
+.public-page svg,
+.referee-page svg {
+  max-width: 100%;
+  height: auto;
+}
+.public-page .cards-grid > *,
+.referee-page .cards-grid > *,
+.public-page .section-card,
+.referee-page .section-card {
+  min-width: 0;
+}
+.public-page .public-match-card,
+.referee-page .referee-focus-card,
+.referee-page .referee-selector-item {
+  overflow-wrap: anywhere;
+}
+
+/* Téléphone et petite tablette : deux modes adaptés à la même URL Web. */
+@media (max-width: 960px) {
+  .public-page,
+  .referee-page {
+    min-height: 100dvh;
+    padding: 8px 0 max(18px, env(safe-area-inset-bottom));
+  }
+  .public-page .container,
+  .referee-page .container {
+    width: calc(100% - 16px) !important;
+    max-width: 100% !important;
+    margin-inline: auto;
+  }
+  .public-page .hero,
+  .referee-page .hero {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 14px !important;
+    border-radius: 16px;
+  }
+  .public-page .hero > *,
+  .referee-page .hero > *,
+  .public-page .hero-controls,
+  .referee-page .hero-controls {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .public-page .hero h1,
+  .referee-page .hero h1 {
+    font-size: clamp(21px, 5vw, 30px) !important;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+  }
+  .public-page .hero-pill,
+  .referee-page .hero-pill {
+    padding: 10px 12px;
+  }
+  .public-page .hero-pill strong,
+  .referee-page .hero-pill strong {
+    font-size: clamp(19px, 4.5vw, 27px);
+  }
+  .public-page .section-card,
+  .referee-page .section-card,
+  .public-page .public-match-card,
+  .public-page .mini-card,
+  .referee-page .mini-card {
+    padding: 12px;
+    border-radius: 16px;
+    max-width: 100%;
+  }
+  .public-page .section-head,
+  .referee-page .section-head {
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .public-page .section-head h2,
+  .referee-page .section-head h2 {
+    font-size: clamp(17px, 4vw, 23px);
+  }
+  .public-page .cards-grid.three-up,
+  .public-page .cards-grid.two-up,
+  .public-page .public-rankings-grid,
+  .referee-page .referee-selector-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px;
+  }
+  .public-page .public-match-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .public-page .public-match-main,
+  .public-page .public-match-team-row {
+    min-width: 0;
+  }
+  .public-page .public-match-team-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+  .public-page .public-match-team-row .team-badge,
+  .public-page .public-qualified-team-name,
+  .referee-page .referee-selector-teams .team-badge {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .public-page .public-team {
+    min-width: 0;
+    font-size: clamp(15px, 4vw, 19px);
+  }
+  .public-page .public-score {
+    font-size: clamp(26px, 7vw, 34px);
+  }
+  .public-page .public-score-inline {
+    min-width: 30px;
+  }
+  .public-page .public-match-side-note {
+    min-width: 0 !important;
+    max-width: 100%;
+    gap: 5px;
+    justify-items: start;
+    text-align: left;
+  }
+  .public-page .public-start-time,
+  .public-page .public-end-time {
+    font-size: clamp(18px, 5vw, 25px);
+    overflow-wrap: anywhere;
+  }
+  /* Les classements détaillés restent consultables sans élargir toute la page. */
+  .public-page .table-wrap,
+  .public-page .public-qualified-list-card .table-wrap,
+  .public-page .compact-overall-ranking-scroll,
+  .public-page .public-qualified-list-card .compact-overall-ranking-scroll {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  .public-page .public-qualified-simple-table {
+    width: 100%;
+    min-width: 0;
+  }
+  .public-page .neo-podium-v60-artwork {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+  .public-page .neo-podium-v60-winners {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* La carte arbitre : deux équipes au-dessus, saisie du score en dessous. */
+  .referee-page .referee-focus-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 10px !important;
+  }
+  .referee-page .referee-focus-head {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .referee-page .referee-focus-head > * {
+    min-width: 0;
+  }
+  .referee-page .referee-focus-head h2 {
+    overflow-wrap: anywhere;
+    font-size: clamp(16px, 4vw, 20px) !important;
+  }
+  .referee-page .referee-focus-body {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas: 'team-a team-b' 'score score' !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .referee-page .referee-focus-body > .referee-team-card:first-child {
+    grid-area: team-a;
+  }
+  .referee-page .referee-focus-body > .referee-team-card:last-child {
+    grid-area: team-b;
+  }
+  .referee-page .referee-focus-body > .referee-big-score {
+    grid-area: score;
+    min-width: 0 !important;
+    max-width: 100%;
+    width: 100%;
+  }
+  .referee-page .referee-team-card {
+    min-width: 0;
+    max-width: 100%;
+    padding: 8px !important;
+  }
+  .referee-page .referee-team-card .team-badge,
+  .referee-page .referee-team-card strong {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  .referee-page .score-inputs-large,
+  .referee-page .score-readonly-large {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+  .referee-page .score-inputs-large {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+  .referee-page .score-stepper {
+    min-width: 0;
+  }
+  .referee-page .score-stepper-btn {
+    min-width: 50px;
+    min-height: 46px;
+    max-width: 100%;
+    touch-action: manipulation;
+  }
+  .referee-page .score-stepper input {
+    width: min(86px, 100%) !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    height: 56px !important;
+    font-size: 19px !important; /* évite le zoom automatique de Safari iOS */
+  }
+  .referee-page .referee-selector-item {
+    min-width: 0;
+    min-height: 54px;
+    padding: 10px;
+    gap: 6px;
+    touch-action: manipulation;
+  }
+  .referee-page .referee-selector-item > div {
+    min-width: 0;
+  }
+  .referee-page .referee-selector-item > .badge {
+    flex-shrink: 0;
+  }
+  .referee-page .referee-selector-teams {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .referee-page .actions-row {
+    max-width: 100%;
+  }
+  .referee-page .btn,
+  .public-page .btn {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  .referee-page input,
+  .referee-page select,
+  .public-page input,
+  .public-page select {
+    max-width: 100%;
+    min-width: 0;
+    font-size: max(16px, 1rem);
+  }
+}
+
+/* Très petits téléphones : privilégier la saisie du score plutôt qu'une carte large. */
+@media (max-width: 359px) {
+  .referee-page .referee-team-card {
+    padding: 6px !important;
+  }
+  .referee-page .score-stepper input {
+    width: 64px !important;
+  }
+  .referee-page .score-inputs-large {
+    gap: 4px !important;
+  }
+  .public-page .public-match-card,
+  .referee-page .referee-focus-card {
+    padding: 8px !important;
+  }
+}
+
+/* Sur un téléphone en paysage, la largeur est utilisée sans rétablir
+   les trois colonnes forcées du score arbitre. */
+@media (orientation: landscape) and (min-width: 600px) and (max-width: 960px) {
+  .public-page .cards-grid.three-up,
+  .public-page .public-rankings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .referee-page .referee-selector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .referee-page .referee-focus-body {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+}
