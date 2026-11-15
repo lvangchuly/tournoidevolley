@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V61';
+const APP_VERSION = 'V62';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -10085,7 +10085,7 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
           <div className="stack-gap">
             {!remoteStateInitialized ? <div className="info-banner">Chargement des données partagées en cours…</div> : null}
             {refereeSelectedEntry ? (
-              <Section title="Saisie arbitre" subtitle="Le match sélectionné s’affiche seul pour faciliter la saisie des scores.">
+              <Section>
                 {renderRefereeSelectedMatch(refereeSelectedEntry)}
               </Section>
             ) : (
