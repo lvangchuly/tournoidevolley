@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V64';
+const APP_VERSION = 'V65';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1507,10 +1507,14 @@ function isStatusASaisir(status) {
   return normalizeStatusLabel(status) === 'a saisir';
 }
 
+// V65 : le match continue d'occuper son terrain lorsqu'il attend un arbitre.
+function isMatchAwaitingReferee(match) {
+  return Boolean(match && match.status === 'Match en cours' && match.missingReferee === true);
+}
+
 function isRefereeAssignedMatch(match) {
-  if (!match) return false;
-  if (match.status === 'Valide') return false;
-  return Boolean(match?.refereeInProgress || match?.matchInProgress || match?.refereeStartedAt);
+  if (!match || match.status === 'Valide' || isMatchAwaitingReferee(match)) return false;
+  return Boolean(match.refereeInProgress || match.refereeStartedAt || match.matchInProgress);
 }
 
 
@@ -1527,7 +1531,7 @@ function hasSentRefereeResultToReview(match, phaseRules) {
   }, phaseRules);
 }
 
-// V64 : les scores saisis par l'arbitre sont visibles en direct dans la vue
+// V65 : les scores saisis par l'arbitre sont visibles en direct dans la vue
 // Organisateur. Ce sont toujours des brouillons tant que le match n'est pas
 // au statut « Résultats envoyés », puis officiellement « Valide ».
 // La condition de validation reste hasSentRefereeResultToReview : ne jamais
@@ -1571,6 +1575,7 @@ function makeRefereeSelectedMatchForOrganizer(match, startedAt = new Date().toIS
     pendingResultSentAt: null,
     refereeInProgress: true,
     matchInProgress: true,
+    missingReferee: false,
     status: 'Match en cours',
     arbitrageRequestStatus: null,
     arbitrageRequestedAt: null,
@@ -1594,7 +1599,7 @@ function getMatchStatusLabel(match, phaseRules) {
 function isMatchCurrentlyInProgress(match, phaseRules) {
   if (!match) return false;
   if (getMatchStatusLabel(match, phaseRules) === 'Valide') return false;
-  return Boolean(match.refereeInProgress || match.matchInProgress);
+  return Boolean(match.status === 'Match en cours' || match.refereeInProgress || match.matchInProgress);
 }
 
 // V59 : un resultat transmis par l'arbitre doit rester dans le bandeau Public
@@ -2194,6 +2199,7 @@ function clearMatchScores(match) {
     manualOverrideAt: null,
     refereeInProgress: false,
     matchInProgress: false,
+    missingReferee: false,
   };
 }
 
@@ -2568,7 +2574,7 @@ const CLOUD_MATCH_PATH_BY_SCOPE = Object.freeze({
 const CLOUD_MATCH_FIELDS = [
   'scoreA', 'scoreB', 'status', 'validatedAt', 'manualOverrideAt',
   'submittedScoreA', 'submittedScoreB', 'submittedAt', 'pendingResultSentAt',
-  'pendingResult', 'resultsSentAt', 'refereeInProgress', 'matchInProgress',
+  'pendingResult', 'resultsSentAt', 'refereeInProgress', 'matchInProgress', 'missingReferee',
   'refereeStartedAt', 'arbitrageRequestStatus', 'arbitrageRequestedAt',
   'arbitrageAcceptedAt',
 ];
@@ -2605,6 +2611,7 @@ function mergeRefereeReceiptsIntoPayload(payload, phaseRules) {
       status: 'Résultats envoyés',
       refereeInProgress: false,
       matchInProgress: false,
+      missingReferee: false,
       refereeStartedAt: null,
       arbitrageRequestStatus: null,
     };
@@ -3345,7 +3352,10 @@ export default function App() {
       const remoteInProgress = Boolean(remoteMatch.refereeInProgress);
       const remoteMatchInProgress = Boolean(remoteMatch.matchInProgress || remoteMatch.refereeInProgress);
       const localMatchInProgress = Boolean(localMatch.matchInProgress || localMatch.refereeInProgress);
-      const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now && remoteInProgress);
+      const newRefereeStartedAfterRelease = Boolean(recentRelease
+        && toTimestamp(remoteMatch.refereeStartedAt) > recentRelease.at);
+      const shouldIgnoreRemoteLock = Boolean(recentRelease && recentRelease.until > now
+        && remoteInProgress && !newRefereeStartedAfterRelease);
       const localSubmittedAt = toTimestamp(localMatch.submittedAt);
       const remoteSubmittedAt = toTimestamp(remoteMatch.submittedAt);
       const localValidatedAt = toTimestamp(localMatch.validatedAt);
@@ -3459,6 +3469,8 @@ export default function App() {
           pendingResultSentAt: remoteMatch.pendingResultSentAt ?? null,
           refereeInProgress: shouldIgnoreRemoteLock ? false : remoteInProgress,
           matchInProgress: shouldIgnoreRemoteLock ? (localMatchInProgress || remoteMatchInProgress) : (remoteMatchInProgress || Boolean(remoteMatch.pendingResultSentAt)),
+          missingReferee: shouldIgnoreRemoteLock ? Boolean(localMatch.missingReferee) : Boolean(remoteMatch.missingReferee),
+          refereeStartedAt: shouldIgnoreRemoteLock ? null : (remoteMatch.refereeStartedAt ?? null),
         };
       } else if (shouldIgnoreRemoteLock) {
         nextMatch = {
@@ -3469,6 +3481,9 @@ export default function App() {
           pendingResultSentAt: localMatch.pendingResultSentAt ?? nextMatch.pendingResultSentAt ?? null,
           refereeInProgress: false,
           matchInProgress: localMatchInProgress || remoteMatchInProgress,
+          missingReferee: Boolean(localMatch.missingReferee),
+          refereeStartedAt: null,
+          status: localMatch.status === 'Match en cours' ? 'Match en cours' : nextMatch.status,
         };
       } else if (shouldIgnoreRemotePendingBecauseLocalEdit) {
         nextMatch = {
@@ -3479,6 +3494,30 @@ export default function App() {
           pendingResultSentAt: localMatch.pendingResultSentAt ?? nextMatch.pendingResultSentAt ?? null,
           refereeInProgress: localMatch.refereeInProgress ?? nextMatch.refereeInProgress ?? false,
           matchInProgress: localMatch.matchInProgress ?? nextMatch.matchInProgress ?? false,
+        };
+      }
+
+      // V65 : pendant qu'un nouvel arbitre reprend un match sans arbitre,
+      // une ancienne lecture Firebase ne doit pas lui retirer sa selection.
+      const freshLocalRefereeClaim = Boolean(
+        recentLocalEdit && recentLocalEdit.until > now
+        && localMatch.missingReferee === false && localMatch.refereeInProgress
+        && remoteMatch.missingReferee === true
+        && toTimestamp(localMatch.refereeStartedAt) > toTimestamp(remoteMatch.refereeStartedAt)
+        && remoteMatch.status !== 'Valide' && remoteMatch.status !== 'Résultats envoyés'
+        && !remoteMatch.pendingResultSentAt
+      );
+      if (freshLocalRefereeClaim) {
+        nextMatch = {
+          ...nextMatch,
+          missingReferee: false,
+          refereeInProgress: true,
+          matchInProgress: true,
+          status: 'Match en cours',
+          refereeStartedAt: localMatch.refereeStartedAt,
+          submittedScoreA: localMatch.submittedScoreA ?? '',
+          submittedScoreB: localMatch.submittedScoreB ?? '',
+          submittedAt: localMatch.submittedAt ?? null,
         };
       }
 
@@ -3964,7 +4003,7 @@ export default function App() {
         return {
           ...local,
           ...Object.fromEntries(CLOUD_MATCH_FIELDS
-            .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','refereeStartedAt','status'].includes(field))
+            .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','refereeStartedAt','status','missingReferee'].includes(field))
             .map((field) => [field, remote[field] ?? null])),
           status: 'Résultats envoyés',
           refereeInProgress: false,
@@ -3973,7 +4012,7 @@ export default function App() {
       }
       if (remotePending > localPending && remoteOfficial >= localOfficial && !isProtected) {
         return { ...local, ...Object.fromEntries(CLOUD_MATCH_FIELDS
-          .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','status'].includes(field))
+          .filter((field) => ['submittedScoreA','submittedScoreB','submittedAt','pendingResultSentAt','refereeInProgress','matchInProgress','status','missingReferee'].includes(field))
           .map((field) => [field, remote[field] ?? null])) };
       }
       return local;
@@ -5062,7 +5101,10 @@ const upcomingMatches = useMemo(() => {
   }
 
   useEffect(() => {
-    if (refereeSelectedMatch && !refereeSelectedEntry) {
+    // V65 : fermer la saisie d'un ancien arbitre lorsque l'organisateur
+    // libere le match. Il reste disponible pour une nouvelle selection.
+    if (refereeSelectedMatch && (!refereeSelectedEntry
+      || isMatchAwaitingReferee(refereeSelectedEntry.match))) {
       setRefereeSelectedScoreDraft(null);
       setRefereeSelectedMatch(null);
     }
@@ -7496,6 +7538,7 @@ const upcomingMatches = useMemo(() => {
     validatedAt: Date.now(),
     refereeInProgress: false,
     matchInProgress: false,
+    missingReferee: false,
     refereeStartedAt: null,
     submittedScoreA: '',
     submittedScoreB: '',
@@ -7837,6 +7880,15 @@ const upcomingMatches = useMemo(() => {
       const incomingOfficialAt = Math.max(toTimestamp(patch.validatedAt), toTimestamp(patch.manualOverrideAt));
       if (incomingOfficialAt && remoteOfficialAt > incomingOfficialAt) {
         throw new Error('Un résultat officiel plus récent existe sur Firebase. Recharge le tournoi.');
+      }
+      // V65 : un arbitre libere ne peut plus ecraser le marqueur
+      // « Pas d'arbitre » avec une ancienne saisie restee ouverte.
+      // Seule la nouvelle prise en charge explicite du match supprime ce marqueur.
+      const isRefereeClaimingMissingMatch = patch.missingReferee === false
+        && patch.refereeInProgress === true && Boolean(patch.refereeStartedAt);
+      if (mode === 'referee' && serverMatch.missingReferee === true
+        && !isRefereeClaimingMissingMatch) {
+        throw new Error('Ce match est en attente d’arbitre. Sélectionne-le à nouveau avant de saisir un score.');
       }
       const next = { ...serverMatch, ...patch };
       const saveResponse = await fetch(matchUrl, {
@@ -8261,7 +8313,7 @@ const upcomingMatches = useMemo(() => {
   function updateRefereeMatchScore(scope, matchId, field, value) {
     const fallbackMatch = findMatchInScope(scope, matchId);
     if (!fallbackMatch) return;
-    if (getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+    if ((getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide' || isMatchAwaitingReferee(fallbackMatch))) return;
 
     const editTimestamp = new Date().toISOString();
     const normalized = String(value ?? '').replace(/[^0-9]/g, '').slice(0, 3);
@@ -8315,7 +8367,7 @@ const upcomingMatches = useMemo(() => {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
+        refereeInProgress: true, matchInProgress: true, missingReferee: false, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
       };
     }));
   }
@@ -8323,7 +8375,7 @@ const upcomingMatches = useMemo(() => {
 
   async function submitRefereeMatchResult(scope, matchId) {
     const fallbackMatch = findMatchInScope(scope, matchId);
-    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return false;
+    if (!fallbackMatch || (getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide' || isMatchAwaitingReferee(fallbackMatch))) return false;
     if (sendingRefereeMatchId) return false;
 
     const displayedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId
@@ -8360,6 +8412,7 @@ const upcomingMatches = useMemo(() => {
       refereeInProgress: false,
       matchInProgress: false,
       refereeStartedAt: null,
+      missingReferee: false,
       status: 'Résultats envoyés',
       arbitrageRequestStatus: null,
       arbitrageRequestedAt: null,
@@ -8416,7 +8469,7 @@ const upcomingMatches = useMemo(() => {
 
   function stepRefereeMatchScore(scope, matchId, field, delta) {
     const fallbackMatch = findMatchInScope(scope, matchId);
-    if (!fallbackMatch || getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide') return;
+    if (!fallbackMatch || (getMatchStatusLabel(fallbackMatch, phaseRulesRef.current) === 'Valide' || isMatchAwaitingReferee(fallbackMatch))) return;
     const selectedDraft = refereeSelectedScoreDraftRef.current?.matchId === matchId ? refereeSelectedScoreDraftRef.current : null;
     const storedDraft = refereeScoreDraftsRef.current?.[matchId] || null;
     const currentRawValue = field === 'scoreA'
@@ -8468,7 +8521,7 @@ const upcomingMatches = useMemo(() => {
         submittedScoreB: nextScoreB,
         submittedAt: editTimestamp,
         pendingResultSentAt: null,
-        refereeInProgress: true, matchInProgress: true, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
+        refereeInProgress: true, matchInProgress: true, missingReferee: false, status: 'Match en cours', arbitrageRequestStatus: 'accepted', arbitrageRequestedAt: null, arbitrageAcceptedAt: Date.now(),
       };
     }));
 
@@ -8508,6 +8561,7 @@ const upcomingMatches = useMemo(() => {
         resultsSentAt: null,
         refereeInProgress: false,
         matchInProgress: false,
+        missingReferee: false,
         refereeStartedAt: null,
         arbitrageRequestStatus: null,
         arbitrageRequestedAt: null,
@@ -8656,14 +8710,20 @@ function rejectRefereeScore(scope, matchId) {
     recentRefereeReleaseRef.current.set(matchId, { at: Date.now(), until: Date.now() + 90000 });
 
     const fallbackMatch = findMatchInScope(scope, matchId);
-    if (!fallbackMatch) return;
+    if (!fallbackMatch || isMatchAwaitingReferee(fallbackMatch) || fallbackMatch.status === 'Valide'
+      || fallbackMatch.status === 'Résultats envoyés') return;
 
     updateMatchesInScope(scope, (matches) => matches.map((match) => {
       if (match.id !== matchId) return match;
       return {
         ...match,
         refereeInProgress: false,
-        matchInProgress: false, status: 'Match en cours', refereeStartedAt: null,
+        // Le match se poursuit et son terrain reste occupe en l'absence d'arbitre.
+        matchInProgress: true,
+        missingReferee: true,
+        status: 'Match en cours',
+        refereeStartedAt: null,
+        arbitrageRequestStatus: null,
       };
     }));
 
@@ -9057,10 +9117,12 @@ function releaseRefereeSelectedMatch(entry) {
                               <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                           </div>
                           ) : null}
-                          {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
+                          {!isValid && match.status !== 'Résultats envoyés' && !Boolean(match.pendingResultSentAt) && (isRefereeAssignedMatch(match) || isMatchAwaitingReferee(match) || (pendingA !== null && pendingB !== null)) ? (
                             <div className="actions-row compact-actions compact-match-card-actions">
-                              <Button variant={isRefereeAssignedMatch(match) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
-                                Changer l’arbitre
+                              <Button variant={isMatchAwaitingReferee(match) ? 'no-referee' : 'info'}
+                                disabled={isMatchAwaitingReferee(match)}
+                                onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                                {isMatchAwaitingReferee(match) ? 'Pas d’arbitre' : 'Changer l’arbitre'}
                               </Button>
                             </div>
                           ) : null}
@@ -9169,10 +9231,12 @@ function releaseRefereeSelectedMatch(entry) {
                             <Button variant="success" onClick={() => forceValidateOrganizerMatch(match.id)}>Valider</Button>
                                                       </div>
                         ) : null}
-                        {!isValid && !Boolean(match.pendingResultSentAt) && ((Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)) || (pendingA !== null && pendingB !== null)) ? (
+                        {!isValid && match.status !== 'Résultats envoyés' && !Boolean(match.pendingResultSentAt) && (isRefereeAssignedMatch(match) || isMatchAwaitingReferee(match) || (pendingA !== null && pendingB !== null)) ? (
                           <div className="actions-row compact-actions compact-match-card-actions">
-                            <Button variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'} onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
-                              Annuler
+                            <Button variant={isMatchAwaitingReferee(match) ? 'no-referee' : 'info'}
+                              disabled={isMatchAwaitingReferee(match)}
+                              onClick={() => reassignRefereeWithoutReset(scope, match.id)}>
+                              {isMatchAwaitingReferee(match) ? 'Pas d’arbitre' : 'Changer l’arbitre'}
                             </Button>
                           </div>
                         ) : null}
@@ -9272,11 +9336,11 @@ function releaseRefereeSelectedMatch(entry) {
                         {!isValid ? (
                           <div className="actions-row compact-actions">
                             <Button
-                              variant={(Boolean(match.refereeInProgress) || Boolean(match.matchInProgress) || pendingA !== null || pendingB !== null) ? 'info' : 'secondary'}
+                              variant={isMatchAwaitingReferee(match) ? 'no-referee' : 'info'}
                               onClick={() => reassignRefereeWithoutReset(scope, match.id)}
-                              disabled={pendingStatus !== 'Match en cours'}
+                              disabled={isMatchAwaitingReferee(match) || pendingStatus !== 'Match en cours'}
                             >
-                              Annuler
+                              {isMatchAwaitingReferee(match) ? 'Pas d’arbitre' : 'Changer l’arbitre'}
                             </Button>
                           </div>
                         ) : null}
@@ -10124,12 +10188,16 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                             : (officialStatus === 'Match en cours' && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
                               ? 'badge-danger status-match-en-cours'
                               : 'badge-neutral';
-                          const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress);
-                          const canSelectExistingInProgressMatch = false;
-                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide' && !isBlockedByRunningReferee && activeOccupiedMatchCount < clampCourtCount(courtCount);
+                          const awaitingReferee = isMatchAwaitingReferee(match);
+                          const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress) && !awaitingReferee;
+                          // Le terrain est deja compte comme occupe : ne pas refuser
+                          // a un nouvel arbitre de reprendre CE match faute de terrain libre.
+                          const canSelectNewMatch = group.isUnlocked && officialStatus !== 'Valide'
+                            && !isBlockedByRunningReferee
+                            && (awaitingReferee || activeOccupiedMatchCount < clampCourtCount(courtCount));
                           const canSelect = canSelectNewMatch;
                           const isLockedVisualMatch = isBlockedByRunningReferee;
-                          const isActuallyBlockedByReferee = Boolean(match.refereeInProgress || match.matchInProgress);
+                          const isActuallyBlockedByReferee = isBlockedByRunningReferee;
                           const disabledReason = !group.isUnlocked
                             ? group.lockReason
                             : isActuallyBlockedByReferee
