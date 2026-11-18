@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V65';
+const APP_VERSION = 'V66';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -10176,19 +10176,26 @@ function renderOverallRanking(rows, withStatus = false, activeTeamIds = null, op
                           return !match.pendingResultSentAt && status !== 'Valide' && match.status !== 'Valide' && status !== 'Résultats envoyés' && match.status !== 'Résultats envoyés';
                         }).map((match) => {
                           const schedule = scheduleData.scheduleMap[match.id];
+                          const awaitingReferee = isMatchAwaitingReferee(match);
                           const pendingStatus = getPendingStatus(match);
                           const officialStatus = getMatchStatusLabel(match, phaseRules);
-                          const statusText = officialStatus === 'Valide'
-                            ? 'Valide'
-                            : officialStatus === 'Match en cours' || pendingStatus === 'Match en cours'
-                              ? 'Match en cours'
-                              : 'À saisir';
-                          const badgeClass = officialStatus === 'Valide'
-                            ? 'badge-success'
-                            : (officialStatus === 'Match en cours' && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
-                              ? 'badge-danger status-match-en-cours'
-                              : 'badge-neutral';
-                          const awaitingReferee = isMatchAwaitingReferee(match);
+                          // V66 : dans la liste Arbitre, un match sans arbitre reste
+                          // selectionnable et affiche « À saisir » en rouge, bien qu'il
+                          // occupe toujours son terrain et reste « Match en cours » ailleurs.
+                          const statusText = awaitingReferee
+                            ? 'À saisir'
+                            : officialStatus === 'Valide'
+                              ? 'Valide'
+                              : officialStatus === 'Match en cours' || pendingStatus === 'Match en cours'
+                                ? 'Match en cours'
+                                : 'À saisir';
+                          const badgeClass = awaitingReferee
+                            ? 'badge-danger status-arbitre-a-saisir'
+                            : officialStatus === 'Valide'
+                              ? 'badge-success'
+                              : (officialStatus === 'Match en cours' && (Boolean(match.refereeInProgress) || Boolean(match.matchInProgress)))
+                                ? 'badge-danger status-match-en-cours'
+                                : 'badge-neutral';
                           const isBlockedByRunningReferee = Boolean(match.refereeInProgress || match.matchInProgress) && !awaitingReferee;
                           // Le terrain est deja compte comme occupe : ne pas refuser
                           // a un nouvel arbitre de reprendre CE match faute de terrain libre.

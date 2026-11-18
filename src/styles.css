@@ -5970,3 +5970,12 @@ tbody tr:last-child td { border-bottom: none; }
   background: #64748b; color: #fff; border: 1px solid #475569;
   opacity: 1; cursor: default; filter: none;
 }
+
+/* V66 — Match toujours occupe mais en attente d'un nouvel arbitre. */
+.referee-page .referee-selector-item .badge.status-arbitre-a-saisir,
+.referee-page .referee-selector-item:hover .badge.status-arbitre-a-saisir,
+.referee-page .referee-selector-item:focus .badge.status-arbitre-a-saisir {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+}
