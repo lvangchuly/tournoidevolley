@@ -38,7 +38,7 @@ function formatPoolNameWithLevel(pool, teamMap) {
   if (!pool?.name) return 'Poule';
   return `${pool.name} - Niveau ${getPoolLevelTotal(pool, teamMap)}`;
 }
-const APP_VERSION = 'V62';
+const APP_VERSION = 'V64';
 const ARBITRAGE_REQUEST_TIMEOUT_MS = 60 * 1000;
 const ARBITRAGE_REQUEST_STATUS = 'En pause';
 const MASTER_PASSWORD = 'Chuly0ne';
@@ -1525,6 +1525,17 @@ function hasSentRefereeResultToReview(match, phaseRules) {
     scoreA: match.submittedScoreA,
     scoreB: match.submittedScoreB,
   }, phaseRules);
+}
+
+// V64 : les scores saisis par l'arbitre sont visibles en direct dans la vue
+// Organisateur. Ce sont toujours des brouillons tant que le match n'est pas
+// au statut « Résultats envoyés », puis officiellement « Valide ».
+// La condition de validation reste hasSentRefereeResultToReview : ne jamais
+// utiliser cet indicateur d'affichage pour autoriser le bouton Valider.
+function showRefereeScoreInOrganizer(match) {
+  if (!match || match.status === 'Valide') return false;
+  if (match.status === 'Résultats envoyés') return true;
+  return match.status === 'Match en cours' && isRefereeAssignedMatch(match);
 }
 
 function getDisplayScoreA(match) {
@@ -8967,7 +8978,7 @@ function releaseRefereeSelectedMatch(entry) {
                       const pendingB = toNumber(match.submittedScoreB);
                       const isValid = status === 'Valide';
                       const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
-                    const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
+                    const showLiveRefereeScores = showRefereeScoreInOrganizer(match);
                       const isSelectedTeamPlayingMatch = Boolean(selectedTeamId) && (match.teamAId === selectedTeamId || match.teamBId === selectedTeamId);
                       const isSelectedTeamRefereeMatch = Boolean(selectedTeamId) && refereeTeamId === selectedTeamId;
                       const matchHighlightClass = isSelectedTeamPlayingMatch
@@ -9015,9 +9026,9 @@ function releaseRefereeSelectedMatch(entry) {
                               type="number"
                               min="0"
                               inputMode="numeric"
-                              value={showSentRefereeScores ? match.submittedScoreA : (match.scoreA ?? '')}
-                              readOnly={showSentRefereeScores}
-                              title={showSentRefereeScores ? 'Résultat arbitre en attente de validation : Valider ou Annuler' : undefined}
+                              value={showLiveRefereeScores ? match.submittedScoreA : (match.scoreA ?? '')}
+                              readOnly={showLiveRefereeScores}
+                              title={showLiveRefereeScores ? (match.status === 'Résultats envoyés' ? 'Résultat arbitre en attente de validation' : 'Score provisoire de l’arbitre en direct') : undefined}
                               onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)}
                               placeholder=""
                               disabled={false}
@@ -9028,9 +9039,9 @@ function releaseRefereeSelectedMatch(entry) {
                               type="number"
                               min="0"
                               inputMode="numeric"
-                              value={showSentRefereeScores ? match.submittedScoreB : (match.scoreB ?? '')}
-                              readOnly={showSentRefereeScores}
-                              title={showSentRefereeScores ? 'Résultat arbitre en attente de validation : Valider ou Annuler' : undefined}
+                              value={showLiveRefereeScores ? match.submittedScoreB : (match.scoreB ?? '')}
+                              readOnly={showLiveRefereeScores}
+                              title={showLiveRefereeScores ? (match.status === 'Résultats envoyés' ? 'Résultat arbitre en attente de validation' : 'Score provisoire de l’arbitre en direct') : undefined}
                               onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)}
                               placeholder=""
                               disabled={false}
@@ -9127,7 +9138,7 @@ function releaseRefereeSelectedMatch(entry) {
                     const isValid = status === 'Valide';
                     const isFinalStage = /quart|demi|finale|petite finale|petite final|principale|principal/i.test(`${match.phase || ''} ${match.group || ''}`);
                     const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
-                    const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
+                    const showLiveRefereeScores = showRefereeScoreInOrganizer(match);
                     const matchNumber = index + 1;
 
                     return (
@@ -9143,10 +9154,10 @@ function releaseRefereeSelectedMatch(entry) {
                         </div>
                         <div className="compact-match-score-row-v24n">
                           <label className="compact-score-box compact-score-box-v24n">
-                            <input type="number" min="0" inputMode="numeric" value={showSentRefereeScores ? match.submittedScoreA : (match.scoreA ?? '')} readOnly={showSentRefereeScores} title={showSentRefereeScores ? 'Résultat arbitre en attente de validation : Valider ou Annuler' : undefined} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
+                            <input type="number" min="0" inputMode="numeric" value={showLiveRefereeScores ? match.submittedScoreA : (match.scoreA ?? '')} readOnly={showLiveRefereeScores} title={showLiveRefereeScores ? (match.status === 'Résultats envoyés' ? 'Résultat arbitre en attente de validation' : 'Score provisoire de l’arbitre en direct') : undefined} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} placeholder="" />
                           </label>
                           <label className="compact-score-box compact-score-box-v24n">
-                            <input type="number" min="0" inputMode="numeric" value={showSentRefereeScores ? match.submittedScoreB : (match.scoreB ?? '')} readOnly={showSentRefereeScores} title={showSentRefereeScores ? 'Résultat arbitre en attente de validation : Valider ou Annuler' : undefined} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
+                            <input type="number" min="0" inputMode="numeric" value={showLiveRefereeScores ? match.submittedScoreB : (match.scoreB ?? '')} readOnly={showLiveRefereeScores} title={showLiveRefereeScores ? (match.status === 'Résultats envoyés' ? 'Résultat arbitre en attente de validation' : 'Score provisoire de l’arbitre en direct') : undefined} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} placeholder="" />
                           </label>
                         </div>
                         <div className="compact-match-footer-v24n">
@@ -9225,7 +9236,7 @@ function releaseRefereeSelectedMatch(entry) {
                 const pendingB = toNumber(match.submittedScoreB);
                 const isValid = status === 'Valide';
                 const canApprovePending = hasSentRefereeResultToReview(match, phaseRules);
-                    const showSentRefereeScores = hasSentRefereeResultToReview(match, phaseRules);
+                    const showLiveRefereeScores = showRefereeScoreInOrganizer(match);
                 const schedule = scheduleData.scheduleMap[match.id];
                 return (
                   <tr key={match.id} className={status === 'Score invalide' ? 'row-invalid' : ''}>
@@ -9240,9 +9251,9 @@ function releaseRefereeSelectedMatch(entry) {
                     <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamAId).name} level={resolveTeam(match.teamAId).level} /></td>
                     <td>
                       <div className="score-inputs">
-                        <input type="number" min="0" inputMode="numeric" value={showSentRefereeScores ? match.submittedScoreA : getDisplayScoreA(match)} readOnly={showSentRefereeScores} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
+                        <input type="number" min="0" inputMode="numeric" value={showLiveRefereeScores ? match.submittedScoreA : getDisplayScoreA(match)} readOnly={showLiveRefereeScores} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreA', e.target.value)} />
                         <span>-</span>
-                        <input type="number" min="0" inputMode="numeric" value={showSentRefereeScores ? match.submittedScoreB : getDisplayScoreB(match)} readOnly={showSentRefereeScores} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
+                        <input type="number" min="0" inputMode="numeric" value={showLiveRefereeScores ? match.submittedScoreB : getDisplayScoreB(match)} readOnly={showLiveRefereeScores} onChange={(e) => updateOfficialMatchScore(scope, match.id, 'scoreB', e.target.value)} />
                       </div>
                     </td>
                     <td className="match-team-cell"><TeamBadge name={resolveTeam(match.teamBId).name} level={resolveTeam(match.teamBId).level} /></td>
